@@ -80,13 +80,6 @@ def create_app(config_class=Config):
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
     
-    # 关闭 Neo4j 连接
-    @app.teardown_appcontext
-    def close_neo4j(exception=None):
-        storage = app.extensions.get('neo4j_storage')
-        if storage and hasattr(storage, 'close'):
-            storage.close()
-
     # 健康检查
     @app.route('/health')
     def health():

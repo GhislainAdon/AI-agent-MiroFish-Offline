@@ -174,7 +174,7 @@ class Neo4jStorage(GraphStorage):
     # ----------------------------------------------------------------
 
     def add_text(self, graph_id: str, text: str) -> str:
-        """Process text: NER/RE → create nodes/edges → return episode_id."""
+        """Process text: NER/RE → batch embed → create nodes/edges → return episode_id."""
         episode_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
 
@@ -182,14 +182,32 @@ class Neo4jStorage(GraphStorage):
         ontology = self.get_ontology(graph_id)
 
         # Extract entities and relations
+        logger.info(f"[add_text] Starting NER extraction for chunk ({len(text)} chars)...")
         extraction = self._ner.extract(text, ontology)
         entities = extraction.get("entities", [])
         relations = extraction.get("relations", [])
 
         logger.info(
-            f"NER extracted {len(entities)} entities, {len(relations)} relations "
-            f"from text ({len(text)} chars)"
+            f"[add_text] NER done: {len(entities)} entities, {len(relations)} relations"
         )
+
+        # --- Batch embed all texts at once ---
+        entity_summaries = [f"{e['name']} ({e['type']})" for e in entities]
+        fact_texts = [r.get("fact", f"{r['source']} {r['type']} {r['target']}") for r in relations]
+        all_texts_to_embed = entity_summaries + fact_texts
+
+        all_embeddings: list = []
+        if all_texts_to_embed:
+            logger.info(f"[add_text] Batch-embedding {len(all_texts_to_embed)} texts...")
+            try:
+                all_embeddings = self._embedding.embed_batch(all_texts_to_embed)
+            except Exception as e:
+                logger.warning(f"[add_text] Batch embedding failed, falling back to empty: {e}")
+                all_embeddings = [[] for _ in all_texts_to_embed]
+
+        entity_embeddings = all_embeddings[:len(entities)]
+        relation_embeddings = all_embeddings[len(entities):]
+        logger.info(f"[add_text] Embedding done, writing to Neo4j...")
 
         with self._driver.session() as session:
             # Create episode node
@@ -214,18 +232,12 @@ class Neo4jStorage(GraphStorage):
 
             # MERGE entities (upsert by graph_id + name + primary label)
             entity_uuid_map: Dict[str, str] = {}  # name_lower -> uuid
-            for entity in entities:
+            for idx, entity in enumerate(entities):
                 ename = entity["name"]
                 etype = entity["type"]
                 attrs = entity.get("attributes", {})
-
-                # Generate embedding for entity summary
-                summary_text = f"{ename} ({etype})"
-                try:
-                    embedding = self._embedding.embed(summary_text)
-                except Exception as e:
-                    logger.warning(f"Embedding failed for entity '{ename}': {e}")
-                    embedding = []
+                summary_text = entity_summaries[idx]
+                embedding = entity_embeddings[idx] if idx < len(entity_embeddings) else []
 
                 e_uuid = str(uuid.uuid4())
                 entity_uuid_map[ename.lower()] = e_uuid
@@ -266,7 +278,7 @@ class Neo4jStorage(GraphStorage):
                 actual_uuid = self._call_with_retry(session.execute_write, _merge_entity)
                 entity_uuid_map[ename.lower()] = actual_uuid
 
-                # Add entity type label using APOC (or fallback to string query)
+                # Add entity type label
                 if etype and etype != "Entity":
                     try:
                         def _add_label(tx, _name_lower=ename.lower()):
@@ -280,7 +292,7 @@ class Neo4jStorage(GraphStorage):
                         logger.warning(f"Failed to add label '{etype}' to '{ename}': {e}")
 
             # Create relations
-            for relation in relations:
+            for idx, relation in enumerate(relations):
                 source_name = relation["source"]
                 target_name = relation["target"]
                 rtype = relation["type"]
@@ -296,13 +308,7 @@ class Neo4jStorage(GraphStorage):
                     )
                     continue
 
-                # Embed the fact text
-                try:
-                    fact_embedding = self._embedding.embed(fact)
-                except Exception as e:
-                    logger.warning(f"Embedding failed for fact: {e}")
-                    fact_embedding = []
-
+                fact_embedding = relation_embeddings[idx] if idx < len(relation_embeddings) else []
                 r_uuid = str(uuid.uuid4())
 
                 def _create_relation(tx, _r_uuid=r_uuid, _source_uuid=source_uuid,
@@ -340,6 +346,7 @@ class Neo4jStorage(GraphStorage):
 
                 self._call_with_retry(session.execute_write, _create_relation)
 
+        logger.info(f"[add_text] Chunk done: episode={episode_id}")
         return episode_id
 
     def add_text_batch(

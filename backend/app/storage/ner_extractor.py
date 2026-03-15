@@ -29,14 +29,14 @@ RULES:
 6. Be precise — only extract what is explicitly stated or strongly implied in the text.
 
 Return ONLY valid JSON in this exact format:
-{
+{{
   "entities": [
-    {"name": "...", "type": "...", "attributes": {"key": "value"}}
+    {{"name": "...", "type": "...", "attributes": {{"key": "value"}}}}
   ],
   "relations": [
-    {"source": "...", "target": "...", "type": "...", "fact": "..."}
+    {{"source": "...", "target": "...", "type": "...", "fact": "..."}}
   ]
-}"""
+}}"""
 
 _USER_PROMPT = """Extract entities and relations from the following text:
 

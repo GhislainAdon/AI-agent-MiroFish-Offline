@@ -458,13 +458,15 @@ def prepare_simulation():
         use_llm_for_profiles = data.get('use_llm_for_profiles', True)
         parallel_profile_count = data.get('parallel_profile_count', 5)
         
+        # ========== 获取 GraphStorage（在后台任务启动前捕获引用） ==========
+        storage = current_app.extensions.get('neo4j_storage')
+        if not storage:
+            raise ValueError("GraphStorage not initialized — check Neo4j connection")
+
         # ========== 同步获取实体数量（在后台任务启动前） ==========
         # 这样前端在调用prepare后立即就能获取到预期Agent总数
         try:
             logger.info(f"同步获取实体数量: graph_id={state.graph_id}")
-            storage = current_app.extensions.get('neo4j_storage')
-            if not storage:
-                raise ValueError("GraphStorage not initialized")
             reader = EntityReader(storage)
             # 快速读取实体（不需要边信息，只统计数量）
             filtered_preview = reader.filter_defined_entities(
@@ -576,7 +578,8 @@ def prepare_simulation():
                     defined_entity_types=entity_types_list,
                     use_llm_for_profiles=use_llm_for_profiles,
                     progress_callback=progress_callback,
-                    parallel_profile_count=parallel_profile_count
+                    parallel_profile_count=parallel_profile_count,
+                    storage=storage,
                 )
                 
                 # 任务完成

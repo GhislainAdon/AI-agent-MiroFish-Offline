@@ -3,6 +3,8 @@
 使用 GraphStorage (Neo4j) 替代 Zep Cloud API
 """
 
+import time
+import logging
 import threading
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass
@@ -11,6 +13,8 @@ from ..config import Config
 from ..models.task import TaskManager, TaskStatus
 from ..storage import GraphStorage
 from .text_processor import TextProcessor
+
+logger = logging.getLogger('mirofish.graph_builder')
 
 
 @dataclass
@@ -188,11 +192,13 @@ class GraphBuilderService:
         """分批添加文本到图谱，返回所有 episode 的 uuid 列表"""
         episode_uuids = []
         total_chunks = len(chunks)
+        total_batches = (total_chunks + batch_size - 1) // batch_size
+
+        logger.info(f"[graph_build] Starting: {total_chunks} chunks, {total_batches} batches (batch_size={batch_size})")
 
         for i in range(0, total_chunks, batch_size):
             batch_chunks = chunks[i:i + batch_size]
             batch_num = i // batch_size + 1
-            total_batches = (total_chunks + batch_size - 1) // batch_size
 
             if progress_callback:
                 progress = (i + len(batch_chunks)) / total_chunks
@@ -201,15 +207,32 @@ class GraphBuilderService:
                     progress
                 )
 
-            for chunk in batch_chunks:
+            for j, chunk in enumerate(batch_chunks):
+                chunk_idx = i + j + 1
+                chunk_preview = chunk[:80].replace('\n', ' ')
+                logger.info(
+                    f"[graph_build] Chunk {chunk_idx}/{total_chunks} "
+                    f"({len(chunk)} chars): \"{chunk_preview}...\""
+                )
+                t0 = time.time()
                 try:
                     episode_id = self.storage.add_text(graph_id, chunk)
                     episode_uuids.append(episode_id)
+                    elapsed = time.time() - t0
+                    logger.info(
+                        f"[graph_build] Chunk {chunk_idx}/{total_chunks} done in {elapsed:.1f}s"
+                    )
                 except Exception as e:
+                    elapsed = time.time() - t0
+                    logger.error(
+                        f"[graph_build] Chunk {chunk_idx}/{total_chunks} FAILED "
+                        f"after {elapsed:.1f}s: {e}"
+                    )
                     if progress_callback:
                         progress_callback(f"批次 {batch_num} 处理失败: {str(e)}", 0)
                     raise
 
+        logger.info(f"[graph_build] All {total_chunks} chunks processed successfully")
         return episode_uuids
 
     def _get_graph_info(self, graph_id: str) -> GraphInfo:
