@@ -15,21 +15,21 @@
       <section class="hero-section" :style="s.heroSection">
         <div class="hero-left" :style="s.heroLeft">
           <div class="tag-row" :style="s.tagRow">
-            <span class="orange-tag" :style="s.orangeTag">Universal Swarm Intelligence Engine</span>
+            <span class="orange-tag" :style="s.orangeTag">Offline Multi-Agent Simulation Engine</span>
             <span class="version-text" :style="s.versionText">/ v0.1-preview</span>
           </div>
 
           <h1 class="main-title" :style="s.mainTitle">
-            Upload Any Report<br>
-            <span class="gradient-text" :style="s.gradientText">Simulate the Future</span>
+            Upload Any Document<br>
+            <span class="gradient-text" :style="s.gradientText">Predict What Happens Next</span>
           </h1>
 
           <div class="hero-desc" :style="s.heroDesc">
             <p :style="s.heroDescP">
-              Even from a single document, <span :style="s.highlightBold">MiroFish</span> can extract reality seeds and auto-generate a parallel world with up to <span :style="s.highlightOrange">millions of Agents</span>. Inject variables from a god's-eye view and find <span :style="s.highlightCode">"local optima"</span> in complex group interactions under dynamic environments.
+              From a single document, <span :style="s.highlightBold">MiroFish Offline</span> extracts reality seeds and builds a parallel world of <span :style="s.highlightOrange">autonomous AI agents</span> — running entirely on your machine. Inject variables, observe emergent behavior, and find <span :style="s.highlightCode">"local optima"</span> in complex social dynamics.
             </p>
             <p class="slogan-text" :style="s.sloganText">
-              Let the future rehearse among Agents, let decisions win after a hundred battles<span :style="s.blinkingCursor">_</span>
+              Your data never leaves your machine. The future is simulated locally<span :style="s.blinkingCursor">_</span>
             </p>
           </div>
 
@@ -54,17 +54,17 @@
 
           <h2 class="section-title" :style="s.sectionTitle">Ready</h2>
           <p class="section-desc" :style="s.sectionDesc">
-            Prediction engine on standby. Upload unstructured data to initialize a simulation sequence.
+            Local prediction engine on standby. Upload unstructured data to initialize a simulation.
           </p>
 
           <div class="metrics-row" :style="s.metricsRow">
             <div class="metric-card" :style="s.metricCard">
-              <div class="metric-value" :style="s.metricValue">Low Cost</div>
-              <div class="metric-label" :style="s.metricLabel">Avg. $5 per simulation</div>
+              <div class="metric-value" :style="s.metricValue">Free</div>
+              <div class="metric-label" :style="s.metricLabel">Runs on your hardware</div>
             </div>
             <div class="metric-card" :style="s.metricCard">
-              <div class="metric-value" :style="s.metricValue">Scalable</div>
-              <div class="metric-label" :style="s.metricLabel">Up to millions of Agents</div>
+              <div class="metric-value" :style="s.metricValue">Private</div>
+              <div class="metric-label" :style="s.metricLabel">100% offline, no cloud</div>
             </div>
           </div>
 
@@ -123,7 +123,7 @@
               </div>
               <div :style="s.inputWrapper">
                 <textarea v-model="formData.simulationRequirement" :style="s.codeInput" placeholder="// Describe your simulation or prediction goal in natural language" rows="6" :disabled="loading"></textarea>
-                <div :style="s.modelBadge">Engine: MiroFish-V1.0</div>
+                <div :style="s.modelBadge">Engine: Ollama + Neo4j (local)</div>
               </div>
             </div>
 
@@ -218,11 +218,11 @@ const s = reactive({
 })
 
 const steps = [
-  { num: '01', title: 'Graph Build', desc: 'Reality seed extraction & individual/group memory injection & GraphRAG construction' },
-  { num: '02', title: 'Env Setup', desc: 'Entity-relation extraction & persona generation & agent config with simulation parameters' },
-  { num: '03', title: 'Simulation', desc: 'Dual-platform parallel simulation & auto-parse prediction goals & dynamic temporal memory update' },
-  { num: '04', title: 'Report', desc: 'ReportAgent with rich toolset interacts deeply with the post-simulation environment' },
-  { num: '05', title: 'Interaction', desc: 'Chat with any agent from the simulated world & converse with ReportAgent' },
+  { num: '01', title: 'Graph Build', desc: 'Extract reality seeds from your document, build knowledge graph with Neo4j + GraphRAG' },
+  { num: '02', title: 'Env Setup', desc: 'Generate agent personas, configure simulation parameters via local Ollama LLM' },
+  { num: '03', title: 'Simulation', desc: 'Run multi-agent simulation locally with dynamic memory updates and emergent behavior' },
+  { num: '04', title: 'Report', desc: 'ReportAgent analyzes the simulation results and generates a detailed prediction report' },
+  { num: '05', title: 'Interaction', desc: 'Chat with any agent from the simulated world or discuss findings with ReportAgent' },
 ]
 
 const router = useRouter()
