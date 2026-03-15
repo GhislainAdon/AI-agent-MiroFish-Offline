@@ -1091,15 +1091,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Variables */
-:root {
-  --black: #000000;
-  --white: #FFFFFF;
-  --orange: #FF6B35;
-  --gray-light: #F5F5F5;
-  --gray-border: #E0E0E0;
-  --gray-text: #666666;
-}
+/* CSS variables are defined globally in App.vue :root */
 
 .process-page {
   min-height: 100vh;
