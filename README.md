@@ -1,203 +1,218 @@
 <div align="center">
 
-<img src="./static/image/MiroFish_logo_compressed.jpeg" alt="MiroFish Logo" width="75%"/>
+<img src="./static/image/mirofish-offline-banner.png" alt="MiroFish Offline" width="100%"/>
 
-<a href="https://trendshift.io/repositories/16144" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16144" alt="666ghj%2FMiroFish | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+# MiroFish-Offline
 
-简洁通用的群体智能引擎，预测万物
-</br>
-<em>A Simple and Universal Swarm Intelligence Engine, Predicting Anything</em>
+**Fully local fork of [MiroFish](https://github.com/666ghj/MiroFish) — no cloud APIs required. English UI.**
 
-<a href="https://www.shanda.com/" target="_blank"><img src="./static/image/shanda_logo.png" alt="666ghj%2MiroFish | Shanda" height="40"/></a>
+*A multi-agent swarm intelligence engine that simulates public opinion, market sentiment, and social dynamics. Entirely on your hardware.*
 
-[![GitHub Stars](https://img.shields.io/github/stars/666ghj/MiroFish?style=flat-square&color=DAA520)](https://github.com/666ghj/MiroFish/stargazers)
-[![GitHub Watchers](https://img.shields.io/github/watchers/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/watchers)
-[![GitHub Forks](https://img.shields.io/github/forks/666ghj/MiroFish?style=flat-square)](https://github.com/666ghj/MiroFish/network)
+[![GitHub Stars](https://img.shields.io/github/stars/nikmcfly/MiroFish-Offline?style=flat-square&color=DAA520)](https://github.com/nikmcfly/MiroFish-Offline/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/nikmcfly/MiroFish-Offline?style=flat-square)](https://github.com/nikmcfly/MiroFish-Offline/network)
 [![Docker](https://img.shields.io/badge/Docker-Build-2496ED?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/666ghj/MiroFish)
-
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.com/channels/1469200078932545606/1469201282077163739)
-[![X](https://img.shields.io/badge/X-Follow-000000?style=flat-square&logo=x&logoColor=white)](https://x.com/mirofish_ai)
-[![Instagram](https://img.shields.io/badge/Instagram-Follow-E4405F?style=flat-square&logo=instagram&logoColor=white)](https://www.instagram.com/mirofish_ai/)
-
-[English](./README-EN.md) | [中文文档](./README.md)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue?style=flat-square)](./LICENSE)
 
 </div>
 
-## ⚡ 项目概述
+## What is this?
 
-**MiroFish** 是一款基于多智能体技术的新一代 AI 预测引擎。通过提取现实世界的种子信息（如突发新闻、政策草案、金融信号），自动构建出高保真的平行数字世界。在此空间内，成千上万个具备独立人格、长期记忆与行为逻辑的智能体进行自由交互与社会演化。你可透过「上帝视角」动态注入变量，精准推演未来走向——**让未来在数字沙盘中预演，助决策在百战模拟后胜出**。
+MiroFish is a multi-agent simulation engine: upload any document (press release, policy draft, financial report), and it generates hundreds of AI agents with unique personalities that simulate the public reaction on social media. Posts, arguments, opinion shifts — hour by hour.
 
-> 你只需：上传种子材料（数据分析报告或者有趣的小说故事），并用自然语言描述预测需求</br>
-> MiroFish 将返回：一份详尽的预测报告，以及一个可深度交互的高保真数字世界
+The [original MiroFish](https://github.com/666ghj/MiroFish) was built for the Chinese market (Chinese UI, Zep Cloud for knowledge graphs, DashScope API). This fork makes it **fully local and fully English**:
 
-### 我们的愿景
+| Original MiroFish | MiroFish-Offline |
+|---|---|
+| Chinese UI | **English UI** (1,000+ strings translated) |
+| Zep Cloud (graph memory) | **Neo4j Community Edition 5.15** |
+| DashScope / OpenAI API (LLM) | **Ollama** (qwen2.5, llama3, etc.) |
+| Zep Cloud embeddings | **nomic-embed-text** via Ollama |
+| Cloud API keys required | **Zero cloud dependencies** |
 
-MiroFish 致力于打造映射现实的群体智能镜像，通过捕捉个体互动引发的群体涌现，突破传统预测的局限：
+## Workflow
 
-- **于宏观**：我们是决策者的预演实验室，让政策与公关在零风险中试错
-- **于微观**：我们是个人用户的创意沙盘，无论是推演小说结局还是探索脑洞，皆可有趣、好玩、触手可及
+1. **Graph Build** — Extracts entities (people, companies, events) and relationships from your document. Builds a knowledge graph with individual and group memory via Neo4j.
+2. **Env Setup** — Generates hundreds of agent personas, each with unique personality, opinion bias, reaction speed, influence level, and memory of past events.
+3. **Simulation** — Agents interact on simulated social platforms: posting, replying, arguing, shifting opinions. The system tracks sentiment evolution, topic propagation, and influence dynamics in real time.
+4. **Report** — A ReportAgent analyzes the post-simulation environment, interviews a focus group of agents, searches the knowledge graph for evidence, and generates a structured analysis.
+5. **Interaction** — Chat with any agent from the simulated world. Ask them why they posted what they posted. Full memory and personality persists.
 
-从严肃预测到趣味仿真，我们让每一个如果都能看见结果，让预测万物成为可能。
-
-## 🌐 在线体验
-
-欢迎访问在线 Demo 演示环境，体验我们为你准备的一次关于热点舆情事件的推演预测：[mirofish-live-demo](https://666ghj.github.io/mirofish-demo/)
-
-## 📸 系统截图
+## Screenshots
 
 <div align="center">
 <table>
 <tr>
-<td><img src="./static/image/Screenshot/运行截图1.png" alt="截图1" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图2.png" alt="截图2" width="100%"/></td>
+<td><img src="./static/image/Screenshot/运行截图1.png" alt="Screenshot 1" width="100%"/></td>
+<td><img src="./static/image/Screenshot/运行截图2.png" alt="Screenshot 2" width="100%"/></td>
 </tr>
 <tr>
-<td><img src="./static/image/Screenshot/运行截图3.png" alt="截图3" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图4.png" alt="截图4" width="100%"/></td>
+<td><img src="./static/image/Screenshot/运行截图3.png" alt="Screenshot 3" width="100%"/></td>
+<td><img src="./static/image/Screenshot/运行截图4.png" alt="Screenshot 4" width="100%"/></td>
 </tr>
 <tr>
-<td><img src="./static/image/Screenshot/运行截图5.png" alt="截图5" width="100%"/></td>
-<td><img src="./static/image/Screenshot/运行截图6.png" alt="截图6" width="100%"/></td>
+<td><img src="./static/image/Screenshot/运行截图5.png" alt="Screenshot 5" width="100%"/></td>
+<td><img src="./static/image/Screenshot/运行截图6.png" alt="Screenshot 6" width="100%"/></td>
 </tr>
 </table>
 </div>
 
-## 🎬 演示视频
+## Quick Start
 
-### 1. 武汉大学舆情推演预测 + MiroFish项目讲解
+### Prerequisites
 
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1VYBsBHEMY/" target="_blank"><img src="./static/image/武大模拟演示封面.png" alt="MiroFish Demo Video" width="75%"/></a>
+- Docker & Docker Compose (recommended), **or**
+- Python 3.11+, Node.js 18+, Neo4j 5.15+, Ollama
 
-点击图片查看使用微舆BettaFish生成的《武大舆情报告》进行预测的完整演示视频
-</div>
-
-### 2. 《红楼梦》失传结局推演预测
-
-<div align="center">
-<a href="https://www.bilibili.com/video/BV1cPk3BBExq" target="_blank"><img src="./static/image/红楼梦模拟推演封面.jpg" alt="MiroFish Demo Video" width="75%"/></a>
-
-点击图片查看基于《红楼梦》前80回数十万字，MiroFish深度预测失传结局
-</div>
-
-> **金融方向推演预测**、**时政要闻推演预测**等示例陆续更新中...
-
-## 🔄 工作流程
-
-1. **图谱构建**：现实种子提取 & 个体与群体记忆注入 & GraphRAG构建
-2. **环境搭建**：实体关系抽取 & 人设生成 & 环境配置Agent注入仿真参数
-3. **开始模拟**：双平台并行模拟 & 自动解析预测需求 & 动态更新时序记忆
-4. **报告生成**：ReportAgent拥有丰富的工具集与模拟后环境进行深度交互
-5. **深度互动**：与模拟世界中的任意一位进行对话 & 与ReportAgent进行对话
-
-## 🚀 快速开始
-
-### 一、源码部署（推荐）
-
-#### 前置要求
-
-| 工具 | 版本要求 | 说明 | 安装检查 |
-|------|---------|------|---------|
-| **Node.js** | 18+ | 前端运行环境，包含 npm | `node -v` |
-| **Python** | ≥3.11, ≤3.12 | 后端运行环境 | `python --version` |
-| **uv** | 最新版 | Python 包管理器 | `uv --version` |
-
-#### 1. 配置环境变量
+### Option A: Docker (easiest)
 
 ```bash
-# 复制示例配置文件
+git clone https://github.com/nikmcfly/MiroFish-Offline.git
+cd MiroFish-Offline
 cp .env.example .env
 
-# 编辑 .env 文件，填入必要的 API 密钥
+# Start all services (Neo4j, Ollama, MiroFish)
+docker compose up -d
+
+# Pull the required models into Ollama
+docker exec mirofish-ollama ollama pull qwen2.5:32b
+docker exec mirofish-ollama ollama pull nomic-embed-text
 ```
 
-**必需的环境变量：**
+Open `http://localhost:3000` — that's it.
 
-```env
-# LLM API配置（支持 OpenAI SDK 格式的任意 LLM API）
-# 推荐使用阿里百炼平台qwen-plus模型：https://bailian.console.aliyun.com/
-# 注意消耗较大，可先进行小于40轮的模拟尝试
-LLM_API_KEY=your_api_key
-LLM_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-LLM_MODEL_NAME=qwen-plus
+### Option B: Manual
 
-# Zep Cloud 配置
-# 每月免费额度即可支撑简单使用：https://app.getzep.com/
-ZEP_API_KEY=your_zep_api_key
-```
-
-#### 2. 安装依赖
+**1. Start Neo4j**
 
 ```bash
-# 一键安装所有依赖（根目录 + 前端 + 后端）
-npm run setup:all
+docker run -d --name neo4j \
+  -p 7474:7474 -p 7687:7687 \
+  -e NEO4J_AUTH=neo4j/mirofish \
+  neo4j:5.15-community
 ```
 
-或者分步安装：
+**2. Start Ollama & pull models**
 
 ```bash
-# 安装 Node 依赖（根目录 + 前端）
-npm run setup
-
-# 安装 Python 依赖（后端，自动创建虚拟环境）
-npm run setup:backend
+ollama serve &
+ollama pull qwen2.5:32b      # LLM (or qwen2.5:14b for less VRAM)
+ollama pull nomic-embed-text  # Embeddings (768d)
 ```
 
-#### 3. 启动服务
+**3. Configure & run backend**
 
 ```bash
-# 同时启动前后端（在项目根目录执行）
+cp .env.example .env
+# Edit .env if your Neo4j/Ollama are on non-default ports
+
+cd backend
+pip install -r requirements.txt
+python run.py
+```
+
+**4. Run frontend**
+
+```bash
+cd frontend
+npm install
 npm run dev
 ```
 
-**服务地址：**
-- 前端：`http://localhost:3000`
-- 后端 API：`http://localhost:5001`
+Open `http://localhost:3000`.
 
-**单独启动：**
+## Configuration
 
-```bash
-npm run backend   # 仅启动后端
-npm run frontend  # 仅启动前端
-```
-
-### 二、Docker 部署
+All settings are in `.env` (copy from `.env.example`):
 
 ```bash
-# 1. 配置环境变量（同源码部署）
-cp .env.example .env
+# LLM — points to local Ollama (OpenAI-compatible API)
+LLM_API_KEY=ollama
+LLM_BASE_URL=http://localhost:11434/v1
+LLM_MODEL_NAME=qwen2.5:32b
 
-# 2. 拉取镜像并启动
-docker compose up -d
+# Neo4j
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=mirofish
+
+# Embeddings
+EMBEDDING_MODEL=nomic-embed-text
+EMBEDDING_BASE_URL=http://localhost:11434
 ```
 
-默认会读取根目录下的 `.env`，并映射端口 `3000（前端）/5001（后端）`
+Works with any OpenAI-compatible API — swap Ollama for Claude, GPT, or any other provider by changing `LLM_BASE_URL` and `LLM_API_KEY`.
 
-> 在 `docker-compose.yml` 中已通过注释提供加速镜像地址，可按需替换
+## Architecture
 
-## 📬 更多交流
+This fork introduces a clean abstraction layer between the application and the graph database:
 
-<div align="center">
-<img src="./static/image/QQ群.png" alt="QQ交流群" width="60%"/>
-</div>
+```
+┌─────────────────────────────────────────┐
+│              Flask API                   │
+│  graph.py  simulation.py  report.py     │
+└──────────────┬──────────────────────────┘
+               │ app.extensions['neo4j_storage']
+┌──────────────▼──────────────────────────┐
+│           Service Layer                  │
+│  EntityReader  GraphToolsService         │
+│  GraphMemoryUpdater  ReportAgent         │
+└──────────────┬──────────────────────────┘
+               │ storage: GraphStorage
+┌──────────────▼──────────────────────────┐
+│         GraphStorage (abstract)          │
+│              │                            │
+│    ┌─────────▼─────────┐                │
+│    │   Neo4jStorage     │                │
+│    │  ┌───────────────┐ │                │
+│    │  │ EmbeddingService│ ← Ollama       │
+│    │  │ NERExtractor   │ ← Ollama LLM   │
+│    │  │ SearchService  │ ← Hybrid search │
+│    │  └───────────────┘ │                │
+│    └───────────────────┘                │
+└─────────────────────────────────────────┘
+               │
+        ┌──────▼──────┐
+        │  Neo4j CE   │
+        │  5.15       │
+        └─────────────┘
+```
 
-&nbsp;
+**Key design decisions:**
 
-MiroFish团队长期招募全职/实习，如果你对多Agent应用感兴趣，欢迎投递简历至：**mirofish@shanda.com**
+- `GraphStorage` is an abstract interface — swap Neo4j for any other graph DB by implementing one class
+- Dependency injection via Flask `app.extensions` — no global singletons
+- Hybrid search: 0.7 × vector similarity + 0.3 × BM25 keyword search
+- Synchronous NER/RE extraction via local LLM (replaces Zep's async episodes)
+- All original dataclasses and LLM tools (InsightForge, Panorama, Agent Interviews) preserved
 
-## 📄 致谢
+## Hardware Requirements
 
-**MiroFish 得到了盛大集团的战略支持和孵化！**
+| Component | Minimum | Recommended |
+|---|---|---|
+| RAM | 16 GB | 32 GB |
+| VRAM (GPU) | 10 GB (14b model) | 24 GB (32b model) |
+| Disk | 20 GB | 50 GB |
+| CPU | 4 cores | 8+ cores |
 
-MiroFish 的仿真引擎由 **[OASIS](https://github.com/camel-ai/oasis)** 驱动，我们衷心感谢 CAMEL-AI 团队的开源贡献！
+CPU-only mode works but is significantly slower for LLM inference. For lighter setups, use `qwen2.5:14b` or `qwen2.5:7b`.
 
-## 📈 项目统计
+## Use Cases
 
-<a href="https://www.star-history.com/#666ghj/MiroFish&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=666ghj/MiroFish&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=666ghj/MiroFish&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=666ghj/MiroFish&type=date&legend=top-left" />
- </picture>
-</a>
+- **PR crisis testing** — simulate the public reaction to a press release before publishing
+- **Trading signal generation** — feed financial news and observe simulated market sentiment
+- **Policy impact analysis** — test draft regulations against simulated public response
+- **Creative experiments** — someone fed it a classical Chinese novel with a lost ending; the agents wrote a narratively consistent conclusion
+
+## License
+
+AGPL-3.0 — same as the original MiroFish project. See [LICENSE](./LICENSE).
+
+## Credits & Attribution
+
+This is a modified fork of [MiroFish](https://github.com/666ghj/MiroFish) by [666ghj](https://github.com/666ghj), originally supported by [Shanda Group](https://www.shanda.com/). The simulation engine is powered by [OASIS](https://github.com/camel-ai/oasis) from the CAMEL-AI team.
+
+**Modifications in this fork:**
+- Backend migrated from Zep Cloud to local Neo4j CE 5.15 + Ollama
+- Entire frontend translated from Chinese to English (20 files, 1,000+ strings)
+- All Zep references replaced with Neo4j across the UI
+- Rebranded to MiroFish Offline
