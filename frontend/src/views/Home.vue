@@ -4,7 +4,7 @@
     <nav class="navbar" :style="s.navbar">
       <div class="nav-brand" :style="s.navBrand">MIROFISH OFFLINE</div>
       <div class="nav-links" :style="s.navLinks">
-        <a href="https://github.com/666ghj/MiroFish" target="_blank" class="github-link" :style="s.githubLink">
+        <a href="https://github.com/nikmcfly/MiroFish-Offline" target="_blank" class="github-link" :style="s.githubLink">
           Visit our Github <span>↗</span>
         </a>
       </div>
