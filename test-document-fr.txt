@@ -1,0 +1,46 @@
+Rapport d'analyse — Lancement de l'application MiroFish en France
+
+MiroFish est une application innovante d'analyse des reseaux sociaux developpee par la startup TechWave SAS, basee a Paris. Le directeur technique, Alexandre Dupont, a concu l'application pour permettre aux entreprises de suivre le sentiment public sur les plateformes comme Twitter, Reddit et Facebook.
+
+=== Acteurs principaux ===
+
+1. TechWave SAS (Entreprise developpeuse)
+   Fondee par la PDG Sophie Martin et le CTO Alexandre Dupont en 2024. La societe a leve 3 millions d'euros en Serie A aupres du fonds d'investissement Capital Innovation Partners, dirige par Jean-Pierre Leroy.
+
+2. Utilisateurs majeurs :
+   - L'agence de marketing digital BrandPulse France, dirigee par Marie Garcia, utilise MiroFish pour surveiller les campagnes de ses clients.
+   - Le chercheur universitaire Dr. Thomas Bernard de l'Universite Paris-Saclay utilise l'outil pour ses etudes academiques sur les dynamiques sociales.
+   - La restauratrice Lisa Nguyen utilise MiroFish pour suivre la reputation en ligne de sa chaine de restaurants "Le Petit Saigon".
+   - L'ONG Reporters Sans Frontieres, sous la direction de Camille Moreau, evalue l'outil pour detecter les campagnes de desinformation.
+
+3. Concurrents :
+   - SocialTrack Europe, dirigee par le CEO Michael Weber, propose une solution entreprise similaire mais plus couteuse et hebergee dans le cloud.
+   - OpenMetrics France, un projet open-source maintenu par le developpeur communautaire Pierre Duval, offre une alternative gratuite mais limitee.
+
+4. Regulateurs :
+   - La CNIL (Commission Nationale de l'Informatique et des Libertes), sous la presidence de Marie-Claire Fontaine, examine les pratiques de collecte de donnees des outils d'analyse sociale.
+   - Le Parlement Europeen, via le depute rapporteur Hans Mueller, prepare un amendement au Digital Services Act concernant l'agregation de donnees cross-plateforme.
+   - L'Autorite de la Concurrence, dirigee par Philippe Renard, surveille les pratiques anticoncurrentielles dans le secteur de l'analyse de donnees.
+
+5. Couverture mediatique :
+   - Le journaliste Robert Marchand du journal Le Monde a publie une critique positive de l'approche innovante de MiroFish.
+   - La journaliste Anna Petit de BFM Business a couvert la levee de fonds et le potentiel du marche francais.
+   - Le blogueur tech Julien Fabre de FrenchTech Daily a realise un test complet de l'application.
+
+6. Communaute :
+   - Le forum Reddit r/FrenchTech discute activement des fonctionnalites de MiroFish.
+   - L'influenceur Twitter @DataFrance (200K abonnes) a publiquement soutenu l'application.
+   - Le collectif "Ethique et Numerique", preside par le professeur Claire Dubois de Sciences Po, a exprime des reserves sur la surveillance des opinions publiques.
+
+=== Debat public ===
+
+Le debat se cristallise autour de plusieurs axes :
+
+- Les partisans estiment que MiroFish democratise l'analyse sociale pour les PME francaises, permettant aux petites entreprises d'acceder a des outils jusque-la reserves aux grands groupes.
+- Les critiques, notamment le collectif "Ethique et Numerique" et certains deputes europeens, s'inquietent du potentiel de surveillance de masse et de manipulation de l'opinion publique.
+- La CNIL a ouvert une enquete preliminaire pour verifier la conformite de l'application avec le RGPD, notamment sur la question du consentement des utilisateurs dont les donnees publiques sont analysees.
+- Les investisseurs, menes par Jean-Pierre Leroy de Capital Innovation Partners, soulignent le potentiel economique considerable du marche de l'analyse predictive en Europe, estime a 2 milliards d'euros d'ici 2027.
+
+=== Contexte technologique ===
+
+MiroFish utilise des modeles de langage locaux (LLM) via Ollama, une base de donnees graphe Neo4j pour le stockage des connaissances, et le framework OASIS de CAMEL-AI pour la simulation multi-agents. L'ensemble fonctionne entierement en local, sans aucune dependance cloud, ce qui constitue un argument fort en matiere de souverainete numerique et de protection des donnees.
