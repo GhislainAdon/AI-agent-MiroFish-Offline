@@ -1,7 +1,7 @@
 """
-OASIS Simulation Manager
-Manage Twitter and Reddit dual-platform parallel simulations
-Use preset scripts + LLM intelligent generation of config parameters
+Gestionnaire de simulation OASIS.
+Gere les simulations paralleles sur les plateformes Twitter et Reddit.
+Utilise des scripts predefinis et une generation intelligente des parametres par LLM.
 """
 
 import os
@@ -53,25 +53,25 @@ class SimulationState:
     # Status
     status: SimulationStatus = SimulationStatus.CREATED
     
-    # Preparation phase data
+    # Donnees de la phase de preparation
     entities_count: int = 0
     profiles_count: int = 0
     entity_types: List[str] = field(default_factory=list)
     
-    # Config generation information
+    # Informations de generation de configuration
     config_generated: bool = False
     config_reasoning: str = ""
     
-    # Runtime data
+    # Donnees d'execution
     current_round: int = 0
     twitter_status: str = "not_started"
     reddit_status: str = "not_started"
     
-    # Timestamps
+    # Horodatages
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
     
-    # Error message
+    # Message d'erreur
     error: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
@@ -113,36 +113,36 @@ class SimulationState:
 
 class SimulationManager:
     """
-    Simulation Manager
-    
-    Core Functions:
-    1. Read entities from graph and filter
-    2. Generate OASIS Agent Profile
-    3. Use LLM intelligent generation of simulation config parameters
-    4. Prepare all files required by preset scripts
+    Gestionnaire de simulation.
+
+    Fonctions principales:
+    1. Lire et filtrer les entites depuis le graphe.
+    2. Generer les profils agents OASIS.
+    3. Generer par LLM les parametres de configuration de simulation.
+    4. Preparer tous les fichiers requis par les scripts predefinis.
     """
     
-    # Simulation data storage directory
+    # Repertoire de stockage des donnees de simulation
     SIMULATION_DATA_DIR = os.path.join(
         os.path.dirname(__file__), 
         '../../uploads/simulations'
     )
     
     def __init__(self):
-        # Ensure directory exists
+        # Garantir l'existence du repertoire.
         os.makedirs(self.SIMULATION_DATA_DIR, exist_ok=True)
         
-        # In-memory simulation state cache
+        # Cache memoire des etats de simulation.
         self._simulations: Dict[str, SimulationState] = {}
     
     def _get_simulation_dir(self, simulation_id: str) -> str:
-        """Get simulation data directory"""
+        """Retourner le repertoire de donnees de simulation."""
         sim_dir = os.path.join(self.SIMULATION_DATA_DIR, simulation_id)
         os.makedirs(sim_dir, exist_ok=True)
         return sim_dir
     
     def _save_simulation_state(self, state: SimulationState):
-        """Save simulation state to file"""
+        """Enregistrer l'etat de simulation dans un fichier."""
         sim_dir = self._get_simulation_dir(state.simulation_id)
         state_file = os.path.join(sim_dir, "state.json")
         
@@ -154,7 +154,7 @@ class SimulationManager:
         self._simulations[state.simulation_id] = state
     
     def _load_simulation_state(self, simulation_id: str) -> Optional[SimulationState]:
-        """Load simulation state from file"""
+        """Charger l'etat de simulation depuis un fichier."""
         if simulation_id in self._simulations:
             return self._simulations[simulation_id]
         
@@ -198,13 +198,13 @@ class SimulationManager:
         enable_reddit: bool = True,
     ) -> SimulationState:
         """
-        Create new simulation
+        Creer une nouvelle simulation.
         
         Args:
             project_id: Project ID
             graph_id: Graph ID
-            enable_twitter: Whether to enable Twitter simulation
-            enable_reddit: Whether to enable Reddit simulation
+            enable_twitter: active ou non la simulation Twitter.
+            enable_reddit: active ou non la simulation Reddit.
             
         Returns:
             SimulationState
@@ -238,14 +238,14 @@ class SimulationManager:
         storage: 'GraphStorage' = None,
     ) -> SimulationState:
         """
-        Prepare simulation environment (fully automated)
-        
-        Steps:
-        1. Read and filter entities from graph
-        2. Generate OASIS Agent Profile for each entity (optional LLM enhancement, parallel support)
-        3. Use LLM intelligent generation of simulation config parameters (time, activity, speaking frequency, etc.)
-        4. Save config files and Profile files
-        5. Copy preset scripts to simulation directory
+        Preparer l'environnement de simulation de facon entierement automatisee.
+
+        Etapes:
+        1. Lire et filtrer les entites depuis le graphe.
+        2. Generer un profil agent OASIS pour chaque entite.
+        3. Generer par LLM les parametres de simulation: temps, activite, frequence de parole, etc.
+        4. Enregistrer les fichiers de configuration et les profils.
+        5. Laisser les scripts predefinis disponibles pour l'execution.
         
         Args:
             simulation_id: Simulation ID
@@ -269,7 +269,7 @@ class SimulationManager:
             
             sim_dir = self._get_simulation_dir(simulation_id)
             
-            # ========== Phase 1: Read and filter entities ==========
+            # ========== Phase 1: lecture et filtrage des entites ==========
             if progress_callback:
                 progress_callback("reading", 0, "Connecting to graph...")
 
@@ -303,7 +303,7 @@ class SimulationManager:
                 self._save_simulation_state(state)
                 return state
             
-            # ========== Phase 2: Generate Agent Profile ==========
+            # ========== Phase 2: generation des profils agents ==========
             total_entities = len(filtered.entities)
             
             if progress_callback:
@@ -314,7 +314,7 @@ class SimulationManager:
                     total=total_entities
                 )
             
-            # Pass graph_id to enable graph retrieval functionality, get richer context
+            # Transmettre graph_id pour enrichir les profils avec le contexte du graphe.
             generator = OasisProfileGenerator(storage=storage, graph_id=state.graph_id)
             
             def profile_progress(current, total, msg):
@@ -328,7 +328,7 @@ class SimulationManager:
                         item_name=msg
                     )
             
-            # Set real-time save file path (prefer Reddit JSON format)
+            # Definir le fichier d'enregistrement temps reel, avec preference pour le JSON Reddit.
             realtime_output_path = None
             realtime_platform = "reddit"
             if state.enable_reddit:
@@ -350,8 +350,8 @@ class SimulationManager:
             
             state.profiles_count = len(profiles)
             
-            # Save Profile files (Note: Twitter uses CSV format, Reddit uses JSON format)
-            # Reddit has been saved in real-time during generation, save once more here to ensure completeness
+            # Enregistrer les profils: Twitter utilise CSV, Reddit utilise JSON.
+            # Reddit a deja ete enregistre en temps reel; on sauvegarde a nouveau pour garantir la completude.
             if progress_callback:
                 progress_callback(
                     "generating_profiles", 95, 
@@ -368,7 +368,7 @@ class SimulationManager:
                 )
             
             if state.enable_twitter:
-                # Twitter uses CSV format! This is OASIS requirement
+                # Twitter utilise le format CSV: exigence OASIS.
                 generator.save_profiles(
                     profiles=profiles,
                     file_path=os.path.join(sim_dir, "twitter_profiles.csv"),
@@ -383,7 +383,7 @@ class SimulationManager:
                     total=len(profiles)
                 )
             
-            # ========== Phase 3: LLM intelligent generation of simulation config ==========
+            # ========== Phase 3: generation intelligente de la configuration par LLM ==========
             if progress_callback:
                 progress_callback(
                     "generating_config", 0, 
@@ -421,7 +421,7 @@ class SimulationManager:
                     total=3
                 )
             
-            # Save config files
+            # Enregistrer les fichiers de configuration.
             config_path = os.path.join(sim_dir, "simulation_config.json")
             with open(config_path, 'w', encoding='utf-8') as f:
                 f.write(sim_params.to_json())
@@ -437,10 +437,10 @@ class SimulationManager:
                     total=3
                 )
             
-            # Note: Run scripts remain in backend/scripts/ directory, no longer copy to simulation directory
-            # When starting simulation, simulation_runner runs scripts from scripts/ directory
+            # Les scripts d'execution restent dans backend/scripts/.
+            # Au demarrage, simulation_runner execute ces scripts depuis ce repertoire.
             
-            # Update status
+            # Mettre a jour le statut.
             state.status = SimulationStatus.READY
             self._save_simulation_state(state)
             
@@ -459,11 +459,11 @@ class SimulationManager:
             raise
     
     def get_simulation(self, simulation_id: str) -> Optional[SimulationState]:
-        """Get simulation state"""
+        """Recuperer l'etat de simulation."""
         return self._load_simulation_state(simulation_id)
     
     def list_simulations(self, project_id: Optional[str] = None) -> List[SimulationState]:
-        """List all simulations"""
+        """Lister toutes les simulations."""
         simulations = []
         
         if os.path.exists(self.SIMULATION_DATA_DIR):
@@ -481,7 +481,7 @@ class SimulationManager:
         return simulations
     
     def get_profiles(self, simulation_id: str, platform: str = "reddit") -> List[Dict[str, Any]]:
-        """Get Agent Profiles for simulation"""
+        """Recuperer les profils agents d'une simulation."""
         state = self._load_simulation_state(simulation_id)
         if not state:
             raise ValueError(f"Simulation does not exist: {simulation_id}")
@@ -496,7 +496,7 @@ class SimulationManager:
             return json.load(f)
     
     def get_simulation_config(self, simulation_id: str) -> Optional[Dict[str, Any]]:
-        """Get simulation config"""
+        """Recuperer la configuration de simulation."""
         sim_dir = self._get_simulation_dir(simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")
         
@@ -507,7 +507,7 @@ class SimulationManager:
             return json.load(f)
     
     def get_run_instructions(self, simulation_id: str) -> Dict[str, str]:
-        """Get run instructions"""
+        """Recuperer les instructions d'execution."""
         sim_dir = self._get_simulation_dir(simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")
         scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../scripts'))

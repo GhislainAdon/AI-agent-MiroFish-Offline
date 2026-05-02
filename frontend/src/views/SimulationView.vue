@@ -146,13 +146,13 @@ const handleGoBack = () => {
 }
 
 const handleNextStep = (params = {}) => {
-  addLog('Entering Step 3: Simulation')
+  addLog("Entree dans l'etape 3: simulation")
 
   // Log simulation rounds configuration
   if (params.maxRounds) {
     addLog(`Custom simulation rounds: ${params.maxRounds}`)
   } else {
-    addLog('Using auto-configured simulation rounds')
+    addLog('Utilisation du nombre de tours configure automatiquement')
   }
 
   // Build route parameters
@@ -184,7 +184,7 @@ const checkAndStopRunningSimulation = async () => {
     const envStatusRes = await getEnvStatus({ simulation_id: currentSimulationId.value })
 
     if (envStatusRes.success && envStatusRes.data?.env_alive) {
-      addLog('Simulation environment running, shutting down...')
+      addLog("Environnement de simulation actif, fermeture en cours...")
 
       // Try graceful shutdown
       try {
@@ -194,7 +194,7 @@ const checkAndStopRunningSimulation = async () => {
         })
 
         if (closeRes.success) {
-          addLog('✓ Simulation environment closed')
+          addLog('✓ Environnement de simulation ferme')
         } else {
           addLog(`Failed to close simulation env: ${closeRes.error || 'Unknown error'}`)
           // If graceful shutdown fails, try force stop
@@ -226,7 +226,7 @@ const forceStopSimulation = async () => {
   try {
     const stopRes = await stopSimulation({ simulation_id: currentSimulationId.value })
     if (stopRes.success) {
-      addLog('✓ Simulation force stopped')
+      addLog('✓ Simulation arretee de force')
     } else {
       addLog(`Failed to force stop simulation: ${stopRes.error || 'Unknown error'}`)
     }
@@ -237,7 +237,7 @@ const forceStopSimulation = async () => {
 
 const loadSimulationData = async () => {
   try {
-    addLog(`Loading simulation data: ${currentSimulationId.value}`)
+    addLog(`Chargement des donnees de simulation: ${currentSimulationId.value}`)
 
     // Get simulation info
     const simRes = await getSimulation(currentSimulationId.value)
@@ -258,7 +258,7 @@ const loadSimulationData = async () => {
         }
       }
     } else {
-      addLog(`Failed to load simulation data: ${simRes.error || 'Unknown error'}`)
+      addLog(`Echec du chargement des donnees de simulation: ${simRes.error || 'Erreur inconnue'}`)
     }
   } catch (err) {
     addLog(`Load error: ${err.message}`)
@@ -287,7 +287,7 @@ const refreshGraph = () => {
 }
 
 onMounted(async () => {
-  addLog('SimulationView initialized')
+  addLog('Vue de simulation initialisee')
 
   // Check and stop running simulation (when user returns from Step 3)
   await checkAndStopRunningSimulation()

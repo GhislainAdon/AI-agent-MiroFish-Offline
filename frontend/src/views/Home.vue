@@ -220,9 +220,9 @@ const s = reactive({
 const steps = [
   { num: '01', title: 'Graph Build', desc: 'Extract reality seeds from your document, build knowledge graph with Neo4j + GraphRAG' },
   { num: '02', title: 'Env Setup', desc: 'Generate agent personas, configure simulation parameters via local Ollama LLM' },
-  { num: '03', title: 'Simulation', desc: 'Run multi-agent simulation locally with dynamic memory updates and emergent behavior' },
-  { num: '04', title: 'Report', desc: 'ReportAgent analyzes the simulation results and generates a detailed prediction report' },
-  { num: '05', title: 'Interaction', desc: 'Chat with any agent from the simulated world or discuss findings with ReportAgent' },
+  { num: '03', title: 'Simulation', desc: 'Execute la simulation multi-agent en local avec mises a jour dynamiques de la memoire' },
+  { num: '04', title: 'Rapport', desc: 'ReportAgent analyse les resultats de simulation et genere un rapport predictif detaille' },
+  { num: '05', title: 'Interaction', desc: 'Dialogue avec les agents simules ou discute les conclusions avec ReportAgent' },
 ]
 
 const router = useRouter()

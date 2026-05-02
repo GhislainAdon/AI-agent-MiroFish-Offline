@@ -1,6 +1,6 @@
 """
-OASIS Simulation Runner
-Run simulations in the background and record actions for each Agent, supporting real-time status monitoring
+Executeur de simulation OASIS.
+Lance les simulations en arriere-plan, enregistre les actions des agents et expose le suivi temps reel.
 """
 
 import os
@@ -25,15 +25,15 @@ from .simulation_ipc import SimulationIPCClient, CommandType, IPCResponse
 
 logger = get_logger('mirofish.simulation_runner')
 
-# Flag whether cleanup function is registered
+# Indique si la fonction de nettoyage est enregistree.
 _cleanup_registered = False
 
-# Platform detection
+# Detection de plateforme.
 IS_WINDOWS = sys.platform == 'win32'
 
 
 class RunnerStatus(str, Enum):
-    """Runner status"""
+    """Statut de l'executeur."""
     IDLE = "idle"
     STARTING = "starting"
     RUNNING = "running"
@@ -194,37 +194,37 @@ class SimulationRunState:
 
 class SimulationRunner:
     """
-    Simulation Runner
-    
-    Responsible for:
-    1. Running OASIS simulations in background processes
-    2. Parsing run logs and recording actions for each Agent
-    3. Providing real-time status query interfaces
-    4. Supporting pause/stop/resume operations
+    Executeur de simulation.
+
+    Responsabilites:
+    1. Lancer les simulations OASIS dans des processus en arriere-plan.
+    2. Analyser les journaux d'execution et enregistrer les actions de chaque agent.
+    3. Fournir les interfaces de suivi en temps reel.
+    4. Supporter les operations pause, arret et reprise.
     """
     
-    # Storage directory for run state
+    # Repertoire de stockage de l'etat d'execution
     RUN_STATE_DIR = os.path.join(
         os.path.dirname(__file__),
         '../../uploads/simulations'
     )
     
-    # Script directory
+    # Repertoire des scripts
     SCRIPTS_DIR = os.path.join(
         os.path.dirname(__file__),
         '../../scripts'
     )
     
-    # In-memory run state
+    # Etat d'execution en memoire
     _run_states: Dict[str, SimulationRunState] = {}
     _processes: Dict[str, subprocess.Popen] = {}
     _action_queues: Dict[str, Queue] = {}
     _monitor_threads: Dict[str, threading.Thread] = {}
-    _stdout_files: Dict[str, Any] = {}  # Store stdout file handles
-    _stderr_files: Dict[str, Any] = {}  # Store stderr file handles
+    _stdout_files: Dict[str, Any] = {}  # Descripteurs des fichiers stdout
+    _stderr_files: Dict[str, Any] = {}  # Descripteurs des fichiers stderr
     
-    # Graph memory update configuration
-    _graph_memory_enabled: Dict[str, bool] = {}  # simulation_id -> enabled
+    # Configuration de mise a jour de la memoire du graphe
+    _graph_memory_enabled: Dict[str, bool] = {}  # simulation_id -> active
     
     @classmethod
     def get_run_state(cls, simulation_id: str) -> Optional[SimulationRunState]:
@@ -319,7 +319,7 @@ class SimulationRunner:
         storage: 'GraphStorage' = None  # GraphStorage instance (required if enable_graph_memory_update)
     ) -> SimulationRunState:
         """
-        Start simulation
+        Demarrer la simulation.
 
         Args:
             simulation_id: Simulation ID
@@ -407,12 +407,12 @@ class SimulationRunner:
         action_queue = Queue()
         cls._action_queues[simulation_id] = action_queue
         
-        # Start simulation process
+        # Demarrer le processus de simulation.
         try:
             # Build run command with full paths
             # New log structure:
-            #   twitter/actions.jsonl - Twitter action log
-            #   reddit/actions.jsonl  - Reddit action log
+            #   twitter/actions.jsonl - journal d'actions Twitter
+            #   reddit/actions.jsonl  - journal d'actions Reddit
             #   simulation.log        - Main process log
             
             cmd = [
@@ -497,13 +497,13 @@ class SimulationRunner:
         
         try:
             while process.poll() is None:  # Process still running
-                # Read Twitter action log
+                # Lire le journal d'actions Twitter.
                 if os.path.exists(twitter_actions_log):
                     twitter_position = cls._read_action_log(
                         twitter_actions_log, twitter_position, state, "twitter"
                     )
                 
-                # Read Reddit action log
+                # Lire le journal d'actions Reddit.
                 if os.path.exists(reddit_actions_log):
                     reddit_position = cls._read_action_log(
                         reddit_actions_log, reddit_position, state, "reddit"
@@ -911,7 +911,7 @@ class SimulationRunner:
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         actions = []
         
-        # Read Twitter action file (auto-set platform to twitter based on file path)
+        # Lire le fichier d'actions Twitter et definir automatiquement la plateforme.
         twitter_actions_log = os.path.join(sim_dir, "twitter", "actions.jsonl")
         if not platform or platform == "twitter":
             actions.extend(cls._read_actions_from_file(
@@ -922,7 +922,7 @@ class SimulationRunner:
                 round_num=round_num
             ))
         
-        # Read Reddit action file (auto-set platform to reddit based on file path)
+        # Lire le fichier d'actions Reddit et definir automatiquement la plateforme.
         reddit_actions_log = os.path.join(sim_dir, "reddit", "actions.jsonl")
         if not platform or platform == "reddit":
             actions.extend(cls._read_actions_from_file(
@@ -1439,9 +1439,9 @@ class SimulationRunner:
             agent_id: Agent ID
             prompt: Interview question
             platform: Specify platform (optional)
-                - "twitter": only interview Twitter platform
-                - "reddit": only interview Reddit platform
-                - None: interview both platforms simultaneously in dual-platform simulations, return integrated results
+                - "twitter": interroger uniquement Twitter.
+                - "reddit": interroger uniquement Reddit.
+                - None: interroger les deux plateformes en parallele et retourner des resultats integres.
             timeout: Timeout (seconds)
 
         Returns:
@@ -1495,19 +1495,19 @@ class SimulationRunner:
         timeout: float = 120.0
     ) -> Dict[str, Any]:
         """
-        Batch interview multiple Agents
+        Interroger plusieurs agents par lot.
 
         Args:
             simulation_id: Simulation ID
-            interviews: List of interviews, each element contains {"agent_id": int, "prompt": str, "platform": str(optional)}
-            platform: Default platform (optional, overridden by each interview item's platform)
-                - "twitter": default only interview Twitter platform
-                - "reddit": default only interview Reddit platform
-                - None: interview each Agent on both platforms simultaneously in dual-platform simulations
+            interviews: liste d'entretiens, chaque element contient {"agent_id": int, "prompt": str, "platform": str(optionnel)}.
+            platform: plateforme par defaut, surchargee par chaque entree si renseignee.
+                - "twitter": interroger uniquement Twitter par defaut.
+                - "reddit": interroger uniquement Reddit par defaut.
+                - None: interroger chaque agent sur les deux plateformes.
             timeout: Timeout (seconds)
 
         Returns:
-            Batch interview result dict
+            Dictionnaire de resultat des entretiens par lot.
 
         Raises:
             ValueError: Simulation does not exist or environment not running
@@ -1554,7 +1554,7 @@ class SimulationRunner:
         timeout: float = 180.0
     ) -> Dict[str, Any]:
         """
-        Interview all Agents (global interview)
+        Interroger tous les agents avec une question globale.
 
         Interview all Agents in the simulation using the same question
 
@@ -1562,13 +1562,13 @@ class SimulationRunner:
             simulation_id: Simulation ID
             prompt: Interview question (all Agents use the same question)
             platform: Specify platform (optional)
-                - "twitter": only interview Twitter platform
-                - "reddit": only interview Reddit platform
-                - None: interview each Agent on both platforms simultaneously in dual-platform simulations
+                - "twitter": interroger uniquement Twitter.
+                - "reddit": interroger uniquement Reddit.
+                - None: interroger chaque agent sur les deux plateformes.
             timeout: Timeout (seconds)
 
         Returns:
-            Global interview result dict
+            Dictionnaire de resultat de l'entretien global.
         """
         sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
         if not os.path.exists(sim_dir):
@@ -1586,7 +1586,7 @@ class SimulationRunner:
         if not agent_configs:
             raise ValueError(f"No agents in simulation config: {simulation_id}")
 
-        # Build batch interview list
+        # Construire la liste d'entretiens par lot.
         interviews = []
         for agent_config in agent_configs:
             agent_id = agent_config.get("agent_id")
@@ -1612,7 +1612,7 @@ class SimulationRunner:
         timeout: float = 30.0
     ) -> Dict[str, Any]:
         """
-        Close simulation environment (not stop simulation process)
+        Fermer l'environnement de simulation sans arreter brutalement le processus.
         
         Send close environment command to simulation to gracefully exit command wait mode
         
