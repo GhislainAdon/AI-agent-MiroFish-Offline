@@ -47,7 +47,7 @@
         />
       </div>
 
-      <!-- Right Panel: Step5 Interaction -->
+      <!-- Panneau droit: etape 5, interaction -->
       <div class="panel-wrapper right" :style="rightPanelStyle">
         <Step5Interaction
           :reportId="currentReportId"
@@ -110,7 +110,7 @@ const statusClass = computed(() => {
 
 const statusText = computed(() => {
   if (currentStatus.value === 'error') return 'Error'
-  if (currentStatus.value === 'completed') return 'Completed'
+  if (currentStatus.value === 'completed') return 'Termine'
   if (currentStatus.value === 'processing') return 'Processing'
   return 'Ready'
 })
@@ -140,7 +140,7 @@ const toggleMaximize = (target) => {
 // --- Data Logic ---
 const loadReportData = async () => {
   try {
-    addLog(`Loading report data: ${currentReportId.value}`)
+    addLog(`Chargement du rapport: ${currentReportId.value}`)
     
     // Get report info to retrieve simulation_id
     const reportRes = await getReport(currentReportId.value)
@@ -170,7 +170,7 @@ const loadReportData = async () => {
         }
       }
     } else {
-      addLog(`Failed to load report: ${reportRes.error || 'Unknown error'}`)
+      addLog(`Echec du chargement du rapport: ${reportRes.error || 'Erreur inconnue'}`)
     }
   } catch (err) {
     addLog(`Load error: ${err.message}`)
@@ -208,7 +208,7 @@ watch(() => route.params.reportId, (newId) => {
 }, { immediate: true })
 
 onMounted(() => {
-  addLog('InteractionView initialized')
+  addLog('Vue interaction initialisee')
   loadReportData()
 })
 </script>

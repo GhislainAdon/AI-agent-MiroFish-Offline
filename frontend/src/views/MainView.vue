@@ -90,8 +90,8 @@ const router = useRouter()
 const viewMode = ref('split') // graph | split | workbench
 
 // Step State
-const currentStep = ref(1) // 1: Graph Build, 2: Env Setup, 3: Simulation, 4: Report, 5: Interaction
-const stepNames = ['Graph Build', 'Env Setup', 'Simulation', 'Report', 'Interaction']
+const currentStep = ref(1) // 1: Construction du graphe, 2: Preparation, 3: Simulation, 4: Rapport, 5: Interaction
+const stepNames = ['Construction du graphe', 'Preparation', 'Simulation', 'Rapport', 'Interaction']
 
 // Data State
 const currentProjectId = ref(route.params.projectId)
@@ -159,11 +159,11 @@ const toggleMaximize = (target) => {
 const handleNextStep = (params = {}) => {
   if (currentStep.value < 5) {
     currentStep.value++
-    addLog(`Entering Step ${currentStep.value}: ${stepNames[currentStep.value - 1]}`)
+    addLog(`Entree dans l'etape ${currentStep.value}: ${stepNames[currentStep.value - 1]}`)
 
     // If entering Step 3 from Step 2, log simulation round config
     if (currentStep.value === 3 && params.maxRounds) {
-      addLog(`Custom simulation rounds: ${params.maxRounds}`)
+      addLog(`Nombre de tours de simulation personnalise: ${params.maxRounds}`)
     }
   }
 }
@@ -171,7 +171,7 @@ const handleNextStep = (params = {}) => {
 const handleGoBack = () => {
   if (currentStep.value > 1) {
     currentStep.value--
-    addLog(`Back to Step ${currentStep.value}: ${stepNames[currentStep.value - 1]}`)
+    addLog(`Retour a l'etape ${currentStep.value}: ${stepNames[currentStep.value - 1]}`)
   }
 }
 

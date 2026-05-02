@@ -116,7 +116,7 @@ const statusClass = computed(() => {
 
 const statusText = computed(() => {
   if (currentStatus.value === 'error') return 'Error'
-  if (currentStatus.value === 'completed') return 'Completed'
+  if (currentStatus.value === 'completed') return 'Termine'
   return 'Running'
 })
 
@@ -146,7 +146,7 @@ const toggleMaximize = (target) => {
 
 const handleGoBack = async () => {
   // Close running simulation before returning to Step 2
-  addLog('Returning to Step 2, closing simulation...')
+  addLog("Retour a l'etape 2, fermeture de la simulation...")
 
   // Stop polling
   stopGraphRefresh()
@@ -156,18 +156,18 @@ const handleGoBack = async () => {
     const envStatusRes = await getEnvStatus({ simulation_id: currentSimulationId.value })
     
     if (envStatusRes.success && envStatusRes.data?.env_alive) {
-      addLog('Closing simulation environment...')
+      addLog("Fermeture de l'environnement de simulation...")
       try {
         await closeSimulationEnv({
           simulation_id: currentSimulationId.value,
           timeout: 10
         })
-        addLog('✓ Simulation environment closed')
+        addLog('✓ Environnement de simulation ferme')
       } catch (closeErr) {
         addLog(`Failed to close env, force stopping...`)
         try {
           await stopSimulation({ simulation_id: currentSimulationId.value })
-          addLog('✓ Simulation force stopped')
+          addLog('✓ Simulation arretee de force')
         } catch (stopErr) {
           addLog(`Force stop failed: ${stopErr.message}`)
         }
@@ -195,13 +195,13 @@ const handleGoBack = async () => {
 const handleNextStep = () => {
   // Step3Simulation component will handle report generation and routing
   // This method is for backup only
-  addLog('Entering Step 4: Report')
+  addLog("Entree dans l'etape 4: rapport")
 }
 
 // --- Data Logic ---
 const loadSimulationData = async () => {
   try {
-    addLog(`Loading simulation data: ${currentSimulationId.value}`)
+    addLog(`Chargement des donnees de simulation: ${currentSimulationId.value}`)
 
     // Get simulation information
     const simRes = await getSimulation(currentSimulationId.value)
@@ -233,7 +233,7 @@ const loadSimulationData = async () => {
         }
       }
     } else {
-      addLog(`Failed to load simulation data: ${simRes.error || 'Unknown error'}`)
+      addLog(`Echec du chargement des donnees de simulation: ${simRes.error || 'Erreur inconnue'}`)
     }
   } catch (err) {
     addLog(`Load error: ${err.message}`)

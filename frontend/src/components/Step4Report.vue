@@ -1,14 +1,14 @@
 <template>
   <div class="report-panel">
-    <!-- Main Split Layout -->
+    <!-- Mise en page principale en deux panneaux -->
     <div class="main-split-layout">
-      <!-- LEFT PANEL: Report Style -->
+      <!-- Panneau gauche: rendu du rapport -->
       <div class="left-panel report-style" ref="leftPanel">
         <div v-if="reportOutline" class="report-content-wrapper">
-          <!-- Report Header -->
+          <!-- En-tete du rapport -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">Prediction Report</span>
+              <span class="report-tag">Rapport predictif</span>
               <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -16,7 +16,7 @@
             <div class="header-divider"></div>
           </div>
 
-          <!-- Sections List -->
+          <!-- Liste des sections -->
           <div class="sections-list">
             <div 
               v-for="(section, idx) in reportOutline.sections" 
@@ -47,10 +47,10 @@
               </div>
               
               <div class="section-body" v-show="!collapsedSections.has(idx)">
-                <!-- Completed Content -->
+                <!-- Contenu termine -->
                 <div v-if="generatedSections[idx + 1]" class="generated-content" v-html="renderMarkdown(generatedSections[idx + 1])"></div>
                 
-                <!-- Loading State -->
+                <!-- Etat de chargement -->
                 <div v-else-if="currentSectionIndex === idx + 1" class="loading-state">
                   <div class="loading-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -58,25 +58,25 @@
                       <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
                     </svg>
                   </div>
-                  <span class="loading-text">Generating {{ section.title }}...</span>
+                  <span class="loading-text">Generation de {{ section.title }}...</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Waiting State -->
+        <!-- Etat d'attente -->
         <div v-if="!reportOutline" class="waiting-placeholder">
           <div class="waiting-animation">
             <div class="waiting-ring"></div>
             <div class="waiting-ring"></div>
             <div class="waiting-ring"></div>
           </div>
-          <span class="waiting-text">Waiting for Report Agent...</span>
+          <span class="waiting-text">En attente de ReportAgent...</span>
         </div>
       </div>
 
-      <!-- RIGHT PANEL: Workflow Timeline -->
+      <!-- Panneau droit: chronologie du workflow -->
       <div class="right-panel" ref="rightPanel">
         <div class="panel-header" :class="`panel-header--${activeStep.status}`" v-if="!isComplete">
           <span class="header-dot" v-if="activeStep.status === 'active'"></span>
@@ -85,7 +85,7 @@
           <span class="header-meta mono" v-if="activeStep.meta">{{ activeStep.meta }}</span>
         </div>
 
-        <!-- Workflow Overview (flat, status-based palette) -->
+        <!-- Vue d'ensemble du workflow -->
         <div class="workflow-overview" v-if="agentLogs.length > 0 || reportOutline">
           <div class="workflow-metrics">
             <div class="metric">
@@ -93,7 +93,7 @@
               <span class="metric-value mono">{{ completedSections }}/{{ totalSections }}</span>
             </div>
             <div class="metric">
-              <span class="metric-label">Elapsed</span>
+              <span class="metric-label">Ecoule</span>
               <span class="metric-value mono">{{ formatElapsedTime }}</span>
             </div>
             <div class="metric">
@@ -127,9 +127,9 @@
             </div>
           </div>
 
-          <!-- Next Step Button - Show after completion -->
+          <!-- Bouton d'etape suivante, affiche apres completion -->
           <button v-if="isComplete" class="next-step-btn" @click="goToInteraction">
-            <span>Enter Deep Interaction</span>
+            <span>Entrer en interaction avancee</span>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
@@ -147,23 +147,23 @@
               class="timeline-item"
               :class="getTimelineItemClass(log, idx, displayLogs.length)"
             >
-              <!-- Timeline Connector -->
+              <!-- Connecteur de chronologie -->
               <div class="timeline-connector">
                 <div class="connector-dot" :class="getConnectorClass(log, idx, displayLogs.length)"></div>
                 <div class="connector-line" v-if="idx < displayLogs.length - 1"></div>
               </div>
               
-              <!-- Timeline Content -->
+              <!-- Contenu de chronologie -->
               <div class="timeline-content">
                 <div class="timeline-header">
                   <span class="action-label">{{ getActionLabel(log.action) }}</span>
                   <span class="action-time">{{ formatTime(log.timestamp) }}</span>
                 </div>
                 
-                <!-- Action Body - Different for each type -->
+                <!-- Corps de l'action, adapte a chaque type -->
                 <div class="timeline-body" :class="{ 'collapsed': isLogCollapsed(log) }" @click="toggleLogExpand(log)">
                   
-                  <!-- Report Start -->
+                  <!-- Demarrage du rapport -->
                   <template v-if="log.action === 'report_start'">
                     <div class="info-row">
                       <span class="info-key">Simulation</span>
@@ -175,18 +175,18 @@
                     </div>
                   </template>
 
-                  <!-- Planning -->
+                  <!-- Planification -->
                   <template v-if="log.action === 'planning_start'">
                     <div class="status-message planning">{{ log.details?.message }}</div>
                   </template>
                   <template v-if="log.action === 'planning_complete'">
                     <div class="status-message success">{{ log.details?.message }}</div>
                     <div class="outline-badge" v-if="log.details?.outline">
-                      {{ log.details.outline.sections?.length || 0 }} sections planned
+                      {{ log.details.outline.sections?.length || 0 }} sections planifiees
                     </div>
                   </template>
 
-                  <!-- Section Start -->
+                  <!-- Demarrage de section -->
                   <template v-if="log.action === 'section_start'">
                     <div class="section-tag">
                       <span class="tag-num">#{{ log.section_index }}</span>
@@ -194,7 +194,7 @@
                     </div>
                   </template>
                   
-                  <!-- Section Content Generated (Content generated, but entire section may not be complete) -->
+                  <!-- Contenu de section genere, section pas forcement complete -->
                   <template v-if="log.action === 'section_content'">
                     <div class="section-tag content-ready">
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -205,7 +205,7 @@
                     </div>
                   </template>
 
-                  <!-- Section Complete (Section generation complete) -->
+                  <!-- Section terminee -->
                   <template v-if="log.action === 'section_complete'">
                     <div class="section-tag completed">
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -215,7 +215,7 @@
                     </div>
                   </template>
 
-                  <!-- Tool Call -->
+                  <!-- Appel d'outil -->
                   <template v-if="log.action === 'tool_call'">
                     <div class="tool-badge" :class="'tool-' + getToolColor(log.details?.tool_name)">
                       <!-- Deep Insight - Lightbulb -->
@@ -1700,7 +1700,7 @@ const QuickSearchDisplay = {
   }
 }
 
-// Computed
+// Valeurs calculees
 const statusClass = computed(() => {
   if (isComplete.value) return 'completed'
   if (agentLogs.value.length > 0) return 'processing'
@@ -1708,9 +1708,9 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (isComplete.value) return 'Completed'
-  if (agentLogs.value.length > 0) return 'Generating...'
-  return 'Waiting'
+  if (isComplete.value) return 'Termine'
+  if (agentLogs.value.length > 0) return 'Generation...'
+  return 'En attente'
 })
 
 const totalSections = computed(() => {
@@ -1744,7 +1744,7 @@ const displayLogs = computed(() => {
   return agentLogs.value
 })
 
-// Workflow steps overview (status-based, no nested cards)
+// Vue d'ensemble des etapes du workflow.
 const activeSectionIndex = computed(() => {
   if (isComplete.value) return null
   if (currentSectionIndex.value) return currentSectionIndex.value
@@ -1764,35 +1764,35 @@ const isFinalizing = computed(() => {
   return !isComplete.value && isPlanningDone.value && totalSections.value > 0 && completedSections.value >= totalSections.value
 })
 
-// Current active step (for top display)
+// Etape active courante pour l'affichage en haut.
 const activeStep = computed(() => {
   const steps = workflowSteps.value
-  // Find current active step
+  // Trouver l'etape active courante.
   const active = steps.find(s => s.status === 'active')
   if (active) return active
 
-  // If no active, return last done step
+  // Sans etape active, retourner la derniere etape terminee.
   const doneSteps = steps.filter(s => s.status === 'done')
   if (doneSteps.length > 0) return doneSteps[doneSteps.length - 1]
 
-  // Otherwise return first step
-  return steps[0] || { noLabel: '--', title: 'Waiting to start', status: 'todo', meta: '' }
+  // Sinon retourner la premiere etape.
+  return steps[0] || { noLabel: '--', title: 'En attente de demarrage', status: 'todo', meta: '' }
 })
 
 const workflowSteps = computed(() => {
   const steps = []
 
-  // Planning / Outline
+  // Planification / structure
   const planningStatus = isPlanningDone.value ? 'done' : (isPlanningStarted.value ? 'active' : 'todo')
   steps.push({
     key: 'planning',
     noLabel: 'PL',
-    title: 'Planning / Outline',
+    title: 'Planification / structure',
     status: planningStatus,
-    meta: planningStatus === 'active' ? 'IN PROGRESS' : ''
+    meta: planningStatus === 'active' ? 'EN COURS' : ''
   })
 
-  // Sections (if outline exists)
+  // Sections, si la structure existe.
   const sections = reportOutline.value?.sections || []
   sections.forEach((section, i) => {
     const idx = i + 1
@@ -1805,24 +1805,24 @@ const workflowSteps = computed(() => {
       noLabel: String(idx).padStart(2, '0'),
       title: section.title,
       status,
-      meta: status === 'active' ? 'IN PROGRESS' : ''
+      meta: status === 'active' ? 'EN COURS' : ''
     })
   })
 
-  // Complete
+  // Terminaison
   const completeStatus = isComplete.value ? 'done' : (isFinalizing.value ? 'active' : 'todo')
   steps.push({
     key: 'complete',
     noLabel: 'OK',
-    title: 'Complete',
+    title: 'Termine',
     status: completeStatus,
-    meta: completeStatus === 'active' ? 'FINALIZING' : ''
+    meta: completeStatus === 'active' ? 'FINALISATION' : ''
   })
 
   return steps
 })
 
-// Methods
+// Methodes
 const addLog = (msg) => {
   emit('add-log', msg)
 }
@@ -1869,25 +1869,25 @@ const truncateText = (text, maxLen) => {
 const renderMarkdown = (content) => {
   if (!content) return ''
   
-  // Remove leading level-2 headings (## xxx), since section title is already shown in parent
+  // Supprimer les titres ## initiaux: le titre de section est deja affiche par le parent.
   let processedContent = content.replace(/^##\s+.+\n+/, '')
 
-  // Process code blocks
+  // Traiter les blocs de code.
   let html = processedContent.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="code-block"><code>$2</code></pre>')
 
-  // Process inline code
+  // Traiter le code inline.
   html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
 
-  // Process headings
+  // Traiter les titres.
   html = html.replace(/^#### (.+)$/gm, '<h5 class="md-h5">$1</h5>')
   html = html.replace(/^### (.+)$/gm, '<h4 class="md-h4">$1</h4>')
   html = html.replace(/^## (.+)$/gm, '<h3 class="md-h3">$1</h3>')
   html = html.replace(/^# (.+)$/gm, '<h2 class="md-h2">$1</h2>')
 
-  // Process blockquotes
+  // Traiter les citations.
   html = html.replace(/^> (.+)$/gm, '<blockquote class="md-quote">$1</blockquote>')
 
-  // Process lists - supports sub-lists
+  // Traiter les listes, sous-listes incluses.
   html = html.replace(/^(\s*)- (.+)$/gm, (match, indent, text) => {
     const level = Math.floor(indent.length / 2)
     return `<li class="md-li" data-level="${level}">${text}</li>`
@@ -1897,9 +1897,9 @@ const renderMarkdown = (content) => {
     return `<li class="md-oli" data-level="${level}">${text}</li>`
   })
 
-  // Wrap unordered lists
+  // Envelopper les listes non ordonnees.
   html = html.replace(/(<li class="md-li"[^>]*>.*?<\/li>\s*)+/g, '<ul class="md-ul">$&</ul>')
-  // Wrap ordered lists
+  // Envelopper les listes ordonnees.
   html = html.replace(/(<li class="md-oli"[^>]*>.*?<\/li>\s*)+/g, '<ol class="md-ol">$&</ol>')
 
   // Clean whitespace between list items
@@ -1911,22 +1911,22 @@ const renderMarkdown = (content) => {
   html = html.replace(/\s+<\/ul>/g, '</ul>')
   html = html.replace(/\s+<\/ol>/g, '</ol>')
 
-  // Process bold and italic
+  // Traiter le gras et l'italique.
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
   html = html.replace(/_(.+?)_/g, '<em>$1</em>')
 
-  // Process horizontal rules
+  // Traiter les separateurs horizontaux.
   html = html.replace(/^---$/gm, '<hr class="md-hr">')
 
-  // Process line breaks - empty lines become paragraph separators, single newline becomes <br>
+  // Traiter les sauts de ligne: lignes vides en paragraphes, ligne simple en <br>.
   html = html.replace(/\n\n/g, '</p><p class="md-p">')
   html = html.replace(/\n/g, '<br>')
 
-  // Wrap in paragraphs
+  // Envelopper en paragraphes.
   html = '<p class="md-p">' + html + '</p>'
 
-  // Clean empty paragraphs
+  // Nettoyer les paragraphes vides.
   html = html.replace(/<p class="md-p"><\/p>/g, '')
   html = html.replace(/<p class="md-p">(<h[2-5])/g, '$1')
   html = html.replace(/(<\/h[2-5]>)<\/p>/g, '$1')
@@ -2037,11 +2037,11 @@ const fetchAgentLog = async () => {
             currentSectionIndex.value = log.section_index
           }
 
-          // section_complete - Section generation complete
+          // section_complete: generation de section terminee.
           if (log.action === 'section_complete') {
             if (log.details?.content) {
               generatedSections.value[log.section_index] = log.details.content
-              // Auto-expand the newly generated section
+              // Ouvrir automatiquement la section nouvellement generee.
               expandedContent.value.add(log.section_index - 1)
               currentSectionIndex.value = null
             }
@@ -2049,10 +2049,10 @@ const fetchAgentLog = async () => {
           
           if (log.action === 'report_complete') {
             isComplete.value = true
-            currentSectionIndex.value = null  // Ensure loading state is cleared
+            currentSectionIndex.value = null  // Garantir que l'etat de chargement est efface.
             emit('update-status', 'completed')
             stopPolling()
-            // Scroll logic handled uniformly in nextTick after loop
+            // Le scroll est gere uniformement dans nextTick apres la boucle.
           }
           
           if (log.action === 'report_start') {
@@ -2064,7 +2064,7 @@ const fetchAgentLog = async () => {
         
         nextTick(() => {
           if (rightPanel.value) {
-            // If task complete, scroll to top; otherwise scroll to bottom to follow latest logs
+            // Si la tache est terminee, remonter; sinon suivre les derniers journaux.
             if (isComplete.value) {
               rightPanel.value.scrollTop = 0
             } else {
@@ -2075,43 +2075,41 @@ const fetchAgentLog = async () => {
       }
     }
   } catch (err) {
-    console.warn('Failed to fetch agent log:', err)
+    console.warn('Echec de recuperation du journal agent:', err)
   }
 }
 
-// Extract final answer content - extract section content from LLM response
+// Extraire le contenu final depuis la reponse du LLM.
 const extractFinalContent = (response) => {
   if (!response) return null
 
-  // Try to extract content inside <final_answer> tags
+  // Essayer d'extraire le contenu des balises <final_answer>.
   const finalAnswerTagMatch = response.match(/<final_answer>([\s\S]*?)<\/final_answer>/)
   if (finalAnswerTagMatch) {
     return finalAnswerTagMatch[1].trim()
   }
 
-  // Try to find content after "Final Answer:" (supports multiple formats)
-  // Format 1: Final Answer:\n\nContent
-  // Format 2: Final Answer: Content
+  // Chercher le contenu apres "Final Answer:".
   const finalAnswerMatch = response.match(/Final\s*Answer:\s*\n*([\s\S]*)$/i)
   if (finalAnswerMatch) {
     return finalAnswerMatch[1].trim()
   }
 
-  // Try to find content after "Final Content:" or similar variants
+  // Chercher le contenu apres "Final Content:" ou variantes proches.
   const finalContentMatch = response.match(/(?:Final\s*Content|Final\s*Result)[：:]\s*\n*([\s\S]*)$/i)
   if (finalContentMatch) {
     return finalContentMatch[1].trim()
   }
 
-  // If starts with ## or # or >, it might be direct markdown content
+  // Si le contenu commence par ##, # ou >, il peut s'agir de Markdown direct.
   const trimmedResponse = response.trim()
   if (trimmedResponse.match(/^[#>]/)) {
     return trimmedResponse
   }
 
-  // If content is long and contains markdown, try removing thought process
+  // Si le contenu est long et contient du Markdown, retirer l'eventuel raisonnement.
   if (response.length > 300 && (response.includes('**') || response.includes('>'))) {
-    // Remove thought process starting with "Thought:"
+    // Retirer le raisonnement commencant par "Thought:".
     const thoughtMatch = response.match(/^Thought:[\s\S]*?(?=\n\n[^T]|\n\n$)/i)
     if (thoughtMatch) {
       const afterThought = response.substring(thoughtMatch[0].length).trim()
@@ -2145,7 +2143,7 @@ const fetchConsoleLog = async () => {
       }
     }
   } catch (err) {
-    console.warn('Failed to fetch console log:', err)
+    console.warn('Echec de recuperation du journal console:', err)
   }
 }
 
@@ -2170,10 +2168,10 @@ const stopPolling = () => {
   }
 }
 
-// Lifecycle
+// Cycle de vie
 onMounted(() => {
   if (props.reportId) {
-    addLog(`Report Agent initialized: ${props.reportId}`)
+    addLog(`ReportAgent initialise: ${props.reportId}`)
     startPolling()
   }
 })
@@ -2212,7 +2210,7 @@ watch(() => props.reportId, (newId) => {
   overflow: hidden;
 }
 
-/* Main Split Layout */
+/* Mise en page principale en deux panneaux */
 .main-split-layout {
   flex: 1;
   display: flex;

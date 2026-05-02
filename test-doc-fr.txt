@@ -1,0 +1,43 @@
+Rapport d'analyse — Lancement commercial des solutions ioireLMS et univLMS 
+sur le marché de l'éducation en Côte d'Ivoire
+
+ioireLMS est un système de gestion dédié aux écoles et lycées ivoiriens.
+univLMS est un système de gestion dédié aux universités et grandes écoles de Côte d'Ivoire.
+Les deux solutions sont développées par Ghislain Adon, basée à Abidjan.
+
+=== Acteurs principaux à surveiller ===
+
+1. Décideurs institutionnels :
+   - Ministère de l'Éducation Nationale et de l'Alphabétisation (MENA)
+   - Ministère de l'Enseignement Supérieur et de la Recherche Scientifique (MESRS)
+   - Direction des Examens et Concours (DECO)
+   - Directeurs régionaux de l'éducation (DREN)
+   - Chefs d'établissements publics et privés (proviseurs, directeurs)
+   - Présidents et DSI des universités publiques (UVCI, UFHB, INP-HB, UPGC...)
+   - Directeurs des grandes écoles privées (ESATIC, INPHB, HEC Abidjan...)
+
+2. Utilisateurs finaux potentiels :
+   - Enseignants du primaire, secondaire et supérieur
+   - Personnels administratifs des établissements
+   - Étudiants et lycéens
+   - Parents d'élèves
+   - Responsables pédagogiques et coordinateurs
+
+3. Concurrents à monitorer :
+   - Solutions LMS internationales déployées localement (Moodle, Canvas, Google Classroom)
+   - Éditeurs africains de logiciels de gestion scolaire (Apprenant, SchoolVi, Additio...)
+   - Solutions françaises présentes en Afrique francophone (Pronote, EcoleDirecte)
+   - Développeurs locaux ivoiriens proposant des solutions custom
+   - Plateformes e-learning régionales (Kedo, OpenClassrooms Afrique)
+
+4. Régulateurs et cadre institutionnel :
+   - ARTCI (Autorité de Régulation des Télécommunications/TIC de Côte d'Ivoire)
+   - ANSSI-CI — cybersécurité et conformité des systèmes d'information
+   - Agence Nationale du Service Universel des TIC (ANSU)
+   - Direction Générale du Budget — marchés publics et appels d'offres
+   - Autorité Nationale de la Commande Publique (ANRMP)
+
+5. Prescripteurs et influenceurs clés :
+   - Syndicats enseignants ivoiriens (SYNESCI, CODDISCI, FESECI)
+   - Associations de parents d'élèves (FAPEEN)
+   - Communautés tech ivoiriennes

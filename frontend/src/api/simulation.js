@@ -1,7 +1,7 @@
 import service, { requestWithRetry } from './index'
 
 /**
- * Create simulation
+ * Creer une simulation.
  * @param {Object} data - { project_id, graph_id?, enable_twitter?, enable_reddit? }
  */
 export const createSimulation = (data) => {
@@ -9,7 +9,7 @@ export const createSimulation = (data) => {
 }
 
 /**
- * Prepare simulation environment (async task)
+ * Preparer l'environnement de simulation (tache asynchrone).
  * @param {Object} data - { simulation_id, entity_types?, use_llm_for_profiles?, parallel_profile_count?, force_regenerate? }
  */
 export const prepareSimulation = (data) => {
@@ -17,7 +17,7 @@ export const prepareSimulation = (data) => {
 }
 
 /**
- * Query prepare task progress
+ * Consulter la progression de la preparation.
  * @param {Object} data - { task_id?, simulation_id? }
  */
 export const getPrepareStatus = (data) => {
@@ -25,7 +25,7 @@ export const getPrepareStatus = (data) => {
 }
 
 /**
- * Get simulation status
+ * Recuperer le statut de simulation.
  * @param {string} simulationId
  */
 export const getSimulation = (simulationId) => {
@@ -33,7 +33,7 @@ export const getSimulation = (simulationId) => {
 }
 
 /**
- * Get Agent Profiles for simulation
+ * Recuperer les profils agents de la simulation.
  * @param {string} simulationId
  * @param {string} platform - 'reddit' | 'twitter'
  */
@@ -42,7 +42,7 @@ export const getSimulationProfiles = (simulationId, platform = 'reddit') => {
 }
 
 /**
- * Get Agent Profiles being generated in real-time
+ * Recuperer en temps reel les profils agents en cours de generation.
  * @param {string} simulationId
  * @param {string} platform - 'reddit' | 'twitter'
  */
@@ -51,7 +51,7 @@ export const getSimulationProfilesRealtime = (simulationId, platform = 'reddit')
 }
 
 /**
- * Get simulation configuration
+ * Recuperer la configuration de simulation.
  * @param {string} simulationId
  */
 export const getSimulationConfig = (simulationId) => {
@@ -59,16 +59,16 @@ export const getSimulationConfig = (simulationId) => {
 }
 
 /**
- * Get simulation configuration being generated in real-time
+ * Recuperer en temps reel la configuration en cours de generation.
  * @param {string} simulationId
- * @returns {Promise} Returns configuration information containing metadata and config content
+ * @returns {Promise} Informations de configuration, metadonnees et contenu.
  */
 export const getSimulationConfigRealtime = (simulationId) => {
   return service.get(`/api/simulation/${simulationId}/config/realtime`)
 }
 
 /**
- * List all simulations
+ * Lister toutes les simulations.
  * @param {string} projectId - Optional, filter by project ID
  */
 export const listSimulations = (projectId) => {
@@ -77,7 +77,7 @@ export const listSimulations = (projectId) => {
 }
 
 /**
- * Start simulation
+ * Demarrer la simulation.
  * @param {Object} data - { simulation_id, platform?, max_rounds?, enable_graph_memory_update? }
  */
 export const startSimulation = (data) => {
@@ -85,7 +85,7 @@ export const startSimulation = (data) => {
 }
 
 /**
- * Stop simulation
+ * Arreter la simulation.
  * @param {Object} data - { simulation_id }
  */
 export const stopSimulation = (data) => {
@@ -93,7 +93,7 @@ export const stopSimulation = (data) => {
 }
 
 /**
- * Get simulation real-time run status
+ * Recuperer le statut d'execution en temps reel.
  * @param {string} simulationId
  */
 export const getRunStatus = (simulationId) => {
@@ -101,7 +101,7 @@ export const getRunStatus = (simulationId) => {
 }
 
 /**
- * Get simulation detailed run status (including recent actions)
+ * Recuperer le statut detaille d'execution, actions recentes incluses.
  * @param {string} simulationId
  */
 export const getRunStatusDetail = (simulationId) => {
@@ -109,7 +109,7 @@ export const getRunStatusDetail = (simulationId) => {
 }
 
 /**
- * Get posts from simulation
+ * Recuperer les publications de la simulation.
  * @param {string} simulationId
  * @param {string} platform - 'reddit' | 'twitter'
  * @param {number} limit - Number of results
@@ -122,7 +122,7 @@ export const getSimulationPosts = (simulationId, platform = 'reddit', limit = 50
 }
 
 /**
- * Get simulation timeline (summarized by rounds)
+ * Recuperer la chronologie de simulation, resumee par tours.
  * @param {string} simulationId
  * @param {number} startRound - Start round
  * @param {number} endRound - End round
@@ -136,7 +136,7 @@ export const getSimulationTimeline = (simulationId, startRound = 0, endRound = n
 }
 
 /**
- * Get Agent statistics
+ * Recuperer les statistiques des agents.
  * @param {string} simulationId
  */
 export const getAgentStats = (simulationId) => {
@@ -144,7 +144,7 @@ export const getAgentStats = (simulationId) => {
 }
 
 /**
- * Get simulation action history
+ * Recuperer l'historique des actions de simulation.
  * @param {string} simulationId
  * @param {Object} params - { limit, offset, platform, agent_id, round_num }
  */
@@ -153,7 +153,7 @@ export const getSimulationActions = (simulationId, params = {}) => {
 }
 
 /**
- * Close simulation environment (graceful shutdown)
+ * Fermer proprement l'environnement de simulation.
  * @param {Object} data - { simulation_id, timeout? }
  */
 export const closeSimulationEnv = (data) => {
@@ -161,7 +161,7 @@ export const closeSimulationEnv = (data) => {
 }
 
 /**
- * Get simulation environment status
+ * Recuperer le statut de l'environnement de simulation.
  * @param {Object} data - { simulation_id }
  */
 export const getEnvStatus = (data) => {
@@ -169,7 +169,7 @@ export const getEnvStatus = (data) => {
 }
 
 /**
- * Batch interview Agents
+ * Interroger plusieurs agents par lot.
  * @param {Object} data - { simulation_id, interviews: [{ agent_id, prompt }] }
  */
 export const interviewAgents = (data) => {
@@ -177,8 +177,8 @@ export const interviewAgents = (data) => {
 }
 
 /**
- * Get simulation history list (with project details)
- * Used to display historical projects on home page
+ * Recuperer l'historique des simulations avec les details projet.
+ * Utilise pour afficher les projets passes sur la page d'accueil.
  * @param {number} limit - Return count limit
  */
 export const getSimulationHistory = (limit = 20) => {

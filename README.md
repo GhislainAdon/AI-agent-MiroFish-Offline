@@ -31,11 +31,11 @@ The [original MiroFish](https://github.com/666ghj/MiroFish) was built for the Ch
 
 ## Workflow
 
-1. **Graph Build** — Extracts entities (people, companies, events) and relationships from your document. Builds a knowledge graph with individual and group memory via Neo4j.
-2. **Env Setup** — Generates hundreds of agent personas, each with unique personality, opinion bias, reaction speed, influence level, and memory of past events.
-3. **Simulation** — Agents interact on simulated social platforms: posting, replying, arguing, shifting opinions. The system tracks sentiment evolution, topic propagation, and influence dynamics in real time.
-4. **Report** — A ReportAgent analyzes the post-simulation environment, interviews a focus group of agents, searches the knowledge graph for evidence, and generates a structured analysis.
-5. **Interaction** — Chat with any agent from the simulated world. Ask them why they posted what they posted. Full memory and personality persists.
+1. **Construction du graphe** — Extrait les entites (personnes, entreprises, evenements) et les relations depuis vos documents. Construit un graphe de connaissances avec memoire individuelle et collective via Neo4j.
+2. **Preparation de la simulation** — Lit les entites du graphe, genere les profils/personas des agents, puis produit la configuration OASIS adaptee au scenario.
+3. **Execution Twitter/Reddit** — Lance la simulation sur les plateformes sociales simulees: publications, reponses, controverses, changements d'opinion. Le systeme suit en temps reel l'evolution du sentiment, la propagation des sujets et les dynamiques d'influence.
+4. **Rapport** — Un ReportAgent analyse l'environnement post-simulation, interroge un groupe cible d'agents, recherche des preuves dans le graphe de connaissances et genere une analyse structuree.
+5. **Interaction** — Permet de dialoguer avec les agents simules ou avec le ReportAgent pour comprendre les reactions, les memoires et les raisonnements issus de la simulation.
 
 ## Screenshot
 

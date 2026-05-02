@@ -1,9 +1,9 @@
 <template>
   <div class="simulation-panel">
-    <!-- Top Control Bar -->
+    <!-- Barre de controle superieure -->
     <div class="control-bar">
       <div class="status-group">
-        <!-- Twitter Platform Progress -->
+        <!-- Progression de la plateforme Twitter simulee -->
         <div class="platform-status twitter" :class="{ active: runStatus.twitter_running, completed: runStatus.twitter_completed }">
           <div class="platform-header">
             <svg class="platform-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -22,7 +22,7 @@
               <span class="stat-value mono">{{ runStatus.twitter_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span>
             </span>
             <span class="stat">
-              <span class="stat-label">Elapsed Time</span>
+              <span class="stat-label">Temps ecoule</span>
               <span class="stat-value mono">{{ twitterElapsedTime }}</span>
             </span>
             <span class="stat">
@@ -30,9 +30,9 @@
               <span class="stat-value mono">{{ runStatus.twitter_actions_count || 0 }}</span>
             </span>
           </div>
-          <!-- Available Actions Tooltip -->
+          <!-- Infobulle des actions disponibles -->
           <div class="actions-tooltip">
-            <div class="tooltip-title">Available Actions</div>
+            <div class="tooltip-title">Actions disponibles</div>
             <div class="tooltip-actions">
               <span class="tooltip-action">POST</span>
               <span class="tooltip-action">LIKE</span>
@@ -44,7 +44,7 @@
           </div>
         </div>
         
-        <!-- Reddit Platform Progress -->
+        <!-- Progression de la plateforme Reddit simulee -->
         <div class="platform-status reddit" :class="{ active: runStatus.reddit_running, completed: runStatus.reddit_completed }">
           <div class="platform-header">
             <svg class="platform-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -63,7 +63,7 @@
               <span class="stat-value mono">{{ runStatus.reddit_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span>
             </span>
             <span class="stat">
-              <span class="stat-label">Elapsed Time</span>
+              <span class="stat-label">Temps ecoule</span>
               <span class="stat-value mono">{{ redditElapsedTime }}</span>
             </span>
             <span class="stat">
@@ -71,9 +71,9 @@
               <span class="stat-value mono">{{ runStatus.reddit_actions_count || 0 }}</span>
             </span>
           </div>
-          <!-- Available Actions Tooltip -->
+          <!-- Infobulle des actions disponibles -->
           <div class="actions-tooltip">
-            <div class="tooltip-title">Available Actions</div>
+            <div class="tooltip-title">Actions disponibles</div>
             <div class="tooltip-actions">
               <span class="tooltip-action">POST</span>
               <span class="tooltip-action">COMMENT</span>
@@ -97,18 +97,18 @@
           @click="handleNextStep"
         >
           <span v-if="isGeneratingReport" class="loading-spinner-small"></span>
-          {{ isGeneratingReport ? 'Starting...' : 'Start Generating Report' }} 
+          {{ isGeneratingReport ? 'Demarrage...' : 'Generer le rapport' }}
           <span v-if="!isGeneratingReport" class="arrow-icon">→</span>
         </button>
       </div>
     </div>
 
-    <!-- Main Content: Dual Timeline -->
+    <!-- Contenu principal: chronologie double plateforme -->
     <div class="main-content-area" ref="scrollContainer">
-      <!-- Timeline Header -->
+      <!-- En-tete de chronologie -->
       <div class="timeline-header" v-if="allActions.length > 0">
         <div class="timeline-stats">
-          <span class="total-count">TOTAL EVENTS: <span class="mono">{{ allActions.length }}</span></span>
+          <span class="total-count">EVENEMENTS: <span class="mono">{{ allActions.length }}</span></span>
           <span class="platform-breakdown">
             <span class="breakdown-item twitter">
               <svg class="mini-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
@@ -123,7 +123,7 @@
         </div>
       </div>
       
-      <!-- Timeline Feed -->
+      <!-- Fil chronologique -->
       <div class="timeline-feed">
         <div class="timeline-axis"></div>
         
@@ -157,12 +157,12 @@
               </div>
               
               <div class="card-body">
-                <!-- CREATE_POST: Post Publication -->
+                <!-- CREATE_POST: publication -->
                 <div v-if="action.action_type === 'CREATE_POST' && action.action_args?.content" class="content-text main-text">
                   {{ action.action_args.content }}
                 </div>
 
-                <!-- QUOTE_POST: Quote Post -->
+                <!-- QUOTE_POST: citation de publication -->
                 <template v-if="action.action_type === 'QUOTE_POST'">
                   <div v-if="action.action_args?.quote_content" class="content-text">
                     {{ action.action_args.quote_content }}
@@ -170,7 +170,7 @@
                   <div v-if="action.action_args?.original_content" class="quoted-block">
                     <div class="quote-header">
                       <svg class="icon-small" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                      <span class="quote-label">@{{ action.action_args.original_author_name || 'User' }}</span>
+                      <span class="quote-label">@{{ action.action_args.original_author_name || 'Utilisateur' }}</span>
                     </div>
                     <div class="quote-text">
                       {{ truncateContent(action.action_args.original_content, 150) }}
@@ -178,44 +178,44 @@
                   </div>
                 </template>
 
-                <!-- REPOST: Repost -->
+                <!-- REPOST: republication -->
                 <template v-if="action.action_type === 'REPOST'">
                   <div class="repost-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-                    <span class="repost-label">Reposted from @{{ action.action_args?.original_author_name || 'User' }}</span>
+                    <span class="repost-label">Republication de @{{ action.action_args?.original_author_name || 'Utilisateur' }}</span>
                   </div>
                   <div v-if="action.action_args?.original_content" class="repost-content">
                     {{ truncateContent(action.action_args.original_content, 200) }}
                   </div>
                 </template>
 
-                <!-- LIKE_POST: Like Post -->
+                <!-- LIKE_POST: mention j'aime -->
                 <template v-if="action.action_type === 'LIKE_POST'">
                   <div class="like-info">
                     <svg class="icon-small filled" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                    <span class="like-label">Liked @{{ action.action_args?.post_author_name || 'User' }}'s post</span>
+                    <span class="like-label">Aime la publication de @{{ action.action_args?.post_author_name || 'Utilisateur' }}</span>
                   </div>
                   <div v-if="action.action_args?.post_content" class="liked-content">
                     "{{ truncateContent(action.action_args.post_content, 120) }}"
                   </div>
                 </template>
 
-                <!-- CREATE_COMMENT: Create Comment -->
+                <!-- CREATE_COMMENT: creation d'un commentaire -->
                 <template v-if="action.action_type === 'CREATE_COMMENT'">
                   <div v-if="action.action_args?.content" class="content-text">
                     {{ action.action_args.content }}
                   </div>
                   <div v-if="action.action_args?.post_id" class="comment-context">
                     <svg class="icon-small" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                    <span>Reply to post #{{ action.action_args.post_id }}</span>
+                    <span>Reponse a la publication #{{ action.action_args.post_id }}</span>
                   </div>
                 </template>
 
-                <!-- SEARCH_POSTS: Search Posts -->
+                <!-- SEARCH_POSTS: recherche de publications -->
                 <template v-if="action.action_type === 'SEARCH_POSTS'">
                   <div class="search-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <span class="search-label">Search Query:</span>
+                    <span class="search-label">Recherche:</span>
                     <span class="search-query">"{{ action.action_args?.query || '' }}"</span>
                   </div>
                 </template>
@@ -314,7 +314,7 @@ const router = useRouter()
 
 // State
 const isGeneratingReport = ref(false)
-const phase = ref(0) // 0: Not started, 1: Running, 2: Completed
+const phase = ref(0) // 0: non demarree, 1: en cours, 2: terminee
 const isStarting = ref(false)
 const isStopping = ref(false)
 const startError = ref(null)
@@ -376,10 +376,10 @@ const resetAllState = () => {
   stopPolling()  // Stop any existing polling
 }
 
-// Start simulation
+// Demarrer la simulation.
 const doStartSimulation = async () => {
   if (!props.simulationId) {
-    addLog('Error: Missing simulationId')
+    addLog('Erreur: simulationId manquant')
     return
   }
 
@@ -388,7 +388,7 @@ const doStartSimulation = async () => {
 
   isStarting.value = true
   startError.value = null
-  addLog('Starting dual-platform parallel simulation...')
+  addLog('Demarrage de la simulation parallele Twitter/Reddit...')
   emit('update-status', 'processing')
 
   try {
@@ -401,18 +401,18 @@ const doStartSimulation = async () => {
 
     if (props.maxRounds) {
       params.max_rounds = props.maxRounds
-      addLog(`Set max simulation rounds: ${props.maxRounds}`)
+      addLog(`Nombre maximal de tours: ${props.maxRounds}`)
     }
 
-    addLog('Dynamic graph update mode enabled')
+    addLog('Mise a jour dynamique du graphe activee')
 
     const res = await startSimulation(params)
 
     if (res.success && res.data) {
       if (res.data.force_restarted) {
-        addLog('✓ Cleaned old simulation logs and restarted simulation')
+        addLog('✓ Anciens journaux nettoyes, simulation redemarree')
       }
-      addLog('✓ Simulation engine started successfully')
+      addLog('✓ Moteur de simulation demarre')
       addLog(`  ├─ PID: ${res.data.process_pid || '-'}`)
 
       phase.value = 1
@@ -421,13 +421,13 @@ const doStartSimulation = async () => {
       startStatusPolling()
       startDetailPolling()
     } else {
-      startError.value = res.error || 'Start failed'
-      addLog(`✗ Start failed: ${res.error || 'Unknown error'}`)
+      startError.value = res.error || 'Echec du demarrage'
+      addLog(`✗ Echec du demarrage: ${res.error || 'Erreur inconnue'}`)
       emit('update-status', 'error')
     }
   } catch (err) {
     startError.value = err.message
-    addLog(`✗ Start exception: ${err.message}`)
+    addLog(`✗ Exception au demarrage: ${err.message}`)
     emit('update-status', 'error')
   } finally {
     isStarting.value = false
@@ -439,21 +439,21 @@ const handleStopSimulation = async () => {
   if (!props.simulationId) return
 
   isStopping.value = true
-  addLog('Stopping simulation...')
+  addLog('Arret de la simulation...')
 
   try {
     const res = await stopSimulation({ simulation_id: props.simulationId })
 
     if (res.success) {
-      addLog('✓ Simulation stopped')
+      addLog('✓ Simulation arretee')
       phase.value = 2
       stopPolling()
       emit('update-status', 'completed')
     } else {
-      addLog(`Stop failed: ${res.error || 'Unknown error'}`)
+      addLog(`Echec de l'arret: ${res.error || 'Erreur inconnue'}`)
     }
   } catch (err) {
-    addLog(`Stop exception: ${err.message}`)
+    addLog(`Exception pendant l'arret: ${err.message}`)
   } finally {
     isStopping.value = false
   }
@@ -517,9 +517,9 @@ const fetchRunStatus = async () => {
 
       if (isCompleted || platformsCompleted) {
         if (platformsCompleted && !isCompleted) {
-          addLog('✓ Detected all platform simulations have ended')
+          addLog('✓ Toutes les plateformes de simulation sont terminees')
         }
-        addLog('✓ Simulation completed')
+        addLog('✓ Simulation terminee')
         phase.value = 2
         stopPolling()
         emit('update-status', 'completed')
@@ -640,17 +640,17 @@ const formatActionTime = (timestamp) => {
 
 const handleNextStep = async () => {
   if (!props.simulationId) {
-    addLog('Error: Missing simulationId')
+    addLog('Erreur: simulationId manquant')
     return
   }
 
   if (isGeneratingReport.value) {
-    addLog('Report generation request sent, please wait...')
+    addLog('Demande de generation du rapport envoyee, merci de patienter...')
     return
   }
 
   isGeneratingReport.value = true
-  addLog('Starting report generation...')
+  addLog('Demarrage de la generation du rapport...')
 
   try {
     const res = await generateReport({
@@ -660,16 +660,16 @@ const handleNextStep = async () => {
 
     if (res.success && res.data) {
       const reportId = res.data.report_id
-      addLog(`✓ Report generation task started: ${reportId}`)
+      addLog(`✓ Tache de generation du rapport demarree: ${reportId}`)
 
       // Navigate to report page
       router.push({ name: 'Report', params: { reportId } })
     } else {
-      addLog(`✗ Failed to start report generation: ${res.error || 'Unknown error'}`)
+      addLog(`✗ Echec du demarrage du rapport: ${res.error || 'Erreur inconnue'}`)
       isGeneratingReport.value = false
     }
   } catch (err) {
-    addLog(`✗ Report generation exception: ${err.message}`)
+    addLog(`✗ Exception pendant la generation du rapport: ${err.message}`)
     isGeneratingReport.value = false
   }
 }
@@ -685,7 +685,7 @@ watch(() => props.systemLogs?.length, () => {
 })
 
 onMounted(() => {
-  addLog('Step3 Simulation initialization')
+  addLog("Initialisation de l'execution de simulation")
   if (props.simulationId) {
     doStartSimulation()
   }

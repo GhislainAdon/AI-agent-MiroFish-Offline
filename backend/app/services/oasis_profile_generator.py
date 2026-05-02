@@ -1103,7 +1103,7 @@ Important:
                 "user_id": profile.user_id if profile.user_id is not None else idx,  # Key: must include user_id
                 "username": profile.user_name,
                 "name": profile.name,
-                "bio": profile.bio[:150] if profile.bio else f"{profile.name}",
+                "bio": str(profile.bio)[:150] if profile.bio else f"{profile.name}",
                 "persona": profile.persona or f"{profile.name} is a participant in social discussions.",
                 "karma": profile.karma if profile.karma else 1000,
                 "created_at": profile.created_at,

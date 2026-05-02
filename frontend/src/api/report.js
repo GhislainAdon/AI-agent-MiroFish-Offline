@@ -43,7 +43,7 @@ export const getReport = (reportId) => {
 }
 
 /**
- * Chat with Report Agent
+ * Dialoguer avec ReportAgent.
  * @param {Object} data - { simulation_id, message, chat_history? }
  */
 export const chatWithReport = (data) => {

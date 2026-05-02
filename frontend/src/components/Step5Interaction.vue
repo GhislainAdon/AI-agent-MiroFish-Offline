@@ -1,14 +1,14 @@
 <template>
   <div class="interaction-panel">
-    <!-- Main Split Layout -->
+    <!-- Mise en page principale en deux panneaux -->
     <div class="main-split-layout">
-      <!-- LEFT PANEL: Report Style -->
+      <!-- Panneau gauche: rendu du rapport -->
       <div class="left-panel report-style" ref="leftPanel">
         <div v-if="reportOutline" class="report-content-wrapper">
-          <!-- Report Header -->
+          <!-- En-tete du rapport -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">Prediction Report</span>
+              <span class="report-tag">Rapport predictif</span>
               <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -16,7 +16,7 @@
             <div class="header-divider"></div>
           </div>
 
-          <!-- Sections List -->
+          <!-- Liste des sections -->
           <div class="sections-list">
             <div 
               v-for="(section, idx) in reportOutline.sections" 
@@ -47,10 +47,10 @@
               </div>
               
               <div class="section-body" v-show="!collapsedSections.has(idx)">
-                <!-- Completed Content -->
+                <!-- Contenu termine -->
                 <div v-if="generatedSections[idx + 1]" class="generated-content" v-html="renderMarkdown(generatedSections[idx + 1])"></div>
                 
-                <!-- Loading State -->
+                <!-- Etat de chargement -->
                 <div v-else-if="currentSectionIndex === idx + 1" class="loading-state">
                   <div class="loading-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -58,35 +58,35 @@
                       <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
                     </svg>
                   </div>
-                  <span class="loading-text">Generating {{ section.title }}...</span>
+                  <span class="loading-text">Generation de {{ section.title }}...</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Waiting State -->
+        <!-- Etat d'attente -->
         <div v-if="!reportOutline" class="waiting-placeholder">
           <div class="waiting-animation">
             <div class="waiting-ring"></div>
             <div class="waiting-ring"></div>
             <div class="waiting-ring"></div>
           </div>
-          <span class="waiting-text">Waiting for Report Agent...</span>
+          <span class="waiting-text">En attente de ReportAgent...</span>
         </div>
       </div>
 
-      <!-- RIGHT PANEL: Interaction Interface -->
+      <!-- Panneau droit: interface d'interaction -->
       <div class="right-panel" ref="rightPanel">
-        <!-- Unified Action Bar - Professional Design -->
+        <!-- Barre d'action unifiee -->
         <div class="action-bar">
         <div class="action-bar-header">
           <svg class="action-bar-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
           <div class="action-bar-text">
-            <span class="action-bar-title">Interactive Tools</span>
-            <span class="action-bar-subtitle mono">{{ profiles.length }} agents available</span>
+            <span class="action-bar-title">Outils interactifs</span>
+            <span class="action-bar-subtitle mono">{{ profiles.length }} agents disponibles</span>
           </div>
         </div>
           <div class="action-bar-tabs">
@@ -98,7 +98,7 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
               </svg>
-              <span>Chat with Report Agent</span>
+              <span>Dialoguer avec ReportAgent</span>
             </button>
             <div class="agent-dropdown" v-if="profiles.length > 0">
               <button 
@@ -110,13 +110,13 @@
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <span>{{ selectedAgent ? selectedAgent.username : 'Chat with any individual' }}</span>
+                <span>{{ selectedAgent ? selectedAgent.username : 'Dialoguer avec un agent' }}</span>
                 <svg class="dropdown-arrow" :class="{ open: showAgentDropdown }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </button>
               <div v-if="showAgentDropdown" class="dropdown-menu">
-                <div class="dropdown-header">Select conversation target</div>
+                <div class="dropdown-header">Choisir une cible de conversation</div>
                 <div 
                   v-for="(agent, idx) in profiles" 
                   :key="idx"
@@ -126,7 +126,7 @@
                   <div class="agent-avatar">{{ (agent.username || 'A')[0] }}</div>
                   <div class="agent-info">
                     <span class="agent-name">{{ agent.username }}</span>
-                    <span class="agent-role">{{ agent.profession || 'Unknown profession' }}</span>
+                    <span class="agent-role">{{ agent.profession || 'Profession inconnue' }}</span>
                   </div>
                 </div>
               </div>
@@ -141,7 +141,7 @@
                 <path d="M9 11l3 3L22 4"></path>
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
               </svg>
-              <span>Send survey to the world</span>
+              <span>Envoyer un sondage au monde simule</span>
             </button>
           </div>
         </div>
@@ -149,13 +149,13 @@
         <!-- Chat Mode -->
         <div v-if="activeTab === 'chat'" class="chat-container">
 
-          <!-- Report Agent Tools Card -->
+          <!-- Carte des outils ReportAgent -->
           <div v-if="chatTarget === 'report_agent'" class="report-agent-tools-card">
             <div class="tools-card-header">
               <div class="tools-card-avatar">R</div>
               <div class="tools-card-info">
-                <div class="tools-card-name">Report Agent - Chat</div>
-                <div class="tools-card-subtitle">Quick chat version of Report Agent with 4 professional tools, has MiroFish's full memory</div>
+                <div class="tools-card-name">ReportAgent - conversation</div>
+                <div class="tools-card-subtitle">Version conversationnelle de ReportAgent avec 4 outils professionnels et la memoire complete de MiroFish</div>
               </div>
               <button class="tools-card-toggle" @click="showToolsDetail = !showToolsDetail">
                 <svg :class="{ 'is-expanded': showToolsDetail }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -208,15 +208,15 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InterviewSubAgent Virtual Interview</div>
-                    <div class="tool-desc">Autonomous interview, capable of parallel multi-turn conversations with individuals in simulated world, collects unstructured perspective data and psychological states</div>
+                    <div class="tool-name">InterviewSubAgent - entretien virtuel</div>
+                    <div class="tool-desc">Entretien autonome capable de conversations paralleles multi-tours avec les agents du monde simule, pour collecter points de vue et etats psychologiques non structures</div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Agent Profile Card -->
+          <!-- Carte du profil agent -->
           <div v-if="chatTarget === 'agent' && selectedAgent" class="agent-profile-card">
             <div class="profile-card-header">
               <div class="profile-card-avatar">{{ (selectedAgent.username || 'A')[0] }}</div>

@@ -1,12 +1,12 @@
 """
-Report Agent Service
-Generate simulated reports using ReACT pattern (via GraphStorage / Neo4j)
+Service ReportAgent.
+Genere des rapports de simulation avec le pattern ReACT via GraphStorage / Neo4j.
 
-Features:
-1. Generate reports based on simulation requirements and graph information
-2. First plan the outline structure, then generate section by section
-3. Each section uses ReACT multi-round thinking and reflection pattern
-4. Support conversations with users, autonomously call retrieval tools during conversations
+Fonctionnalites:
+1. Generer des rapports a partir des besoins de simulation et des informations du graphe.
+2. Planifier d'abord la structure, puis produire le rapport section par section.
+3. Utiliser ReACT avec raisonnement et reflexion multi-tours pour chaque section.
+4. Permettre les conversations utilisateur avec appels autonomes aux outils de recherche.
 """
 
 import os
@@ -34,18 +34,18 @@ logger = get_logger('mirofish.report_agent')
 
 class ReportLogger:
     """
-    Report Agent Detailed Logger
+    Journal detaille de ReportAgent.
 
-    Generates agent_log.jsonl file in the report folder, recording detailed actions at each step.
-    Each line is a complete JSON object containing timestamp, action type, details, etc.
+    Genere agent_log.jsonl dans le dossier du rapport et enregistre les actions detaillees.
+    Chaque ligne est un objet JSON complet avec horodatage, type d'action et details.
     """
     
     def __init__(self, report_id: str):
         """
-        Initialize the logger
+        Initialiser le journal.
 
         Args:
-            report_id: Report ID, used to determine the log file path
+            report_id: ID du rapport, utilise pour determiner le chemin du fichier de log.
         """
         self.report_id = report_id
         self.log_file_path = os.path.join(
@@ -305,18 +305,18 @@ class ReportLogger:
 
 class ReportConsoleLogger:
     """
-    Report Agent Console Logger
+    Journal console de ReportAgent.
 
-    Writes console-style logs (INFO, WARNING, etc.) to console_log.txt file in the report folder.
-    These logs are different from agent_log.jsonl and are plain text console output.
+    Ecrit les journaux de type console (INFO, WARNING, etc.) dans console_log.txt.
+    Ces journaux sont distincts de agent_log.jsonl et restent en texte brut.
     """
     
     def __init__(self, report_id: str):
         """
-        Initialize console logger
+        Initialiser le journal console.
 
         Args:
-            report_id: Report ID, used to determine the log file path
+            report_id: ID du rapport, utilise pour determiner le chemin du fichier de log.
         """
         self.report_id = report_id
         self.log_file_path = os.path.join(
@@ -327,12 +327,12 @@ class ReportConsoleLogger:
         self._setup_file_handler()
     
     def _ensure_log_file(self):
-        """Ensure the log file directory exists"""
+        """Garantir l'existence du repertoire du fichier de log."""
         log_dir = os.path.dirname(self.log_file_path)
         os.makedirs(log_dir, exist_ok=True)
     
     def _setup_file_handler(self):
-        """Set up file handler to write logs to file"""
+        """Configurer le handler charge d'ecrire les logs dans le fichier."""
         import logging
 
         # Create file handler
@@ -860,27 +860,27 @@ CHAT_OBSERVATION_SUFFIX = "\n\nPlease answer the question concisely."
 
 
 # ═══════════════════════════════════════════════════════════════
-# ReportAgent Main Class
+# Classe principale ReportAgent
 # ═══════════════════════════════════════════════════════════════
 
 
 class ReportAgent:
     """
-    Report Agent - Simulation Report Generation Agent
+    ReportAgent - agent de generation de rapport de simulation.
 
-    Uses ReACT (Reasoning + Acting) pattern:
-    1. Planning Phase: Analyze simulation requirements, plan report outline structure
-    2. Generation Phase: Generate content section by section, each section can call tools multiple times to get information
-    3. Reflection Phase: Check content completeness and accuracy
+    Utilise le pattern ReACT (raisonnement + action):
+    1. Planification: analyser les besoins et structurer le rapport.
+    2. Generation: produire le contenu section par section avec appels d'outils si necessaire.
+    3. Reflexion: verifier la completude et la precision.
     """
     
-    # Maximum tool call count (per section)
+    # Nombre maximal d'appels d'outils par section
     MAX_TOOL_CALLS_PER_SECTION = 5
 
-    # Maximum reflection rounds
+    # Nombre maximal de tours de reflexion
     MAX_REFLECTION_ROUNDS = 3
 
-    # Maximum tool call count in conversation
+    # Nombre maximal d'appels d'outils en conversation
     MAX_TOOL_CALLS_PER_CHAT = 2
     
     def __init__(
@@ -892,14 +892,14 @@ class ReportAgent:
         graph_tools: Optional[GraphToolsService] = None
     ):
         """
-        Initialize Report Agent
+        Initialiser ReportAgent.
 
         Args:
-            graph_id: Graph ID
-            simulation_id: Simulation ID
-            simulation_requirement: Simulation requirement description
-            llm_client: LLM client (optional)
-            graph_tools: Graph tools service (optional, requires external GraphStorage injection)
+            graph_id: ID du graphe.
+            simulation_id: ID de simulation.
+            simulation_requirement: description du besoin de simulation.
+            llm_client: client LLM optionnel.
+            graph_tools: service d'outils graphe optionnel, injecte depuis GraphStorage.
         """
         self.graph_id = graph_id
         self.simulation_id = simulation_id
@@ -1013,7 +1013,7 @@ class ReportAgent:
                 return result.to_text()
             
             elif tool_name == "interview_agents":
-                # Deep interview - call real OASIS interview API to get simulated agent responses (dual platform)
+                # Entretien approfondi: appeler l'API OASIS reelle pour obtenir les reponses des agents simules.
                 interview_topic = parameters.get("interview_topic", parameters.get("query", ""))
                 max_agents = parameters.get("max_agents", 5)
                 if isinstance(max_agents, str):
@@ -1635,11 +1635,11 @@ class ReportAgent:
             
             logger.info(f"outlinesavedtofile: {report_id}/outline.json")
             
-            # Phase 2: Sequentially generate sectionsgeneration (per sectionsave）
+            # Phase 2: generer les sections sequentiellement et les enregistrer une par une.
             report.status = ReportStatus.GENERATING
             
             total_sections = len(outline.sections)
-            generated_sections = []  # savecontentfor context
+            generated_sections = []  # Conserver le contenu genere pour le contexte.
             
             for i, section in enumerate(outline.sections):
                 section_num = i + 1
