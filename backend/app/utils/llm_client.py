@@ -1,7 +1,7 @@
 """
-LLM Client Wrapper
-Unified OpenAI format API calls
-Supports Ollama num_ctx parameter to prevent prompt truncation
+Client LLM (Wrapper)
+Appels API unifiés au format OpenAI
+Prend en charge le paramètre Ollama num_ctx pour éviter la troncature du prompt
 """
 
 import json
@@ -14,7 +14,7 @@ from ..config import Config
 
 
 class LLMClient:
-    """LLM Client"""
+    """Client LLM"""
 
     def __init__(
         self,
@@ -28,7 +28,7 @@ class LLMClient:
         self.model = model or Config.LLM_MODEL_NAME
 
         if not self.api_key:
-            raise ValueError("LLM_API_KEY not configured")
+            raise ValueError("LLM_API_KEY non configurée")
 
         self.client = OpenAI(
             api_key=self.api_key,
@@ -36,12 +36,12 @@ class LLMClient:
             timeout=timeout,
         )
 
-        # Ollama context window size — prevents prompt truncation.
-        # Read from env OLLAMA_NUM_CTX, default 8192 (Ollama default is only 2048).
+        # Taille de la fenêtre de contexte Ollama — empêche la troncature du prompt.
+        # Lu depuis la variable d'environnement OLLAMA_NUM_CTX, par défaut 8192 (la valeur par défaut d'Ollama est seulement 2048).
         self._num_ctx = int(os.environ.get('OLLAMA_NUM_CTX', '8192'))
 
     def _is_ollama(self) -> bool:
-        """Check if we're talking to an Ollama server."""
+        """Vérifier si nous communiquons avec un serveur Ollama."""
         return '11434' in (self.base_url or '')
 
     def chat(
@@ -52,16 +52,16 @@ class LLMClient:
         response_format: Optional[Dict] = None
     ) -> str:
         """
-        Send chat request
+        Envoyer une requête de chat
 
         Args:
-            messages: Message list
-            temperature: Temperature parameter
-            max_tokens: Max token count
-            response_format: Response format (e.g., JSON mode)
+            messages: Liste de messages
+            temperature: Paramètre de température
+            max_tokens: Nombre maximal de jetons
+            response_format: Format de réponse (par ex. mode JSON)
 
         Returns:
-            Model response text
+            Texte de réponse du modèle
         """
         kwargs = {
             "model": self.model,
@@ -73,7 +73,7 @@ class LLMClient:
         if response_format:
             kwargs["response_format"] = response_format
 
-        # For Ollama: pass num_ctx via extra_body to prevent prompt truncation
+        # Pour Ollama : passer num_ctx via extra_body pour éviter la troncature du prompt
         if self._is_ollama() and self._num_ctx:
             kwargs["extra_body"] = {
                 "options": {"num_ctx": self._num_ctx}
@@ -81,8 +81,8 @@ class LLMClient:
 
         response = self.client.chat.completions.create(**kwargs)
         content = response.choices[0].message.content
-        # Some models (like MiniMax M2.5) include <think>thinking content in response, need to remove
-        content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
+        # Certains modèles (comme MiniMax M2.5) incluent du contenu de réflexion dans la réponse, il faut le supprimer
+        content = re.sub(r'<think\>[\s\S]*?\</think\>', '', content).strip()
         return content
 
     def chat_json(
@@ -92,15 +92,15 @@ class LLMClient:
         max_tokens: int = 4096
     ) -> Dict[str, Any]:
         """
-        Send chat request and return JSON
+        Envoyer une requête de chat et retourner du JSON
 
         Args:
-            messages: Message list
-            temperature: Temperature parameter
-            max_tokens: Max token count
+            messages: Liste de messages
+            temperature: Paramètre de température
+            max_tokens: Nombre maximal de jetons
 
         Returns:
-            Parsed JSON object
+            Objet JSON analysé
         """
         response = self.chat(
             messages=messages,
@@ -108,7 +108,7 @@ class LLMClient:
             max_tokens=max_tokens,
             response_format={"type": "json_object"}
         )
-        # Clean markdown code block markers
+        # Nettoyer les marqueurs de bloc de code markdown
         cleaned_response = response.strip()
         cleaned_response = re.sub(r'^```(?:json)?\s*\n?', '', cleaned_response, flags=re.IGNORECASE)
         cleaned_response = re.sub(r'\n?```\s*$', '', cleaned_response)
@@ -117,4 +117,4 @@ class LLMClient:
         try:
             return json.loads(cleaned_response)
         except json.JSONDecodeError:
-            raise ValueError(f"Invalid JSON format from LLM: {cleaned_response}")
+            raise ValueError(f"Format JSON invalide provenant du LLM : {cleaned_response}")

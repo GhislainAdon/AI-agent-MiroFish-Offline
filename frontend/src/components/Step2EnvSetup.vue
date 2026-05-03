@@ -9,7 +9,7 @@
             <span class="step-title">Initialisation de l'instance de simulation</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 0" class="badge success">Termine</span>
+            <span v-if="phase > 0" class="badge success">Terminé</span>
             <span v-else class="badge processing">Initialisation</span>
           </div>
         </div>
@@ -17,7 +17,7 @@
         <div class="card-content">
           <p class="api-note">POST /api/simulation/create</p>
           <p class="description">
-            Cree une nouvelle instance de simulation et recupere le modele de parametres du monde simule.
+            Crée une nouvelle instance de simulation et récupère le modèle de paramètres du monde simulé.
           </p>
 
           <div v-if="simulationId" class="info-card">
@@ -34,8 +34,8 @@
               <span class="info-value mono">{{ simulationId }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">ID tache</span>
-              <span class="info-value mono">{{ taskId || 'Tache asynchrone terminee' }}</span>
+              <span class="info-label">ID tâche</span>
+              <span class="info-value mono">{{ taskId || 'Tâche asynchrone terminée' }}</span>
             </div>
           </div>
         </div>
@@ -46,10 +46,10 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">02</span>
-            <span class="step-title">Generer les profils agents</span>
+            <span class="step-title">Générer les profils d'agents</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 1" class="badge success">Termine</span>
+            <span v-if="phase > 1" class="badge success">Terminé</span>
             <span v-else-if="phase === 1" class="badge processing">{{ prepareProgress }}%</span>
             <span v-else class="badge pending">En attente</span>
           </div>
@@ -58,14 +58,14 @@
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            Lit les entites et relations du graphe de connaissances, initialise les individus simules, puis leur attribue des comportements et des memoires propres au contexte fourni.
+            Lit les entités et les relations du graphe de connaissances, initialise les individus simulés, puis leur attribue des comportements et des mémoires propres au contexte fourni.
           </p>
 
           <!-- Statistiques des profils -->
           <div v-if="profiles.length > 0" class="stats-grid">
             <div class="stat-card">
               <span class="stat-value">{{ profiles.length }}</span>
-              <span class="stat-label">Agents generes</span>
+              <span class="stat-label">Agents générés</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ expectedTotal || '-' }}</span>
@@ -73,14 +73,14 @@
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ totalTopicsCount }}</span>
-              <span class="stat-label">Sujets lies au contexte</span>
+              <span class="stat-label">Sujets liés au contexte</span>
             </div>
           </div>
 
           <!-- Apercu des profils -->
           <div v-if="profiles.length > 0" class="profiles-preview">
             <div class="preview-header">
-              <span class="preview-title">Profils agents generes</span>
+              <span class="preview-title">Profils d'agents générés</span>
             </div>
             <div class="profiles-list">
               <div 
@@ -96,7 +96,7 @@
                 <div class="profile-meta">
                   <span class="profile-profession">{{ profile.profession || 'Profession inconnue' }}</span>
                 </div>
-                <p class="profile-bio">{{ profile.bio || 'Aucune presentation disponible' }}</p>
+                <p class="profile-bio">{{ profile.bio || 'Aucune présentation disponible' }}</p>
                 <div v-if="profile.interested_topics?.length" class="profile-topics">
                   <span 
                     v-for="topic in profile.interested_topics.slice(0, 3)" 
@@ -118,10 +118,10 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">03</span>
-            <span class="step-title">Generer la configuration Twitter/Reddit</span>
+            <span class="step-title">Générer la configuration Twitter/Reddit</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 2" class="badge success">Termine</span>
+            <span v-if="phase > 2" class="badge success">Terminé</span>
             <span v-else-if="phase === 2" class="badge processing">Generation</span>
             <span v-else class="badge pending">En attente</span>
           </div>
@@ -130,7 +130,7 @@
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            Le LLM utilise le besoin de simulation et le contexte source pour regler la temporalite, les algorithmes de recommandation, les periodes d'activite, la frequence de parole et les declencheurs d'evenements.
+            Le LLM utilise le besoin de simulation et le contexte source pour régler la temporalité, les algorithmes de recommandation, les périodes d'activité, la fréquence de parole et les déclencheurs d'événements.
           </p>
           
           <!-- Config Preview -->
@@ -139,16 +139,16 @@
             <div class="config-block">
               <div class="config-grid">
                 <div class="config-item">
-                  <span class="config-item-label">Duree de simulation</span>
+                  <span class="config-item-label">Durée de simulation</span>
                   <span class="config-item-value">{{ simulationConfig.time_config?.total_simulation_hours || '-' }} heures</span>
                 </div>
                 <div class="config-item">
-                  <span class="config-item-label">Duree par tour</span>
-                  <span class="config-item-value">{{ simulationConfig.time_config?.minutes_per_round || '-' }} minutes</span>
+                  <span class="config-item-label">Durée par tour</span>
+                  <span class="config-item-value">{{ simulationConfig.time_config?. minutes_per_round || '-' }}  minutes</span>
                 </div>
                 <div class="config-item">
                   <span class="config-item-label">Nombre total de tours</span>
-                  <span class="config-item-value">{{ Math.floor((simulationConfig.time_config?.total_simulation_hours * 60 / simulationConfig.time_config?.minutes_per_round)) || '-' }} tours</span>
+                  <span class="config-item-value">{{ Math.floor((simulationConfig.time_config?.total_simulation_hours * 60 / simulationConfig.time_config?. minutes_per_round)) || '-' }} tours</span>
                 </div>
                 <div class="config-item">
                   <span class="config-item-label">Actifs par heure</span>
@@ -157,7 +157,7 @@
               </div>
               <div class="time-periods">
                 <div class="period-item">
-                  <span class="period-label">Periode de pic</span>
+                  <span class="period-label">Période de pic</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.peak_hours?.join(':00, ') }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.peak_activity_multiplier }}</span>
                 </div>
@@ -172,7 +172,7 @@
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.morning_activity_multiplier }}</span>
                 </div>
                 <div class="period-item">
-                  <span class="period-label">Periode creuse</span>
+                  <span class="period-label">Période creuse</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.off_peak_hours?.[0] }}:00-{{ simulationConfig.time_config?.off_peak_hours?.slice(-1)[0] }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.off_peak_activity_multiplier }}</span>
                 </div>
@@ -205,7 +205,7 @@
                   
                   <!-- Chronologie d'activite -->
                   <div class="agent-timeline">
-                    <span class="timeline-label">Periode active</span>
+                    <span class="timeline-label">Période active</span>
                     <div class="mini-timeline">
                       <div 
                         v-for="hour in 24" 
@@ -236,13 +236,13 @@
                         <span class="param-value">{{ agent.comments_per_hour }}</span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">Delai de reponse</span>
+                        <span class="param-label">Délai de réponse</span>
                         <span class="param-value">{{ agent.response_delay_min }}-{{ agent.response_delay_max }}min</span>
                       </div>
                     </div>
                     <div class="param-group">
                       <div class="param-item">
-                        <span class="param-label">Niveau d'activite</span>
+                        <span class="param-label">Niveau d'activité</span>
                         <span class="param-value with-bar">
                           <span class="mini-bar" :style="{ width: (agent.activity_level * 100) + '%' }"></span>
                           {{ (agent.activity_level * 100).toFixed(0) }}%
@@ -267,59 +267,59 @@
             <!-- Platform configuration -->
             <div class="config-block">
               <div class="config-block-header">
-                <span class="config-block-title">Recommendation algorithm configuration</span>
+                <span class="config-block-title">Configuration de l'algorithme de recommandation</span>
               </div>
               <div class="platforms-grid">
                 <div v-if="simulationConfig.twitter_config" class="platform-card">
                   <div class="platform-card-header">
-                    <span class="platform-name">Platform 1：Square / Information flow</span>
+                    <span class="platform-name">Plateforme 1 : Place publique / Flux d'information</span>
                   </div>
                   <div class="platform-params">
                     <div class="param-row">
-                      <span class="param-label">Time weight</span>
+                      <span class="param-label">Poids temporel</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.recency_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">Popularity weight</span>
+                      <span class="param-label">Poids de popularité</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.popularity_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">Relevance weight</span>
+                      <span class="param-label">Poids de pertinence</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.relevance_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">Virus threshold</span>
+                      <span class="param-label">Seuil de viralité</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.viral_threshold }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">Echo chamber strength</span>
+                      <span class="param-label">Force de la chambre d'écho</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.echo_chamber_strength }}</span>
                     </div>
                   </div>
                 </div>
                 <div v-if="simulationConfig.reddit_config" class="platform-card">
                   <div class="platform-card-header">
-                    <span class="platform-name">Platform 2：Topic / Community</span>
+                    <span class="platform-name">Plateforme 2 : Sujets / Communauté</span>
                   </div>
                   <div class="platform-params">
                     <div class="param-row">
-                      <span class="param-label">Time weight</span>
+                      <span class="param-label">Poids temporel</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.recency_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">Popularity weight</span>
+                      <span class="param-label">Poids de popularité</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.popularity_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">Relevance weight</span>
+                      <span class="param-label">Poids de pertinence</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.relevance_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">Virus threshold</span>
+                      <span class="param-label">Seuil de viralité</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.viral_threshold }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">Echo chamber strength</span>
+                      <span class="param-label">Force de la chambre d'écho</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.echo_chamber_strength }}</span>
                     </div>
                   </div>
@@ -327,10 +327,10 @@
               </div>
             </div>
 
-            <!-- LLM Configuration inference -->
+            <!-- Inférence de configuration LLM -->
             <div v-if="simulationConfig.generation_reasoning" class="config-block">
               <div class="config-block-header">
-                <span class="config-block-title">LLM Configuration inference</span>
+                <span class="config-block-title">Inférence de configuration LLM</span>
               </div>
               <div class="reasoning-content">
                 <div 
@@ -346,24 +346,24 @@
         </div>
       </div>
 
-      <!-- Step 04: Initial activation arrangement -->
+      <!-- Step 04: Arrangement d'activation initiale -->
       <div class="step-card" :class="{ 'active': phase === 3, 'completed': phase > 3 }">
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">04</span>
-            <span class="step-title">Initial activation arrangement</span>
+            <span class="step-title">Arrangement d'activation initiale</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 3" class="badge success">Completed</span>
-            <span v-else-if="phase === 3" class="badge processing">Arranging</span>
-            <span v-else class="badge pending">Waiting</span>
+            <span v-if="phase > 3" class="badge success">Terminé</span>
+            <span v-else-if="phase === 3" class="badge processing">Arrangement</span>
+            <span v-else class="badge pending">En attente</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            Based on narrative direction，Automatically generate initial activation events and trending topics，Guide the initial state of the simulated world
+            Basé sur la direction narrative, génère automatiquement les événements d'activation initiaux et les sujets tendance, guide l'état initial du monde simulé
           </p>
 
           <div v-if="simulationConfig?.event_config" class="orchestration-content">
@@ -380,14 +380,14 @@
                     </linearGradient>
                   </defs>
                 </svg>
-                Narrative Guidance Direction
+                Direction narrative guidée
               </span>
               <p class="narrative-text">{{ simulationConfig.event_config.narrative_direction }}</p>
             </div>
 
             <!-- Trending Topics -->
             <div class="topics-section">
-              <span class="box-label">Initial trending topics</span>
+              <span class="box-label">Sujets tendance initiaux</span>
               <div class="hot-topics-grid">
                 <span v-for="topic in simulationConfig.event_config.hot_topics" :key="topic" class="hot-topic-tag">
                   # {{ topic }}
@@ -397,7 +397,7 @@
 
             <!-- Initial post stream -->
             <div class="initial-posts-section">
-              <span class="box-label">Initial activation sequence ({{ simulationConfig.event_config.initial_posts.length }})</span>
+              <span class="box-label">Séquence d'activation initiale ({{ simulationConfig.event_config.initial_posts.length }})</span>
               <div class="posts-timeline">
                 <div v-for="(post, idx) in simulationConfig.event_config.initial_posts" :key="idx" class="timeline-item">
                   <div class="timeline-marker"></div>
@@ -418,34 +418,34 @@
         </div>
       </div>
 
-      <!-- Step 05: Preparation completed -->
+      <!-- Step 05: Préparation terminée -->
       <div class="step-card" :class="{ 'active': phase === 4 }">
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">05</span>
-            <span class="step-title">Preparation completed</span>
+            <span class="step-title">Préparation terminée</span>
           </div>
           <div class="step-status">
-            <span v-if="phase >= 4" class="badge processing">In progress</span>
-            <span v-else class="badge pending">Waiting</span>
+            <span v-if="phase >= 4" class="badge processing">En cours</span>
+            <span v-else class="badge pending">En attente</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/start</p>
-          <p class="description">Simulation environment preparation completed，Can start running simulation</p>
+          <p class="description">La préparation de l'environnement de simulation est terminée, la simulation peut être démarrée</p>
           
           <!-- Simulation Rounds Configuration - Only show after configuration generation is completed and rounds are calculated -->
           <div v-if="simulationConfig && autoGeneratedRounds" class="rounds-config-section">
             <div class="rounds-header">
               <div class="header-left">
-                <span class="section-title">Simulation Rounds Setting</span>
-                <span class="section-desc">MiroFish Automatically plan and infer reality <span class="desc-highlight">{{ simulationConfig?.time_config?.total_simulation_hours || '-' }}</span> hours，Each round represents reality <span class="desc-highlight">{{ simulationConfig?.time_config?.minutes_per_round || '-' }}</span> minutes time elapsed</span>
+                <span class="section-title">Configuration des tours de simulation</span>
+                <span class="section-desc">MiroFish planifie et infère automatiquement la réalité <span class="desc-highlight">{{ simulationConfig?.time_config?.total_simulation_hours || '-' }}</span>  heures, chaque tour représente <span class="desc-highlight">{{ simulationConfig?.time_config?. minutes_per_round || '-' }}</span>   minutes de temps écoulé</span>
               </div>
               <label class="switch-control">
                 <input type="checkbox" v-model="useCustomRounds">
                 <span class="switch-track"></span>
-                <span class="switch-label">Custom</span>
+                <span class="switch-label">Personnalisé</span>
               </label>
             </div>
             
@@ -454,10 +454,10 @@
                 <div class="slider-display">
                   <div class="slider-main-value">
                     <span class="val-num">{{ customMaxRounds }}</span>
-                    <span class="val-unit">rounds</span>
+                    <span class="val-unit">tours</span>
                   </div>
                   <div class="slider-meta-info">
-                    <span>IfAgentScale is100：Estimated time approximately {{ Math.round(customMaxRounds * 0.6) }} minutes</span>
+                    <span>Si l'échelle de l'agent est de 100 : temps estimé environ {{ Math.round(customMaxRounds * 0.6) }}  minutes</span>
                   </div>
                 </div>
 
@@ -478,7 +478,7 @@
                       :class="{ active: customMaxRounds === 40 }"
                       @click="customMaxRounds = 40"
                       :style="{ position: 'absolute', left: `calc(${(40 - 10) / (autoGeneratedRounds - 10) * 100}% - 30px)` }"
-                    >40 (Recommendation)</span>
+                    >40 (Recommandé)</span>
                     <span>{{ autoGeneratedRounds }}</span>
                   </div>
                 </div>
@@ -488,7 +488,7 @@
                 <div class="auto-info-card">
                   <div class="auto-value">
                     <span class="val-num">{{ autoGeneratedRounds }}</span>
-                    <span class="val-unit">rounds</span>
+                    <span class="val-unit">tours</span>
                   </div>
                   <div class="auto-content">
                     <div class="auto-meta-row">
@@ -497,7 +497,7 @@
                           <circle cx="12" cy="12" r="10"></circle>
                           <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        IfAgentScale is100：Estimated time {{ Math.round(autoGeneratedRounds * 0.6) }} minutes
+                        IfAgentScale is100：Estimated time {{ Math.round(autoGeneratedRounds * 0.6) }}  minutes
                       </span>
                     </div>
                     <div class="auto-desc">
@@ -514,14 +514,14 @@
               class="action-btn secondary"
               @click="$emit('go-back')"
             >
-              ← Return graph construction
+              ← Retour à la construction du graphe
             </button>
             <button 
               class="action-btn primary"
               :disabled="phase < 4"
               @click="handleStartSimulation"
             >
-              Start dual world parallel simulation ➝
+              Démarrer la simulation parallèle double monde ➝
             </button>
           </div>
         </div>
@@ -547,32 +547,32 @@
           <!-- Basic information -->
           <div class="modal-info-grid">
             <div class="info-item">
-              <span class="info-label">Age manifestation</span>
-              <span class="info-value">{{ selectedProfile.age || '-' }} years old</span>
+              <span class="info-label">Âge apparent</span>
+              <span class="info-value">{{ selectedProfile.age || '-' }}  ans</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Gender manifestation</span>
+              <span class="info-label">Genre apparent</span>
               <span class="info-value">{{ { male: 'Male', female: 'Female', other: 'Other' }[selectedProfile.gender] || selectedProfile.gender }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Country/Region</span>
+              <span class="info-label">Pays/Région</span>
               <span class="info-value">{{ selectedProfile.country || '-' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Event manifestationMBTI</span>
+              <span class="info-label">MBTI de l'événement</span>
               <span class="info-value mbti">{{ selectedProfile.mbti || '-' }}</span>
             </div>
           </div>
 
           <!-- Introduction -->
           <div class="modal-section">
-            <span class="section-label">Persona Introduction</span>
-            <p class="section-bio">{{ selectedProfile.bio || 'No introduction available' }}</p>
+            <span class="section-label">Introduction du persona</span>
+            <p class="section-bio">{{ selectedProfile.bio || 'Aucune introduction disponible' }}</p>
           </div>
 
           <!-- Followed Topics -->
           <div class="modal-section" v-if="selectedProfile.interested_topics?.length">
-            <span class="section-label">Reality Seed Related Topics</span>
+            <span class="section-label">Sujets liés aux graines de réalité</span>
             <div class="topics-grid">
               <span 
                 v-for="topic in selectedProfile.interested_topics" 
@@ -584,25 +584,25 @@
 
           <!-- Detailed Persona -->
           <div class="modal-section" v-if="selectedProfile.persona">
-            <span class="section-label">Detailed Persona Background</span>
+            <span class="section-label">Historique détaillé du persona</span>
             
             <!-- Persona Dimension Overview -->
             <div class="persona-dimensions">
               <div class="dimension-card">
-                <span class="dim-title">Event panoramic experience</span>
-                <span class="dim-desc">Complete behavior trajectory in this event</span>
+                <span class="dim-title">Expérience panoramique de l'événement</span>
+                <span class="dim-desc">Trajectoire comportementale complète dans cet événement</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">Behavior pattern profiling</span>
-                <span class="dim-desc">Experience summary and action style preference</span>
+                <span class="dim-title">Profilage des modèles de comportement</span>
+                <span class="dim-desc">Résumé de l'expérience et préférence de style d'action</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">Unique memory imprints</span>
-                <span class="dim-desc">Memory formed based on reality seed</span>
+                <span class="dim-title">Empruntes mémoire uniques</span>
+                <span class="dim-desc">Mémoire formée à partir de la graine de réalité</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">Social Relationship Network</span>
-                <span class="dim-desc">Individual Links and Interaction Graph</span>
+                <span class="dim-title">Réseau de relations sociales</span>
+                <span class="dim-desc">Liens individuels et graphe d'interaction</span>
               </div>
             </div>
 
@@ -618,7 +618,7 @@
     <!-- Bottom Info / Logs -->
     <div class="system-logs">
       <div class="log-header">
-        <span class="log-title">SYSTEM DASHBOARD</span>
+        <span class="log-title">TABLEAU DE BORD SYSTÈME</span>
         <span class="log-id">{{ simulationId || 'NO_SIMULATION' }}</span>
       </div>
       <div class="log-content" ref="logContent">
@@ -680,7 +680,7 @@ watch(currentStage, (newStage) => {
     phase.value = 2
     // Enter configuration generation phase，Start polling configuration
     if (!configTimer) {
-      addLog('Generation de la configuration de simulation Twitter/Reddit...')
+      addLog('Génération de la configuration de simulation Twitter/Reddit...')
       startConfigPolling()
     }
   } else if (newStage === 'Prepare simulation script' || newStage === 'copying_scripts') {
@@ -694,11 +694,11 @@ const autoGeneratedRounds = computed(() => {
     return null // Return when configuration is not generated null
   }
   const totalHours = simulationConfig.value.time_config.total_simulation_hours
-  const minutesPerRound = simulationConfig.value.time_config.minutes_per_round
-  if (!totalHours || !minutesPerRound) {
+  const  minutesPerRound = simulationConfig.value.time_config. minutes_per_round
+  if (!totalHours || ! minutesPerRound) {
     return null // Return when configuration data is incomplete null
   }
-  const calculatedRounds = Math.floor((totalHours * 60) / minutesPerRound)
+  const calculatedRounds = Math.floor((totalHours * 60) /  minutesPerRound)
   // Ensure max rounds no less than40（Recommendation value），Avoid slider range anomalies
   return Math.max(calculatedRounds, 40)
 })
@@ -745,10 +745,10 @@ const handleStartSimulation = () => {
   if (useCustomRounds.value) {
     // User custom rounds，Pass max_rounds Parameter
     params.maxRounds = customMaxRounds.value
-    addLog(`Demarrage de la simulation, tours personnalises: ${customMaxRounds.value}`)
+    addLog(`Démarrage de la simulation, tours personnalisés : ${customMaxRounds.value}`)
   } else {
     // User chose to keep auto-generated rounds，Do not pass max_rounds Parameter
-    addLog(`Demarrage de la simulation, tours auto-configures: ${autoGeneratedRounds.value}`)
+    addLog(`Démarrage de la simulation, tours auto-configurés : ${autoGeneratedRounds.value}`)
   }
   
   emit('next-step', params)
@@ -768,15 +768,15 @@ const selectProfile = (profile) => {
 // Demarrer automatiquement la preparation de simulation.
 const startPrepareSimulation = async () => {
   if (!props.simulationId) {
-    addLog('Error：Missing simulationId')
+    addLog('Erreur : simulationId manquant')
     emit('update-status', 'error')
     return
   }
   
   // Mark step 1 completed，Start step 2
   phase.value = 1
-  addLog(`Instance de simulation creee: ${props.simulationId}`)
-  addLog("Preparation de l'environnement de simulation...")
+  addLog(`Instance de simulation créée : ${props.simulationId}`)
+  addLog("Préparation de l'environnement de simulation...")
   emit('update-status', 'processing')
   
   try {
@@ -788,35 +788,35 @@ const startPrepareSimulation = async () => {
     
     if (res.success && res.data) {
       if (res.data.already_prepared) {
-        addLog('Detected existing completed preparation work，Use directly')
+        addLog('Travail de préparation existant détecté, utilisation directe')
         await loadPreparedData()
         return
       }
       
       taskId.value = res.data.task_id
-      addLog('Tache de preparation demarree')
-      addLog(`  └─ Task ID: ${res.data.task_id}`)
+      addLog('Tâche de préparation démarrée')
+      addLog(`  └─ ID de tâche : ${res.data.task_id}`)
       
       // Set immediatelyExpected Agent Total（FromprepareInterface return value retrieval）
       if (res.data.expected_entities_count) {
         expectedTotal.value = res.data.expected_entities_count
-        addLog(`${res.data.expected_entities_count} entites lues depuis le graphe Neo4j`)
+        addLog(`${res.data.expected_entities_count} entités lues depuis le graphe Neo4j`)
         if (res.data.entity_types && res.data.entity_types.length > 0) {
           addLog(`  └─ Entity Type: ${res.data.entity_types.join(', ')}`)
         }
       }
       
-      addLog('Demarrage du suivi de progression de preparation...')
+      addLog('Démarrage du suivi de la progression de la préparation...')
       // Start polling progress
       startPolling()
       // Start real-time fetching Profiles
       startProfilesPolling()
     } else {
-      addLog(`Echec de la preparation: ${res.error || 'Erreur inconnue'}`)
+      addLog(`Échec de la préparation : ${res.error || 'Erreur inconnue'}`)
       emit('update-status', 'error')
     }
   } catch (err) {
-    addLog(`Exception pendant la preparation: ${err.message}`)
+    addLog(`Exception pendant la préparation : ${err.message}`)
     emit('update-status', 'error')
   }
 }
@@ -890,12 +890,12 @@ const pollPrepareStatus = async () => {
       
       // Check if completed
       if (data.status === 'completed' || data.status === 'ready' || data.already_prepared) {
-        addLog('✓ Preparation terminee')
+        addLog('✓ Préparation terminée')
         stopPolling()
         stopProfilesPolling()
         await loadPreparedData()
       } else if (data.status === 'failed') {
-        addLog(`✗ Echec de la preparation: ${data.error || 'Erreur inconnue'}`)
+        addLog(`✗ Échec de la préparation : ${data.error || 'Erreur inconnue'}`)
         stopPolling()
         stopProfilesPolling()
       }
@@ -997,7 +997,7 @@ const fetchConfigRealtime = async () => {
         // Show time configuration details
         if (data.config.time_config) {
           const tc = data.config.time_config
-          addLog(`Time Configuration: Per round${tc.minutes_per_round}minutes, Total${Math.floor((tc.total_simulation_hours * 60) / tc.minutes_per_round)}rounds`)
+          addLog(`Time Configuration: Per round${tc. minutes_per_round} minutes, Total${Math.floor((tc.total_simulation_hours * 60) / tc. minutes_per_round)}rounds`)
         }
         
         // Show event configuration
@@ -1008,7 +1008,7 @@ const fetchConfigRealtime = async () => {
         
         stopConfigPolling()
         phase.value = 4
-        addLog("✓ Preparation terminee, la simulation peut demarrer")
+        addLog("✓ Préparation terminée, la simulation peut demarrer")
         emit('update-status', 'completed')
       }
     }
@@ -1040,7 +1040,7 @@ const loadPreparedData = async () => {
           addLog(`  └─ Initial posts: ${res.data.summary.initial_posts_count}items`)
         }
         
-        addLog("✓ Preparation terminee, la simulation peut demarrer")
+        addLog("✓ Préparation terminée, la simulation peut demarrer")
         phase.value = 4
         emit('update-status', 'completed')
       } else {

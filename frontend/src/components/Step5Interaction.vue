@@ -8,7 +8,7 @@
           <!-- En-tete du rapport -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">Rapport predictif</span>
+              <span class="report-tag">Rapport prédictif</span>
               <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -58,7 +58,7 @@
                       <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
                     </svg>
                   </div>
-                  <span class="loading-text">Generation de {{ section.title }}...</span>
+                  <span class="loading-text">Génération de {{ section.title }}...</span>
                 </div>
               </div>
             </div>
@@ -141,7 +141,7 @@
                 <path d="M9 11l3 3L22 4"></path>
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
               </svg>
-              <span>Envoyer un sondage au monde simule</span>
+              <span>Envoyer un sondage au monde simulé</span>
             </button>
           </div>
         </div>
@@ -155,7 +155,7 @@
               <div class="tools-card-avatar">R</div>
               <div class="tools-card-info">
                 <div class="tools-card-name">ReportAgent - conversation</div>
-                <div class="tools-card-subtitle">Version conversationnelle de ReportAgent avec 4 outils professionnels et la memoire complete de MiroFish</div>
+                <div class="tools-card-subtitle">Version conversationnelle de ReportAgent avec 4 outils professionnels et la mémoire complète de MiroFish</div>
               </div>
               <button class="tools-card-toggle" @click="showToolsDetail = !showToolsDetail">
                 <svg :class="{ 'is-expanded': showToolsDetail }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -172,8 +172,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">InsightForge Deep Attribution</div>
-                    <div class="tool-desc">Aligns real-world seed data with simulation environment state, combines Global/Local Memory mechanisms, provides cross-temporal deep attribution analysis</div>
+                    <div class="tool-name">InsightForge - Attribution approfondie</div>
+                    <div class="tool-desc">Aligne les données de graines de réalité avec l'état de l'environnement de simulation, combine les mécanismes de mémoire globale/locale, fournit une analyse d'attribution approfondie trans-temporelle</div>
                   </div>
                 </div>
                 <div class="tool-item tool-blue">
@@ -184,8 +184,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">PanoramaSearch Panoramic Tracking</div>
-                    <div class="tool-desc">Graph-based breadth-first traversal algorithm, reconstructs event propagation paths, captures full information flow topology</div>
+                    <div class="tool-name">PanoramaSearch - Suivi panoramique</div>
+                    <div class="tool-desc">Algorithme de parcours en largeur basé sur le graphe, reconstruit les chemins de propagation d'événements, capture la topologie complète du flux d'information</div>
                   </div>
                 </div>
                 <div class="tool-item tool-orange">
@@ -195,8 +195,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">QuickSearch Fast Retrieval</div>
-                    <div class="tool-desc">GraphRAG-based instant query interface, optimized indexing efficiency, for quickly extracting node attributes and discrete facts</div>
+                    <div class="tool-name">QuickSearch - Recherche rapide</div>
+                    <div class="tool-desc">Interface de requête instantanée basée sur GraphRAG, efficacité d'indexation optimisée, pour extraire rapidement les attributs de nœuds et les faits discrets</div>
                   </div>
                 </div>
                 <div class="tool-item tool-green">
@@ -209,7 +209,7 @@
                   </div>
                   <div class="tool-content">
                     <div class="tool-name">InterviewSubAgent - entretien virtuel</div>
-                    <div class="tool-desc">Entretien autonome capable de conversations paralleles multi-tours avec les agents du monde simule, pour collecter points de vue et etats psychologiques non structures</div>
+                    <div class="tool-desc">Entretien autonome capable de conversations parallèles multi-tours avec les agents du monde simulé, pour collecter points de vue et états psychologiques non structurés</div>
                   </div>
                 </div>
               </div>
@@ -224,7 +224,7 @@
                 <div class="profile-card-name">{{ selectedAgent.username }}</div>
                 <div class="profile-card-meta">
                   <span v-if="selectedAgent.name" class="profile-card-handle">@{{ selectedAgent.name }}</span>
-                  <span class="profile-card-profession">{{ selectedAgent.profession || 'Unknown profession' }}</span>
+                  <span class="profile-card-profession">{{ selectedAgent.profession || 'Profession inconnue' }}</span>
                 </div>
               </div>
               <button class="profile-card-toggle" @click="showFullProfile = !showFullProfile">
@@ -250,7 +250,7 @@
                 </svg>
               </div>
               <p class="empty-text">
-                {{ chatTarget === 'report_agent' ? 'Chat with Report Agent to deeply understand report content' : 'Chat with simulated individuals to learn their perspectives' }}
+                {{ chatTarget === 'report_agent' ? 'Discutez avec ReportAgent pour comprendre en profondeur le contenu du rapport' : 'Discutez avec les individus simulés pour connaître leurs perspectives' }}
               </p>
             </div>
             <div 
@@ -266,7 +266,7 @@
               <div class="message-content">
                 <div class="message-header">
                   <span class="sender-name">
-                    {{ msg.role === 'user' ? 'You' : (chatTarget === 'report_agent' ? 'Report Agent' : (selectedAgent?.username || 'Agent')) }}
+                    {{ msg.role === 'user' ? 'Vous' : (chatTarget === 'report_agent' ? 'Agent de rapport' : (selectedAgent?.username || 'Agent')) }}
                   </span>
                   <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
                 </div>
@@ -292,7 +292,7 @@
             <textarea 
               v-model="chatInput"
               class="chat-input"
-              placeholder="Type your question..."
+              placeholder="Tapez votre question..."
               @keydown.enter.exact.prevent="sendMessage"
               :disabled="isSending || (!selectedAgent && chatTarget === 'agent')"
               rows="1"
@@ -317,8 +317,8 @@
           <div class="survey-setup">
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">Select survey targets</span>
-                <span class="selection-count">Selected {{ selectedAgents.size }} / {{ profiles.length }}</span>
+                <span class="section-title">Sélectionner les cibles du sondage</span>
+                <span class="selection-count">Sélectionné(s) {{ selectedAgents.size }} / {{ profiles.length }}</span>
               </div>
               <div class="agents-grid">
                 <label 
@@ -335,7 +335,7 @@
                   <div class="checkbox-avatar">{{ (agent.username || 'A')[0] }}</div>
                   <div class="checkbox-info">
                     <span class="checkbox-name">{{ agent.username }}</span>
-                    <span class="checkbox-role">{{ agent.profession || 'Unknown profession' }}</span>
+                    <span class="checkbox-role">{{ agent.profession || 'Profession inconnue' }}</span>
                   </div>
                   <div class="checkbox-indicator">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3">
@@ -345,20 +345,20 @@
                 </label>
               </div>
               <div class="selection-actions">
-                <button class="action-link" @click="selectAllAgents">Select All</button>
+                <button class="action-link" @click="selectAllAgents">Tout sélectionner</button>
                 <span class="action-divider">|</span>
-                <button class="action-link" @click="clearAgentSelection">Clear</button>
+                <button class="action-link" @click="clearAgentSelection">Effacer</button>
               </div>
             </div>
 
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">Survey Question</span>
+                <span class="section-title">Question du sondage</span>
               </div>
               <textarea 
                 v-model="surveyQuestion"
                 class="survey-input"
-                placeholder="Enter the question you want to ask all selected targets..."
+                placeholder="Entrez la question que vous souhaitez poser à toutes les cibles sélectionnées..."
                 rows="3"
               ></textarea>
             </div>
@@ -369,15 +369,15 @@
               @click="submitSurvey"
             >
               <span v-if="isSurveying" class="loading-spinner"></span>
-              <span v-else>Send Survey</span>
+              <span v-else>Envoyer le sondage</span>
             </button>
           </div>
 
-          <!-- Survey Results -->
+          <!-- Résultats du sondage -->
           <div v-if="surveyResults.length > 0" class="survey-results">
             <div class="results-header">
-              <span class="results-title">Survey Results</span>
-              <span class="results-count">{{ surveyResults.length }} replies</span>
+              <span class="results-title">Résultats du sondage</span>
+              <span class="results-count">{{ surveyResults.length }} réponses</span>
             </div>
             <div class="results-list">
               <div 
@@ -389,7 +389,7 @@
                   <div class="result-avatar">{{ (result.agent_name || 'A')[0] }}</div>
                   <div class="result-info">
                     <span class="result-name">{{ result.agent_name }}</span>
-                    <span class="result-role">{{ result.profession || 'Unknown profession' }}</span>
+                    <span class="result-role">{{ result.profession || 'Profession inconnue' }}</span>
                   </div>
                 </div>
                 <div class="result-question">
@@ -535,7 +535,7 @@ const selectAgent = (agent, idx) => {
 
   // Restore this Agent's chat history
   chatHistory.value = chatHistoryCache.value[`agent_${idx}`] || []
-  addLog(`Selected conversation target: ${agent.username}`)
+  addLog(`Cible de conversation sélectionnée : ${agent.username}`)
 }
 
 const formatTime = (timestamp) => {
@@ -662,10 +662,10 @@ const sendMessage = async () => {
       await sendToAgent(message)
     }
   } catch (err) {
-    addLog(`Send failed: ${err.message}`)
+    addLog(`Échec de l'envoi : ${err.message}`)
     chatHistory.value.push({
       role: 'assistant',
-      content: `Sorry, an error occurred: ${err.message}`,
+      content: `Désolé, une erreur s'est produite : ${err.message}`,
       timestamp: new Date().toISOString()
     })
   } finally {
@@ -677,7 +677,7 @@ const sendMessage = async () => {
 }
 
 const sendToReportAgent = async (message) => {
-  addLog(`Send to Report Agent: ${message.substring(0, 50)}...`)
+  addLog(`Envoi à ReportAgent : ${message.substring(0, 50)}...`)
 
   // Build chat history for API
   const historyForApi = chatHistory.value
@@ -697,18 +697,18 @@ const sendToReportAgent = async (message) => {
   if (res.success && res.data) {
     chatHistory.value.push({
       role: 'assistant',
-      content: res.data.response || res.data.answer || 'No response',
+      content: res.data.response || res.data.answer || 'Aucune réponse',
       timestamp: new Date().toISOString()
     })
-    addLog('Report Agent replied')
+    addLog('L'Agent de rapport a répondu')
   } else {
-    throw new Error(res.error || 'Request failed')
+    throw new Error(res.error || 'La requête a échoué')
   }
 }
 
 const sendToAgent = async (message) => {
   if (!selectedAgent.value || selectedAgentIndex.value === null) {
-    throw new Error('Please select a simulated individual first')
+    throw new Error('Veuillez d'abord sélectionner un individu simulé')
   }
 
   addLog(`Send to ${selectedAgent.value.username}: ${message.substring(0, 50)}...`)
@@ -719,7 +719,7 @@ const sendToAgent = async (message) => {
     const historyContext = chatHistory.value
       .filter(msg => msg.content !== message)
       .slice(-6)
-      .map(msg => `${msg.role === 'user' ? 'Questioner' : 'You'}: ${msg.content}`)
+      .map(msg => `${msg.role === 'user' ? 'Questioner' : 'Vous'}: ${msg.content}`)
       .join('\n')
     prompt = `Here is our previous conversation:\n${historyContext}\n\nNow my new question is: ${message}`
   }
@@ -761,12 +761,12 @@ const sendToAgent = async (message) => {
         content: responseContent,
         timestamp: new Date().toISOString()
       })
-      addLog(`${selectedAgent.value.username} replied`)
+      addLog(`${selectedAgent.value.username} a répondu`)
     } else {
-      throw new Error('No response data')
+      throw new Error('Aucune réponse data')
     }
   } else {
-    throw new Error(res.error || 'Request failed')
+    throw new Error(res.error || 'La requête a échoué')
   }
 }
 
@@ -803,7 +803,7 @@ const submitSurvey = async () => {
   if (selectedAgents.value.size === 0 || !surveyQuestion.value.trim()) return
 
   isSurveying.value = true
-  addLog(`Sending survey to ${selectedAgents.value.size} targets...`)
+  addLog(`Envoi du sondage à .* cibles...`)
 
   try {
     const interviews = Array.from(selectedAgents.value).map(idx => ({
@@ -830,20 +830,20 @@ const submitSurvey = async () => {
         const agent = profiles.value[agentIdx]
 
         // Prefer reddit platform response, then twitter
-        let responseContent = 'No response'
+        let responseContent = 'Aucune réponse'
 
         if (typeof resultsDict === 'object' && !Array.isArray(resultsDict)) {
           const redditKey = `reddit_${agentIdx}`
           const twitterKey = `twitter_${agentIdx}`
           const agentResult = resultsDict[redditKey] || resultsDict[twitterKey]
           if (agentResult) {
-            responseContent = agentResult.response || agentResult.answer || 'No response'
+            responseContent = agentResult.response || agentResult.answer || 'Aucune réponse'
           }
         } else if (Array.isArray(resultsDict)) {
           // Compatible with array format
           const matchedResult = resultsDict.find(r => r.agent_id === agentIdx)
           if (matchedResult) {
-            responseContent = matchedResult.response || matchedResult.answer || 'No response'
+            responseContent = matchedResult.response || matchedResult.answer || 'Aucune réponse'
           }
         }
 
@@ -857,12 +857,12 @@ const submitSurvey = async () => {
       }
 
       surveyResults.value = surveyResultsList
-      addLog(`Received ${surveyResults.value.length} replies`)
+      addLog(`Received ${surveyResults.value.length} réponses`)
     } else {
-      throw new Error(res.error || 'Request failed')
+      throw new Error(res.error || 'La requête a échoué')
     }
   } catch (err) {
-    addLog(`Survey submission failed: ${err.message}`)
+    addLog(`Échec de l'envoi du sondage : ${err.message}`)
   } finally {
     isSurveying.value = false
   }
@@ -873,7 +873,7 @@ const loadReportData = async () => {
   if (!props.reportId) return
 
   try {
-    addLog(`Loading report data: ${props.reportId}`)
+    addLog(`Chargement des données du rapport : ${props.reportId}`)
 
     // Get report info
     const reportRes = await getReport(props.reportId)
@@ -882,7 +882,7 @@ const loadReportData = async () => {
       await loadAgentLogs()
     }
   } catch (err) {
-    addLog(`Failed to load report: ${err.message}`)
+    addLog(`Impossible de charger le rapport : ${err.message}`)
   }
 }
 
@@ -904,10 +904,10 @@ const loadAgentLogs = async () => {
         }
       })
 
-      addLog('Report data loading completed')
+      addLog('Chargement des données du rapport terminé')
     }
   } catch (err) {
-    addLog(`Failed to load report logs: ${err.message}`)
+    addLog(`Impossible de charger les journaux du rapport : ${err.message}`)
   }
 }
 
@@ -918,10 +918,10 @@ const loadProfiles = async () => {
     const res = await getSimulationProfilesRealtime(props.simulationId, 'reddit')
     if (res.success && res.data) {
       profiles.value = res.data.profiles || []
-      addLog(`Loaded ${profiles.value.length} simulated individuals`)
+      addLog(`Individus simulés chargés`)
     }
   } catch (err) {
-    addLog(`Failed to load simulated individuals: ${err.message}`)
+    addLog(`Impossible de charger les individus simulés : ${err.message}`)
   }
 }
 
@@ -935,7 +935,7 @@ const handleClickOutside = (e) => {
 
 // Lifecycle
 onMounted(() => {
-  addLog('Step5 Interaction initialized')
+  addLog('Interaction étape 5 initialisée')
   loadReportData()
   loadProfiles()
   document.addEventListener('click', handleClickOutside)
@@ -2390,7 +2390,7 @@ watch(() => props.simulationId, (newId) => {
   to { transform: rotate(360deg); }
 }
 
-/* Survey Results */
+/* Résultats du sondage */
 .survey-results {
   flex: 1;
   overflow-y: auto;

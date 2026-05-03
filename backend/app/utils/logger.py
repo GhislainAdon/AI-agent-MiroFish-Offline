@@ -1,6 +1,6 @@
 """
-Logger Configuration Module
-Provides unified logging management with output to both console and file
+Module de configuration du journaliseur
+Fournit une gestion unifiée de la journalisation avec sortie vers la console et un fichier
 """
 
 import os
@@ -12,47 +12,47 @@ from logging.handlers import RotatingFileHandler
 
 def _ensure_utf8_stdout():
     """
-    Ensure stdout/stderr use UTF-8 encoding
-    Solves Windows console Chinese character encoding issue
+    S'assurer que stdout/stderr utilisent l'encodage UTF-8
+    Résout le problème d'encodage des caractères chinois dans la console Windows
     """
     if sys.platform == 'win32':
-        # Reconfigure standard output to UTF-8 on Windows
+        # Reconfigurer la sortie standard en UTF-8 sous Windows
         if hasattr(sys.stdout, 'reconfigure'):
             sys.stdout.reconfigure(encoding='utf-8', errors='replace')
         if hasattr(sys.stderr, 'reconfigure'):
             sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 
-# Log directory
+# Répertoire des journaux
 LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
 
 
 def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.Logger:
     """
-    Setup logger
+    Configurer le journaliseur
 
     Args:
-        name: Logger name
-        level: Log level
+        name: Nom du journaliseur
+        level: Niveau de journalisation
 
     Returns:
-        Configured logger
+        Journaliseur configuré
     """
-    # Ensure log directory exists
+    # S'assurer que le répertoire des journaux existe
     os.makedirs(LOG_DIR, exist_ok=True)
 
-    # Create logger
+    # Créer le journaliseur
     logger = logging.getLogger(name)
     logger.setLevel(level)
 
-    # Prevent logs from propagating to root logger to avoid duplicate output
+    # Empêcher la propagation des journaux vers le journaliseur racine pour éviter les sorties en double
     logger.propagate = False
 
-    # If handlers already exist, don't add duplicates
+    # Si des gestionnaires existent déjà, ne pas ajouter de doublons
     if logger.handlers:
         return logger
 
-    # Log formats
+    # Formats de journalisation
     detailed_formatter = logging.Formatter(
         '[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
@@ -63,25 +63,25 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
         datefmt='%H:%M:%S'
     )
 
-    # 1. File handler - detailed logs (named by date, with rotation)
+    # 1. Gestionnaire de fichier - journaux détaillés (nommés par date, avec rotation)
     log_filename = datetime.now().strftime('%Y-%m-%d') + '.log'
     file_handler = RotatingFileHandler(
         os.path.join(LOG_DIR, log_filename),
-        maxBytes=10 * 1024 * 1024,  # 10MB
+        maxBytes=10 * 1024 * 1024,  # 10 Mo
         backupCount=5,
         encoding='utf-8'
     )
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(detailed_formatter)
 
-    # 2. Console handler - concise logs (INFO and above)
-    # Ensure UTF-8 encoding on Windows to avoid Chinese character issues
+    # 2. Gestionnaire de console - journaux concis (INFO et au-dessus)
+    # S'assurer de l'encodage UTF-8 sous Windows pour éviter les problèmes de caractères chinois
     _ensure_utf8_stdout()
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(simple_formatter)
 
-    # Add handlers
+    # Ajouter les gestionnaires
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
@@ -90,13 +90,13 @@ def setup_logger(name: str = 'mirofish', level: int = logging.DEBUG) -> logging.
 
 def get_logger(name: str = 'mirofish') -> logging.Logger:
     """
-    Get logger (create if not exists)
+    Obtenir le journaliseur (le créer s'il n'existe pas)
 
     Args:
-        name: Logger name
+        name: Nom du journaliseur
 
     Returns:
-        Logger instance
+        Instance du journaliseur
     """
     logger = logging.getLogger(name)
     if not logger.handlers:
@@ -104,11 +104,11 @@ def get_logger(name: str = 'mirofish') -> logging.Logger:
     return logger
 
 
-# Create default logger
+# Créer le journaliseur par défaut
 logger = setup_logger()
 
 
-# Convenience functions
+# Fonctions de commodité
 def debug(msg, *args, **kwargs):
     logger.debug(msg, *args, **kwargs)
 
@@ -123,4 +123,3 @@ def error(msg, *args, **kwargs):
 
 def critical(msg, *args, **kwargs):
     logger.critical(msg, *args, **kwargs)
-

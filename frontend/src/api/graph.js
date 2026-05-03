@@ -1,8 +1,8 @@
 import service, { requestWithRetry } from './index'
 
 /**
- * Generate ontology (upload documents and simulation requirements)
- * @param {Object} data - Contains files, simulation_requirement, project_name, etc.
+ * Générer l'ontologie (télécharger les documents et les exigences de simulation)
+ * @param {Object} data - Contient les fichiers, simulation_requirement, project_name, etc.
  * @returns {Promise}
  */
 export function generateOntology(formData) {
@@ -19,8 +19,8 @@ export function generateOntology(formData) {
 }
 
 /**
- * Build graph
- * @param {Object} data - Contains project_id, graph_name, etc.
+ * Construire le graphe
+ * @param {Object} data - Contient project_id, graph_name, etc.
  * @returns {Promise}
  */
 export function buildGraph(data) {
@@ -34,8 +34,8 @@ export function buildGraph(data) {
 }
 
 /**
- * Query task status
- * @param {String} taskId - Task ID
+ * Consulter le statut de la tâche
+ * @param {String} taskId - Identifiant de la tâche
  * @returns {Promise}
  */
 export function getTaskStatus(taskId) {
@@ -46,8 +46,8 @@ export function getTaskStatus(taskId) {
 }
 
 /**
- * Get graph data
- * @param {String} graphId - Graph ID
+ * Récupérer les données du graphe
+ * @param {String} graphId - Identifiant du graphe
  * @returns {Promise}
  */
 export function getGraphData(graphId) {
@@ -58,8 +58,8 @@ export function getGraphData(graphId) {
 }
 
 /**
- * Get project information
- * @param {String} projectId - Project ID
+ * Récupérer les informations du projet
+ * @param {String} projectId - Identifiant du projet
  * @returns {Promise}
  */
 export function getProject(projectId) {

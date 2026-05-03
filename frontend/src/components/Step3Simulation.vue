@@ -9,7 +9,7 @@
             <svg class="platform-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
             </svg>
-            <span class="platform-name">Info Plaza</span>
+            <span class="platform-name">Place d'informations</span>
             <span v-if="runStatus.twitter_completed" class="status-badge">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3">
                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -22,7 +22,7 @@
               <span class="stat-value mono">{{ runStatus.twitter_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span>
             </span>
             <span class="stat">
-              <span class="stat-label">Temps ecoule</span>
+              <span class="stat-label">Temps écoulé</span>
               <span class="stat-value mono">{{ twitterElapsedTime }}</span>
             </span>
             <span class="stat">
@@ -50,7 +50,7 @@
             <svg class="platform-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
             </svg>
-            <span class="platform-name">Topic Community</span>
+            <span class="platform-name">Communauté thématique</span>
             <span v-if="runStatus.reddit_completed" class="status-badge">
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3">
                 <polyline points="20 6 9 17 4 12"></polyline>
@@ -63,7 +63,7 @@
               <span class="stat-value mono">{{ runStatus.reddit_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span>
             </span>
             <span class="stat">
-              <span class="stat-label">Temps ecoule</span>
+              <span class="stat-label">Temps écoulé</span>
               <span class="stat-value mono">{{ redditElapsedTime }}</span>
             </span>
             <span class="stat">
@@ -97,7 +97,7 @@
           @click="handleNextStep"
         >
           <span v-if="isGeneratingReport" class="loading-spinner-small"></span>
-          {{ isGeneratingReport ? 'Demarrage...' : 'Generer le rapport' }}
+          {{ isGeneratingReport ? 'Démarrage...' : 'Générer le rapport' }}
           <span v-if="!isGeneratingReport" class="arrow-icon">→</span>
         </button>
       </div>
@@ -108,7 +108,7 @@
       <!-- En-tete de chronologie -->
       <div class="timeline-header" v-if="allActions.length > 0">
         <div class="timeline-stats">
-          <span class="total-count">EVENEMENTS: <span class="mono">{{ allActions.length }}</span></span>
+          <span class="total-count">ÉVÉNEMENTS : <span class="mono">{{ allActions.length }}</span></span>
           <span class="platform-breakdown">
             <span class="breakdown-item twitter">
               <svg class="mini-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
@@ -207,7 +207,7 @@
                   </div>
                   <div v-if="action.action_args?.post_id" class="comment-context">
                     <svg class="icon-small" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                    <span>Reponse a la publication #{{ action.action_args.post_id }}</span>
+                    <span>Réponse à la publication #{{ action.action_args.post_id }}</span>
                   </div>
                 </template>
 
@@ -215,7 +215,7 @@
                 <template v-if="action.action_type === 'SEARCH_POSTS'">
                   <div class="search-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <span class="search-label">Recherche:</span>
+                    <span class="search-label">Recherche :</span>
                     <span class="search-query">"{{ action.action_args?.query || '' }}"</span>
                   </div>
                 </template>
@@ -224,7 +224,7 @@
                 <template v-if="action.action_type === 'FOLLOW'">
                   <div class="follow-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                    <span class="follow-label">Followed @{{ action.action_args?.target_user || action.action_args?.user_id || 'User' }}</span>
+                    <span class="follow-label">Suit @{{ action.action_args?.target_user || action.action_args?.user_id || 'User' }}</span>
                   </div>
                 </template>
 
@@ -233,7 +233,7 @@
                   <div class="vote-info">
                     <svg v-if="action.action_type === 'UPVOTE_POST'" class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
                     <svg v-else class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    <span class="vote-label">{{ action.action_type === 'UPVOTE_POST' ? 'Upvoted' : 'Downvoted' }} Post</span>
+                    <span class="vote-label">{{ action.action_type === 'UPVOTE_POST' ? 'Vote positif' : 'Vote négatif' }} Post</span>
                   </div>
                   <div v-if="action.action_args?.post_content" class="voted-content">
                     "{{ truncateContent(action.action_args.post_content, 120) }}"
@@ -244,7 +244,7 @@
                 <template v-if="action.action_type === 'DO_NOTHING'">
                   <div class="idle-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <span class="idle-label">Action Skipped</span>
+                    <span class="idle-label">Action ignorée</span>
                   </div>
                 </template>
 
@@ -264,7 +264,7 @@
 
         <div v-if="allActions.length === 0" class="waiting-state">
           <div class="pulse-ring"></div>
-          <span>Waiting for agent actions...</span>
+          <span>En attente des actions des agents...</span>
         </div>
       </div>
     </div>
@@ -272,7 +272,7 @@
     <!-- Bottom Info / Logs -->
     <div class="system-logs">
       <div class="log-header">
-        <span class="log-title">SIMULATION MONITOR</span>
+        <span class="log-title">MONITEUR DE SIMULATION</span>
         <span class="log-id">{{ simulationId || 'NO_SIMULATION' }}</span>
       </div>
       <div class="log-content" ref="logContent">
@@ -379,7 +379,7 @@ const resetAllState = () => {
 // Demarrer la simulation.
 const doStartSimulation = async () => {
   if (!props.simulationId) {
-    addLog('Erreur: simulationId manquant')
+    addLog('Erreur : simulationId manquant')
     return
   }
 
@@ -388,7 +388,7 @@ const doStartSimulation = async () => {
 
   isStarting.value = true
   startError.value = null
-  addLog('Demarrage de la simulation parallele Twitter/Reddit...')
+  addLog('Démarrage de la simulation parallèle Twitter/Reddit...')
   emit('update-status', 'processing')
 
   try {
@@ -401,18 +401,18 @@ const doStartSimulation = async () => {
 
     if (props.maxRounds) {
       params.max_rounds = props.maxRounds
-      addLog(`Nombre maximal de tours: ${props.maxRounds}`)
+      addLog(`Nombre maximal de tours : ${props.maxRounds}`)
     }
 
-    addLog('Mise a jour dynamique du graphe activee')
+    addLog('Mise à jour dynamique du graphe activée')
 
     const res = await startSimulation(params)
 
     if (res.success && res.data) {
       if (res.data.force_restarted) {
-        addLog('✓ Anciens journaux nettoyes, simulation redemarree')
+        addLog('✓ Anciens journaux nettoyés, simulation redémarrée')
       }
-      addLog('✓ Moteur de simulation demarre')
+      addLog('✓ Moteur de simulation démarré')
       addLog(`  ├─ PID: ${res.data.process_pid || '-'}`)
 
       phase.value = 1
@@ -421,13 +421,13 @@ const doStartSimulation = async () => {
       startStatusPolling()
       startDetailPolling()
     } else {
-      startError.value = res.error || 'Echec du demarrage'
-      addLog(`✗ Echec du demarrage: ${res.error || 'Erreur inconnue'}`)
+      startError.value = res.error || 'Échec du démarrage'
+      addLog(`✗ Échec du démarrage: ${res.error || 'Erreur inconnue'}`)
       emit('update-status', 'error')
     }
   } catch (err) {
     startError.value = err.message
-    addLog(`✗ Exception au demarrage: ${err.message}`)
+    addLog(`✗ Exception au démarrage : ${err.message}`)
     emit('update-status', 'error')
   } finally {
     isStarting.value = false
@@ -439,21 +439,21 @@ const handleStopSimulation = async () => {
   if (!props.simulationId) return
 
   isStopping.value = true
-  addLog('Arret de la simulation...')
+  addLog('Arrêt de la simulation...')
 
   try {
     const res = await stopSimulation({ simulation_id: props.simulationId })
 
     if (res.success) {
-      addLog('✓ Simulation arretee')
+      addLog('✓ Simulation arrêtée')
       phase.value = 2
       stopPolling()
       emit('update-status', 'completed')
     } else {
-      addLog(`Echec de l'arret: ${res.error || 'Erreur inconnue'}`)
+      addLog(`Échec de l'arrêt : ${res.error || 'Erreur inconnue'}`)
     }
   } catch (err) {
-    addLog(`Exception pendant l'arret: ${err.message}`)
+    addLog(`Exception pendant l'arrêt : ${err.message}`)
   } finally {
     isStopping.value = false
   }
@@ -517,9 +517,9 @@ const fetchRunStatus = async () => {
 
       if (isCompleted || platformsCompleted) {
         if (platformsCompleted && !isCompleted) {
-          addLog('✓ Toutes les plateformes de simulation sont terminees')
+          addLog('✓ Toutes les plateformes de simulation sont terminées')
         }
-        addLog('✓ Simulation terminee')
+        addLog('✓ Simulation terminée')
         phase.value = 2
         stopPolling()
         emit('update-status', 'completed')
@@ -640,17 +640,17 @@ const formatActionTime = (timestamp) => {
 
 const handleNextStep = async () => {
   if (!props.simulationId) {
-    addLog('Erreur: simulationId manquant')
+    addLog('Erreur : simulationId manquant')
     return
   }
 
   if (isGeneratingReport.value) {
-    addLog('Demande de generation du rapport envoyee, merci de patienter...')
+    addLog('Demande de génération du rapport envoyée, merci de patienter...')
     return
   }
 
   isGeneratingReport.value = true
-  addLog('Demarrage de la generation du rapport...')
+  addLog('Démarrage de la génération du rapport...')
 
   try {
     const res = await generateReport({
@@ -660,16 +660,16 @@ const handleNextStep = async () => {
 
     if (res.success && res.data) {
       const reportId = res.data.report_id
-      addLog(`✓ Tache de generation du rapport demarree: ${reportId}`)
+      addLog(`✓ Tâche de génération du rapport démarrée : ${reportId}`)
 
       // Navigate to report page
       router.push({ name: 'Report', params: { reportId } })
     } else {
-      addLog(`✗ Echec du demarrage du rapport: ${res.error || 'Erreur inconnue'}`)
+      addLog(`✗ Échec du démarrage du rapport: ${res.error || 'Erreur inconnue'}`)
       isGeneratingReport.value = false
     }
   } catch (err) {
-    addLog(`✗ Exception pendant la generation du rapport: ${err.message}`)
+    addLog(`✗ Exception pendant la génération du rapport : ${err.message}`)
     isGeneratingReport.value = false
   }
 }
@@ -685,7 +685,7 @@ watch(() => props.systemLogs?.length, () => {
 })
 
 onMounted(() => {
-  addLog("Initialisation de l'execution de simulation")
+  addLog("Initialisation de l'exécution de simulation")
   if (props.simulationId) {
     doStartSimulation()
   }

@@ -1,7 +1,7 @@
 import service, { requestWithRetry } from './index'
 
 /**
- * Start report generation
+ * Démarrer la génération du rapport
  * @param {Object} data - { simulation_id, force_regenerate? }
  */
 export const generateReport = (data) => {
@@ -9,7 +9,7 @@ export const generateReport = (data) => {
 }
 
 /**
- * Get report generation status
+ * Récupérer le statut de génération du rapport
  * @param {string} reportId
  */
 export const getReportStatus = (reportId) => {
@@ -17,25 +17,25 @@ export const getReportStatus = (reportId) => {
 }
 
 /**
- * Get Agent log (incremental)
+ * Récupérer le journal de l'agent (incrémental)
  * @param {string} reportId
- * @param {number} fromLine - Start from which line
+ * @param {number} fromLine - Commencer à partir de cette ligne
  */
 export const getAgentLog = (reportId, fromLine = 0) => {
   return service.get(`/api/report/${reportId}/agent-log`, { params: { from_line: fromLine } })
 }
 
 /**
- * Get console log (incremental)
+ * Récupérer le journal de la console (incrémental)
  * @param {string} reportId
- * @param {number} fromLine - Start from which line
+ * @param {number} fromLine - Commencer à partir de cette ligne
  */
 export const getConsoleLog = (reportId, fromLine = 0) => {
   return service.get(`/api/report/${reportId}/console-log`, { params: { from_line: fromLine } })
 }
 
 /**
- * Get report details
+ * Récupérer les détails du rapport
  * @param {string} reportId
  */
 export const getReport = (reportId) => {

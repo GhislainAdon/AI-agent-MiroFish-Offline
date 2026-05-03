@@ -1,15 +1,15 @@
 """
-Action logger
-Used to record actions of each Agent in OASIS simulation for backend monitoring
+Journaliseur d'actions
+Utilisé pour enregistrer les actions de chaque Agent dans la simulation OASIS pour la surveillance du backend
 
-Log structure:
+Structure des journaux :
     sim_xxx/
     ├── twitter/
-    │   └── actions.jsonl    # Twitter platform action log
+    │   └── actions.jsonl    # Journal des actions de la plateforme Twitter
     ├── reddit/
-    │   └── actions.jsonl    # Reddit platform action log
-    ├── simulation.log       # Main simulation process log
-    └── run_state.json       # Run state (for API queries)
+    │   └── actions.jsonl    # Journal des actions de la plateforme Reddit
+    ├── simulation.log       # Journal du processus principal de simulation
+    └── run_state.json       # État d'exécution (pour les requêtes API)
 """
 
 import json
@@ -20,15 +20,15 @@ from typing import Dict, Any, Optional
 
 
 class PlatformActionLogger:
-    """Single platform action logger"""
+    """Journaliseur d'actions pour une plateforme unique"""
     
     def __init__(self, platform: str, base_dir: str):
         """
-        Initialize logger
+        Initialiser le journaliseur
         
         Args:
-            platform: Platform name (twitter/reddit)
-            base_dir: Base path of simulation directory
+            platform: Nom de la plateforme (twitter/reddit)
+            base_dir: Chemin de base du répertoire de simulation
         """
         self.platform = platform
         self.base_dir = base_dir
@@ -37,7 +37,7 @@ class PlatformActionLogger:
         self._ensure_dir()
     
     def _ensure_dir(self):
-        """Ensure directory exists"""
+        """S'assurer que le répertoire existe"""
         os.makedirs(self.log_dir, exist_ok=True)
     
     def log_action(
@@ -50,7 +50,7 @@ class PlatformActionLogger:
         result: Optional[str] = None,
         success: bool = True
     ):
-        """Log an action"""
+        """Enregistrer une action"""
         entry = {
             "round": round_num,
             "timestamp": datetime.now().isoformat(),
@@ -66,7 +66,7 @@ class PlatformActionLogger:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
     
     def log_round_start(self, round_num: int, simulated_hour: int):
-        """Log round start"""
+        """Enregistrer le début d'un tour"""
         entry = {
             "round": round_num,
             "timestamp": datetime.now().isoformat(),
@@ -78,7 +78,7 @@ class PlatformActionLogger:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
     
     def log_round_end(self, round_num: int, actions_count: int):
-        """Log round end"""
+        """Enregistrer la fin d'un tour"""
         entry = {
             "round": round_num,
             "timestamp": datetime.now().isoformat(),
@@ -90,7 +90,7 @@ class PlatformActionLogger:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
     
     def log_simulation_start(self, config: Dict[str, Any]):
-        """Log simulation start"""
+        """Enregistrer le début de la simulation"""
         entry = {
             "timestamp": datetime.now().isoformat(),
             "event_type": "simulation_start",
@@ -103,7 +103,7 @@ class PlatformActionLogger:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
     
     def log_simulation_end(self, total_rounds: int, total_actions: int):
-        """Log simulation end"""
+        """Enregistrer la fin de la simulation"""
         entry = {
             "timestamp": datetime.now().isoformat(),
             "event_type": "simulation_end",
@@ -118,35 +118,35 @@ class PlatformActionLogger:
 
 class SimulationLogManager:
     """
-    Simulation log manager
-    Unified management of all log files, separated by platform
+    Gestionnaire de journaux de simulation
+    Gestion unifiée de tous les fichiers journaux, séparés par plateforme
     """
     
     def __init__(self, simulation_dir: str):
         """
-        Initialize log manager
+        Initialiser le gestionnaire de journaux
         
         Args:
-            simulation_dir: Simulation directory path
+            simulation_dir: Chemin du répertoire de simulation
         """
         self.simulation_dir = simulation_dir
         self.twitter_logger: Optional[PlatformActionLogger] = None
         self.reddit_logger: Optional[PlatformActionLogger] = None
         self._main_logger: Optional[logging.Logger] = None
         
-        # Setup main log
+        # Configurer le journal principal
         self._setup_main_logger()
     
     def _setup_main_logger(self):
-        """Setup main simulation log"""
+        """Configurer le journal principal de simulation"""
         log_path = os.path.join(self.simulation_dir, "simulation.log")
         
-        # Create logger
+        # Créer le journaliseur
         self._main_logger = logging.getLogger(f"simulation.{os.path.basename(self.simulation_dir)}")
         self._main_logger.setLevel(logging.INFO)
         self._main_logger.handlers.clear()
         
-        # File handler
+        # Gestionnaire de fichier
         file_handler = logging.FileHandler(log_path, encoding='utf-8', mode='w')
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(logging.Formatter(
@@ -155,7 +155,7 @@ class SimulationLogManager:
         ))
         self._main_logger.addHandler(file_handler)
         
-        # Console handler
+        # Gestionnaire de console
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(logging.Formatter(
@@ -167,19 +167,19 @@ class SimulationLogManager:
         self._main_logger.propagate = False
     
     def get_twitter_logger(self) -> PlatformActionLogger:
-        """Get Twitter platform logger"""
+        """Obtenir le journaliseur de la plateforme Twitter"""
         if self.twitter_logger is None:
             self.twitter_logger = PlatformActionLogger("twitter", self.simulation_dir)
         return self.twitter_logger
     
     def get_reddit_logger(self) -> PlatformActionLogger:
-        """Get Reddit platform logger"""
+        """Obtenir le journaliseur de la plateforme Reddit"""
         if self.reddit_logger is None:
             self.reddit_logger = PlatformActionLogger("reddit", self.simulation_dir)
         return self.reddit_logger
     
     def log(self, message: str, level: str = "info"):
-        """Log main message"""
+        """Enregistrer un message principal"""
         if self._main_logger:
             getattr(self._main_logger, level.lower(), self._main_logger.info)(message)
     
@@ -196,12 +196,12 @@ class SimulationLogManager:
         self.log(message, "debug")
 
 
-# ============ Compatible with old interface ============
+# ============ Compatible avec l'ancienne interface ============
 
 class ActionLogger:
     """
-    Action logger (compatible with old interface)
-    Recommend using SimulationLogManager instead
+    Journaliseur d'actions (compatible avec l'ancienne interface)
+    Il est recommandé d'utiliser SimulationLogManager à la place
     """
     
     def __init__(self, log_path: str):
@@ -288,12 +288,12 @@ class ActionLogger:
             f.write(json.dumps(entry, ensure_ascii=False) + '\n')
 
 
-# Global logger instance (compatible with old interface)
+# Instance globale du journaliseur (compatible avec l'ancienne interface)
 _global_logger: Optional[ActionLogger] = None
 
 
 def get_logger(log_path: Optional[str] = None) -> ActionLogger:
-    """Get global logger instance (compatible with old interface)"""
+    """Obtenir l'instance globale du journaliseur (compatible avec l'ancienne interface)"""
     global _global_logger
     
     if log_path:

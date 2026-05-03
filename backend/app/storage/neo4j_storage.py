@@ -1,8 +1,8 @@
 """
-Neo4jStorage — Neo4j Community Edition implementation of GraphStorage.
+Neo4jStorage — implémentation Neo4j Community Edition de GraphStorage.
 
-Replaces all Zep Cloud API calls with local Neo4j Cypher queries.
-Includes: CRUD, NER/RE-based text ingestion, hybrid search, retry logic.
+Remplace tous les appels API Zep Cloud par des requêtes Cypher Neo4j locales.
+Inclut : CRUD, ingestion de texte basée sur NER/RE, recherche hybride, logique de nouvelle tentative.
 """
 
 import json
@@ -30,10 +30,10 @@ logger = logging.getLogger('mirofish.neo4j_storage')
 
 
 class Neo4jStorage(GraphStorage):
-    """Neo4j CE implementation of the GraphStorage interface."""
+    """Implémentation Neo4j CE de l'interface GraphStorage."""
 
     MAX_RETRIES = 3
-    RETRY_DELAY_BASE = 1  # seconds
+    RETRY_DELAY_BASE = 1  # secondes
 
     def __init__(
         self,
@@ -54,30 +54,30 @@ class Neo4jStorage(GraphStorage):
         self._ner = ner_extractor or NERExtractor()
         self._search = SearchService(self._embedding)
 
-        # Initialize schema (indexes, constraints)
+        # Initialiser le schéma (index, contraintes)
         self._ensure_schema()
 
     def close(self):
-        """Close the Neo4j driver connection."""
+        """Fermer la connexion du pilote Neo4j."""
         self._driver.close()
 
     def _ensure_schema(self):
-        """Create indexes and constraints if they don't exist."""
+        """Créer les index et contraintes s'ils n'existent pas."""
         with self._driver.session() as session:
             for query in neo4j_schema.ALL_SCHEMA_QUERIES:
                 try:
                     session.run(query)
                 except Exception as e:
-                    logger.warning(f"Schema query warning (may already exist): {e}")
+                    logger.warning(f"Avertissement de requête de schéma (peut déjà exister) : {e}")
 
     # ----------------------------------------------------------------
-    # Retry wrapper
+    # Enveloppe de nouvelle tentative
     # ----------------------------------------------------------------
 
     def _call_with_retry(self, func, *args, **kwargs):
         """
-        Execute a function with retry on Neo4j transient errors.
-        Replaces 3 different retry patterns from the Zep codebase.
+        Exécuter une fonction avec nouvelle tentative sur les erreurs transitoires Neo4j.
+        Remplace 3 modèles de nouvelle tentative différents du codebase Zep.
         """
         last_error = None
         for attempt in range(self.MAX_RETRIES):
@@ -87,8 +87,8 @@ class Neo4jStorage(GraphStorage):
                 last_error = e
                 wait = self.RETRY_DELAY_BASE * (2 ** attempt)
                 logger.warning(
-                    f"Neo4j transient error (attempt {attempt + 1}/{self.MAX_RETRIES}), "
-                    f"retrying in {wait}s: {e}"
+                    f"Erreur transitoire Neo4j (tentative {attempt + 1}/{self.MAX_RETRIES}), "
+                    f"nouvelle tentative dans {wait}s : {e}"
                 )
                 time.sleep(wait)
             except Exception:
@@ -97,7 +97,7 @@ class Neo4jStorage(GraphStorage):
         raise last_error  # type: ignore
 
     # ----------------------------------------------------------------
-    # Graph lifecycle
+    # Cycle de vie du graphe
     # ----------------------------------------------------------------
 
     def create_graph(self, name: str, description: str = "") -> str:
@@ -124,17 +124,17 @@ class Neo4jStorage(GraphStorage):
         with self._driver.session() as session:
             self._call_with_retry(session.execute_write, _create)
 
-        logger.info(f"Created graph '{name}' with id {graph_id}")
+        logger.info(f"Graphe '{name}' créé avec l'identifiant {graph_id}")
         return graph_id
 
     def delete_graph(self, graph_id: str) -> None:
         def _delete(tx):
-            # Delete all entities and their relationships
+            # Supprimer toutes les entités et leurs relations
             tx.run(
                 "MATCH (n {graph_id: $gid}) DETACH DELETE n",
                 gid=graph_id,
             )
-            # Delete graph node
+            # Supprimer le nœud graphe
             tx.run(
                 "MATCH (g:Graph {graph_id: $gid}) DELETE g",
                 gid=graph_id,
@@ -142,7 +142,7 @@ class Neo4jStorage(GraphStorage):
 
         with self._driver.session() as session:
             self._call_with_retry(session.execute_write, _delete)
-        logger.info(f"Deleted graph {graph_id}")
+        logger.info(f"Graphe {graph_id} supprimé")
 
     def set_ontology(self, graph_id: str, ontology: Dict[str, Any]) -> None:
         def _set(tx):
@@ -170,47 +170,47 @@ class Neo4jStorage(GraphStorage):
             return {}
 
     # ----------------------------------------------------------------
-    # Add data (NER → nodes/edges)
+    # Ajout de données (NER → nœuds/arêtes)
     # ----------------------------------------------------------------
 
     def add_text(self, graph_id: str, text: str) -> str:
-        """Process text: NER/RE → batch embed → create nodes/edges → return episode_id."""
+        """Traiter le texte : NER/RE → incorporation par lot → créer nœuds/arêtes → retourner episode_id."""
         episode_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
 
-        # Get ontology for NER guidance
+        # Obtenir l'ontologie pour guider le NER
         ontology = self.get_ontology(graph_id)
 
-        # Extract entities and relations
-        logger.info(f"[add_text] Starting NER extraction for chunk ({len(text)} chars)...")
+        # Extraire les entités et les relations
+        logger.info(f"[add_text] Début de l'extraction NER pour le morceau ({len(text)} caractères)...")
         extraction = self._ner.extract(text, ontology)
         entities = extraction.get("entities", [])
         relations = extraction.get("relations", [])
 
         logger.info(
-            f"[add_text] NER done: {len(entities)} entities, {len(relations)} relations"
+            f"[add_text] NER terminé : {len(entities)} entités, {len(relations)} relations"
         )
 
-        # --- Batch embed all texts at once ---
+        # --- Incorporer tous les textes par lot en une seule fois ---
         entity_summaries = [f"{e['name']} ({e['type']})" for e in entities]
         fact_texts = [r.get("fact", f"{r['source']} {r['type']} {r['target']}") for r in relations]
         all_texts_to_embed = entity_summaries + fact_texts
 
         all_embeddings: list = []
         if all_texts_to_embed:
-            logger.info(f"[add_text] Batch-embedding {len(all_texts_to_embed)} texts...")
+            logger.info(f"[add_text] Incorporation par lot de {len(all_texts_to_embed)} textes...")
             try:
                 all_embeddings = self._embedding.embed_batch(all_texts_to_embed)
             except Exception as e:
-                logger.warning(f"[add_text] Batch embedding failed, falling back to empty: {e}")
+                logger.warning(f"[add_text] L'incorporation par lot a échoué, repli vers vide : {e}")
                 all_embeddings = [[] for _ in all_texts_to_embed]
 
         entity_embeddings = all_embeddings[:len(entities)]
         relation_embeddings = all_embeddings[len(entities):]
-        logger.info(f"[add_text] Embedding done, writing to Neo4j...")
+        logger.info(f"[add_text] Incorporation terminée, écriture dans Neo4j...")
 
         with self._driver.session() as session:
-            # Create episode node
+            # Créer le nœud épisode
             def _create_episode(tx):
                 tx.run(
                     """
@@ -230,8 +230,8 @@ class Neo4jStorage(GraphStorage):
 
             self._call_with_retry(session.execute_write, _create_episode)
 
-            # MERGE entities (upsert by graph_id + name + primary label)
-            entity_uuid_map: Dict[str, str] = {}  # name_lower -> uuid
+            # FUSIONNER les entités (upsert par graph_id + nom + label principal)
+            entity_uuid_map: Dict[str, str] = {}  # nom_minuscule -> uuid
             for idx, entity in enumerate(entities):
                 ename = entity["name"]
                 etype = entity["type"]
@@ -245,7 +245,7 @@ class Neo4jStorage(GraphStorage):
                 def _merge_entity(tx, _uuid=e_uuid, _name=ename, _type=etype,
                                   _attrs=attrs, _embedding=embedding,
                                   _summary=summary_text, _now=now):
-                    # MERGE by graph_id + lowercase name to deduplicate
+                    # FUSIONNER par graph_id + nom en minuscules pour dédupliquer
                     result = tx.run(
                         """
                         MERGE (n:Entity {graph_id: $gid, name_lower: $name_lower})
@@ -278,7 +278,7 @@ class Neo4jStorage(GraphStorage):
                 actual_uuid = self._call_with_retry(session.execute_write, _merge_entity)
                 entity_uuid_map[ename.lower()] = actual_uuid
 
-                # Add entity type label
+                # Ajouter le label de type d'entité
                 if etype and etype != "Entity":
                     try:
                         def _add_label(tx, _name_lower=ename.lower()):
@@ -289,9 +289,9 @@ class Neo4jStorage(GraphStorage):
                             )
                         self._call_with_retry(session.execute_write, _add_label)
                     except Exception as e:
-                        logger.warning(f"Failed to add label '{etype}' to '{ename}': {e}")
+                        logger.warning(f"Impossible d'ajouter le label '{etype}' à '{ename}' : {e}")
 
-            # Create relations
+            # Créer les relations
             for idx, relation in enumerate(relations):
                 source_name = relation["source"]
                 target_name = relation["target"]
@@ -303,8 +303,8 @@ class Neo4jStorage(GraphStorage):
 
                 if not source_uuid or not target_uuid:
                     logger.warning(
-                        f"Skipping relation {source_name}->{target_name}: "
-                        f"entity not found in extraction results"
+                        f"Ignorer la relation {source_name}->{target_name} : "
+                        f"entité non trouvée dans les résultats d'extraction"
                     )
                     continue
 
@@ -346,7 +346,7 @@ class Neo4jStorage(GraphStorage):
 
                 self._call_with_retry(session.execute_write, _create_relation)
 
-        logger.info(f"[add_text] Chunk done: episode={episode_id}")
+        logger.info(f"[add_text] Morceau terminé : épisode={episode_id}")
         return episode_id
 
     def add_text_batch(
@@ -356,7 +356,7 @@ class Neo4jStorage(GraphStorage):
         batch_size: int = 3,
         progress_callback: Optional[Callable] = None,
     ) -> List[str]:
-        """Batch-add text chunks with progress reporting."""
+        """Ajouter des morceaux de texte par lot avec rapport de progression."""
         episode_ids = []
         total = len(chunks)
 
@@ -370,7 +370,7 @@ class Neo4jStorage(GraphStorage):
                 progress = (i + 1) / total
                 progress_callback(progress)
 
-            logger.info(f"Processed chunk {i + 1}/{total}")
+            logger.info(f"Morceau {i + 1}/{total} traité")
 
         return episode_ids
 
@@ -380,12 +380,12 @@ class Neo4jStorage(GraphStorage):
         progress_callback: Optional[Callable] = None,
         timeout: int = 600,
     ) -> None:
-        """No-op — processing is synchronous in Neo4j."""
+        """Sans opération — le traitement est synchrone dans Neo4j."""
         if progress_callback:
             progress_callback(1.0)
 
     # ----------------------------------------------------------------
-    # Read nodes
+    # Lecture des nœuds
     # ----------------------------------------------------------------
 
     def get_all_nodes(self, graph_id: str, limit: int = 2000) -> List[Dict[str, Any]]:
@@ -420,7 +420,7 @@ class Neo4jStorage(GraphStorage):
             return self._call_with_retry(session.execute_read, _read)
 
     def get_node_edges(self, node_uuid: str) -> List[Dict[str, Any]]:
-        """O(1) Cypher — NOT full scan + filter like the old Zep code."""
+        """Cypher O(1) — PAS de balayage complet + filtre comme l'ancien code Zep."""
         def _read(tx):
             result = tx.run(
                 """
@@ -439,7 +439,7 @@ class Neo4jStorage(GraphStorage):
 
     def get_nodes_by_label(self, graph_id: str, label: str) -> List[Dict[str, Any]]:
         def _read(tx):
-            # Dynamic label in query (safe — label comes from ontology, not user input)
+            # Label dynamique dans la requête (sûr — le label vient de l'ontologie, pas de l'entrée utilisateur)
             query = f"""
                 MATCH (n:Entity:`{label}` {{graph_id: $gid}})
                 RETURN n, labels(n) AS labels
@@ -451,7 +451,7 @@ class Neo4jStorage(GraphStorage):
             return self._call_with_retry(session.execute_read, _read)
 
     # ----------------------------------------------------------------
-    # Read edges
+    # Lecture des arêtes
     # ----------------------------------------------------------------
 
     def get_all_edges(self, graph_id: str) -> List[Dict[str, Any]]:
@@ -473,7 +473,7 @@ class Neo4jStorage(GraphStorage):
             return self._call_with_retry(session.execute_read, _read)
 
     # ----------------------------------------------------------------
-    # Search
+    # Recherche
     # ----------------------------------------------------------------
 
     def search(
@@ -484,10 +484,10 @@ class Neo4jStorage(GraphStorage):
         scope: str = "edges",
     ):
         """
-        Hybrid search — returns results matching the scope.
+        Recherche hybride — retourne les résultats correspondant à la portée.
 
-        Returns a dict with 'edges' and/or 'nodes' lists
-        (callers like zep_tools will wrap into SearchResult).
+        Retourne un dictionnaire avec des listes 'edges' et/ou 'nodes'
+        (les appelants comme zep_tools les encapsuleront dans SearchResult).
         """
         result = {"edges": [], "nodes": [], "query": query}
 
@@ -505,26 +505,26 @@ class Neo4jStorage(GraphStorage):
         return result
 
     # ----------------------------------------------------------------
-    # Graph info
+    # Informations sur le graphe
     # ----------------------------------------------------------------
 
     def get_graph_info(self, graph_id: str) -> Dict[str, Any]:
         def _read(tx):
-            # Count nodes
+            # Compter les nœuds
             node_result = tx.run(
                 "MATCH (n:Entity {graph_id: $gid}) RETURN count(n) AS cnt",
                 gid=graph_id,
             )
             node_count = node_result.single()["cnt"]
 
-            # Count edges
+            # Compter les arêtes
             edge_result = tx.run(
                 "MATCH ()-[r:RELATION {graph_id: $gid}]->() RETURN count(r) AS cnt",
                 gid=graph_id,
             )
             edge_count = edge_result.single()["cnt"]
 
-            # Distinct entity types
+            # Types d'entités distincts
             label_result = tx.run(
                 """
                 MATCH (n:Entity {graph_id: $gid})
@@ -548,11 +548,11 @@ class Neo4jStorage(GraphStorage):
 
     def get_graph_data(self, graph_id: str) -> Dict[str, Any]:
         """
-        Full graph dump with enriched edge format (for frontend).
-        Includes derived fields: fact_type, source_node_name, target_node_name.
+        Vidage complet du graphe avec format d'arête enrichi (pour le frontend).
+        Inclut les champs dérivés : fact_type, source_node_name, target_node_name.
         """
         def _read(tx):
-            # Get all nodes
+            # Obtenir tous les nœuds
             node_result = tx.run(
                 """
                 MATCH (n:Entity {graph_id: $gid})
@@ -561,13 +561,13 @@ class Neo4jStorage(GraphStorage):
                 gid=graph_id,
             )
             nodes = []
-            node_map: Dict[str, str] = {}  # uuid -> name
+            node_map: Dict[str, str] = {}  # uuid -> nom
             for record in node_result:
                 nd = self._node_to_dict(record["n"], record["labels"])
                 nodes.append(nd)
                 node_map[nd["uuid"]] = nd["name"]
 
-            # Get all edges with source/target node names (JOIN)
+            # Obtenir toutes les arêtes avec les noms des nœuds source/cible (JOINTURE)
             edge_result = tx.run(
                 """
                 MATCH (src:Entity)-[r:RELATION {graph_id: $gid}]->(tgt:Entity)
@@ -579,11 +579,11 @@ class Neo4jStorage(GraphStorage):
             edges = []
             for record in edge_result:
                 ed = self._edge_to_dict(record["r"], record["src_uuid"], record["tgt_uuid"])
-                # Enriched fields for frontend
+                # Champs enrichis pour le frontend
                 ed["fact_type"] = ed["name"]
                 ed["source_node_name"] = record["src_name"] or ""
                 ed["target_node_name"] = record["tgt_name"] or ""
-                # Legacy alias
+                # Alias hérité
                 ed["episodes"] = ed.get("episode_ids", [])
                 edges.append(ed)
 
@@ -599,12 +599,12 @@ class Neo4jStorage(GraphStorage):
             return self._call_with_retry(session.execute_read, _read)
 
     # ----------------------------------------------------------------
-    # Dict conversion helpers
+    # Aides à la conversion en dictionnaire
     # ----------------------------------------------------------------
 
     @staticmethod
     def _node_to_dict(node, labels: List[str]) -> Dict[str, Any]:
-        """Convert Neo4j node to the standard node dict format."""
+        """Convertir un nœud Neo4j au format de dictionnaire de nœud standard."""
         props = dict(node)
         attrs_json = props.pop("attributes_json", "{}")
         try:
@@ -612,7 +612,7 @@ class Neo4jStorage(GraphStorage):
         except (json.JSONDecodeError, TypeError):
             attributes = {}
 
-        # Remove internal fields from dict
+        # Supprimer les champs internes du dictionnaire
         props.pop("embedding", None)
         props.pop("name_lower", None)
 
@@ -627,7 +627,7 @@ class Neo4jStorage(GraphStorage):
 
     @staticmethod
     def _edge_to_dict(rel, source_uuid: str, target_uuid: str) -> Dict[str, Any]:
-        """Convert Neo4j relationship to the standard edge dict format."""
+        """Convertir une relation Neo4j au format de dictionnaire d'arête standard."""
         props = dict(rel)
         attrs_json = props.pop("attributes_json", "{}")
         try:
@@ -635,7 +635,7 @@ class Neo4jStorage(GraphStorage):
         except (json.JSONDecodeError, TypeError):
             attributes = {}
 
-        # Remove internal fields
+        # Supprimer les champs internes
         props.pop("fact_embedding", None)
 
         episode_ids = props.get("episode_ids", [])

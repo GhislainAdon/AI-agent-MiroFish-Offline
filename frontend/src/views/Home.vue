@@ -1,35 +1,35 @@
 <template>
   <div class="home-container">
-    <!-- Top Navigation Bar -->
+    <!-- Barre de navigation supérieure -->
     <nav class="navbar" :style="s.navbar">
       <div class="nav-brand" :style="s.navBrand">MIROFISH OFFLINE</div>
       <div class="nav-links" :style="s.navLinks">
         <a href="https://github.com/nikmcfly/MiroFish-Offline" target="_blank" class="github-link" :style="s.githubLink">
-          Visit our Github <span>↗</span>
+          Visitez notre Github <span>↗</span>
         </a>
       </div>
     </nav>
 
     <div class="main-content" :style="s.mainContent">
-      <!-- Hero Section -->
+      <!-- Section héro -->
       <section class="hero-section" :style="s.heroSection">
         <div class="hero-left" :style="s.heroLeft">
           <div class="tag-row" :style="s.tagRow">
-            <span class="orange-tag" :style="s.orangeTag">Offline Multi-Agent Simulation Engine</span>
+            <span class="orange-tag" :style="s.orangeTag">Moteur de simulation multi-agent hors ligne</span>
             <span class="version-text" :style="s.versionText">/ v0.1-preview</span>
           </div>
 
           <h1 class="main-title" :style="s.mainTitle">
-            Upload Any Document<br>
-            <span class="gradient-text" :style="s.gradientText">Predict What Happens Next</span>
+            Téléchargez n'importe quel document<br>
+            <span class="gradient-text" :style="s.gradientText">Prédisez ce qui va se passer</span>
           </h1>
 
           <div class="hero-desc" :style="s.heroDesc">
             <p :style="s.heroDescP">
-              From a single document, <span :style="s.highlightBold">MiroFish Offline</span> extracts reality seeds and builds a parallel world of <span :style="s.highlightOrange">autonomous AI agents</span> — running entirely on your machine. Inject variables, observe emergent behavior, and find <span :style="s.highlightCode">"local optima"</span> in complex social dynamics.
+              À partir d'un seul document, <span :style="s.highlightBold">MiroFish Offline</span> extrait des graines de réalité et construit un monde parallèle d'<span :style="s.highlightOrange">agents IA autonomes</span> — fonctionnant entièrement sur votre machine. Injectez des variables, observez les comportements émergents et trouvez des <span :style="s.highlightCode">"optima locaux"</span> dans les dynamiques sociales complexes.
             </p>
             <p class="slogan-text" :style="s.sloganText">
-              Your data never leaves your machine. The future is simulated locally<span :style="s.blinkingCursor">_</span>
+              Vos données ne quittent jamais votre machine. Le futur est simulé localement<span :style="s.blinkingCursor">_</span>
             </p>
           </div>
 
@@ -44,33 +44,33 @@
         </div>
       </section>
 
-      <!-- Dashboard: Two-Column Layout -->
+      <!-- Tableau de bord : disposition en deux colonnes -->
       <section class="dashboard-section" :style="s.dashboardSection">
-        <!-- Left Column: Status & Steps -->
+        <!-- Colonne gauche : Statut et étapes -->
         <div class="left-panel" :style="s.leftPanel">
           <div class="panel-header" :style="s.panelHeader">
-            <span :style="s.statusDot">■</span> System Status
+            <span :style="s.statusDot">■</span> État du système
           </div>
 
-          <h2 class="section-title" :style="s.sectionTitle">Ready</h2>
+          <h2 class="section-title" :style="s.sectionTitle">Prêt</h2>
           <p class="section-desc" :style="s.sectionDesc">
-            Local prediction engine on standby. Upload unstructured data to initialize a simulation.
+            Moteur de prédiction local en veille. Téléchargez des données non structurées pour initialiser une simulation.
           </p>
 
           <div class="metrics-row" :style="s.metricsRow">
             <div class="metric-card" :style="s.metricCard">
-              <div class="metric-value" :style="s.metricValue">Free</div>
-              <div class="metric-label" :style="s.metricLabel">Runs on your hardware</div>
+              <div class="metric-value" :style="s.metricValue">Gratuit</div>
+              <div class="metric-label" :style="s.metricLabel">Fonctionne sur votre matériel</div>
             </div>
             <div class="metric-card" :style="s.metricCard">
-              <div class="metric-value" :style="s.metricValue">Private</div>
-              <div class="metric-label" :style="s.metricLabel">100% offline, no cloud</div>
+              <div class="metric-value" :style="s.metricValue">Privé</div>
+              <div class="metric-label" :style="s.metricLabel">100% hors ligne, aucun cloud</div>
             </div>
           </div>
 
           <div class="steps-container" :style="s.stepsContainer">
             <div class="steps-header" :style="s.stepsHeader">
-               <span :style="s.diamondIcon">◇</span> Workflow Sequence
+               <span :style="s.diamondIcon">◇</span> Séquence de travail
             </div>
             <div :style="s.workflowList">
               <div v-for="(step, i) in steps" :key="i" :style="s.workflowItem">
@@ -89,8 +89,8 @@
           <div class="console-box" :style="s.consoleBox">
             <div :style="s.consoleSection">
               <div class="console-header" :style="s.consoleHeader">
-                <span>01 / Reality Seeds</span>
-                <span>Supported: PDF, MD, TXT</span>
+                <span>01 / Grainnes de réalité</span>
+                <span>Formats pris en charge : PDF, MD, TXT</span>
               </div>
               <div
                 :style="s.uploadZone"
@@ -102,8 +102,8 @@
                 <input ref="fileInput" type="file" multiple accept=".pdf,.md,.txt" @change="handleFileSelect" style="display: none" :disabled="loading" />
                 <div v-if="files.length === 0" :style="s.uploadPlaceholder">
                   <div :style="s.uploadIcon">↑</div>
-                  <div :style="s.uploadTitle">Drag & drop files here</div>
-                  <div :style="s.uploadHint">or click to browse</div>
+                  <div :style="s.uploadTitle">Glissez-déposez vos fichiers ici</div>
+                  <div :style="s.uploadHint">ou cliquez pour parcourir</div>
                 </div>
                 <div v-else :style="s.fileList">
                   <div v-for="(file, index) in files" :key="index" :style="s.fileItem">
@@ -115,22 +115,22 @@
               </div>
             </div>
 
-            <div :style="s.consoleDivider"><span :style="s.consoleDividerText">Parameters</span></div>
+            <div :style="s.consoleDivider"><span :style="s.consoleDividerText">Paramètres</span></div>
 
             <div :style="s.consoleSection">
               <div class="console-header" :style="s.consoleHeader">
-                <span>>_ 02 / Simulation Prompt</span>
+                <span>>_ 02 / Prompt de simulation</span>
               </div>
               <div :style="s.inputWrapper">
-                <textarea v-model="formData.simulationRequirement" :style="s.codeInput" placeholder="// Describe your simulation or prediction goal in natural language" rows="6" :disabled="loading"></textarea>
-                <div :style="s.modelBadge">Engine: Ollama + Neo4j (local)</div>
+                <textarea v-model="formData.simulationRequirement" :style="s.codeInput" placeholder="// Décrivez votre objectif de simulation ou de prédiction en langage naturel" rows="6" :disabled="loading"></textarea>
+                <div :style="s.modelBadge">Moteur : Ollama + Neo4j (local)</div>
               </div>
             </div>
 
             <div :style="s.btnSection">
               <button :style="s.startEngineBtn" @click="startSimulation" :disabled="!canSubmit || loading">
-                <span v-if="!loading">Start Engine</span>
-                <span v-else>Initializing...</span>
+                <span v-if="!loading">Démarrer le moteur</span>
+                <span v-else>Initialisation...</span>
                 <span>→</span>
               </button>
             </div>
@@ -218,11 +218,11 @@ const s = reactive({
 })
 
 const steps = [
-  { num: '01', title: 'Graph Build', desc: 'Extract reality seeds from your document, build knowledge graph with Neo4j + GraphRAG' },
-  { num: '02', title: 'Env Setup', desc: 'Generate agent personas, configure simulation parameters via local Ollama LLM' },
-  { num: '03', title: 'Simulation', desc: 'Execute la simulation multi-agent en local avec mises a jour dynamiques de la memoire' },
-  { num: '04', title: 'Rapport', desc: 'ReportAgent analyse les resultats de simulation et genere un rapport predictif detaille' },
-  { num: '05', title: 'Interaction', desc: 'Dialogue avec les agents simules ou discute les conclusions avec ReportAgent' },
+  { num: '01', title: 'Construction du graphe', desc: 'Extrait les graines de réalité de votre document, construit le graphe de connaissances avec Neo4j + GraphRAG' },
+  { num: '02', title: 'Configuration', desc: 'Génère les profils d\'agents, configure les paramètres de simulation via le LLM Ollama local' },
+  { num: '03', title: 'Simulation', desc: 'Exécute la simulation multi-agent en local avec mises à jour dynamiques de la mémoire' },
+  { num: '04', title: 'Rapport', desc: 'ReportAgent analyse les résultats de simulation et génère un rapport prédictif détaillé' },
+  { num: '05', title: 'Interaction', desc: 'Dialogue avec les agents simulés ou discute des conclusions avec ReportAgent' },
 ]
 
 const router = useRouter()

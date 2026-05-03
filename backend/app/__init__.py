@@ -1,12 +1,12 @@
 """
-MiroFish Backend - Flask Application Factory
+MiroFish Backend - Fabrique d'application Flask
 """
 
 import os
 import warnings
 
-# Suppress multiprocessing resource_tracker warnings (from third-party libraries like transformers)
-# Must be set before all other imports
+# Supprimer les avertissements multiprocessing resource_tracker (des bibliothèques tierces comme transformers)
+# Doit être défini avant toutes les autres importations
 warnings.filterwarnings("ignore", message=".*resource_tracker.*")
 
 from flask import Flask, request
@@ -17,76 +17,75 @@ from .utils.logger import setup_logger, get_logger
 
 
 def create_app(config_class=Config):
-    """Flask application factory function"""
+    """Fonction fabrique de l'application Flask"""
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Configure JSON encoding: ensure Chinese displays directly (not as \uXXXX)
-    # Flask >= 2.3 uses app.json.ensure_ascii, older versions use JSON_AS_ASCII config
+    # Configurer l'encodage JSON : s'assurer que le chinois s'affiche directement (pas comme \uXXXX)
+    # Flask >= 2.3 utilise app.json.ensure_ascii, les versions plus anciennes utilisent la config JSON_AS_ASCII
     if hasattr(app, 'json') and hasattr(app.json, 'ensure_ascii'):
         app.json.ensure_ascii = False
 
-    # Setup logging
+    # Configuration de la journalisation
     logger = setup_logger('mirofish')
 
-    # Only print startup info in reloader subprocess (avoid printing twice in debug mode)
+    # N'imprimer les informations de démarrage que dans le sous-processus du reloader (éviter d'imprimer deux fois en mode debug)
     is_reloader_process = os.environ.get('WERKZEUG_RUN_MAIN') == 'true'
     debug_mode = app.config.get('DEBUG', False)
     should_log_startup = not debug_mode or is_reloader_process
 
     if should_log_startup:
         logger.info("=" * 50)
-        logger.info("MiroFish-Offline Backend starting...")
+        logger.info("Démarrage du backend MiroFish-Offline...")
         logger.info("=" * 50)
 
-    # Enable CORS
+    # Activer CORS
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    # --- Initialize Neo4jStorage singleton (DI via app.extensions) ---
+    # --- Initialiser le singleton Neo4jStorage (injection via app.extensions) ---
     from .storage import Neo4jStorage
     try:
         neo4j_storage = Neo4jStorage()
         app.extensions['neo4j_storage'] = neo4j_storage
         if should_log_startup:
-            logger.info("Neo4jStorage initialized (connected to %s)", Config.NEO4J_URI)
+            logger.info("Neo4jStorage initialisé (connecté à %s)", Config.NEO4J_URI)
     except Exception as e:
-        logger.error("Neo4jStorage initialization failed: %s", e)
-        # Store None so endpoints can return 503 gracefully
+        logger.error("Échec de l'initialisation de Neo4jStorage : %s", e)
+        # Stocker None pour que les endpoints puissent retourner 503 proprement
         app.extensions['neo4j_storage'] = None
 
-    # Register simulation process cleanup function (ensure all simulation processes terminate on server shutdown)
+    # Enregistrer la fonction de nettoyage des processus de simulation (s'assurer que tous les processus de simulation se terminent à l'arrêt du serveur)
     from .services.simulation_runner import SimulationRunner
     SimulationRunner.register_cleanup()
     if should_log_startup:
-        logger.info("Simulation process cleanup function registered")
+        logger.info("Fonction de nettoyage des processus de simulation enregistrée")
 
-    # Request logging middleware
+    # Middleware de journalisation des requêtes
     @app.before_request
     def log_request():
         logger = get_logger('mirofish.request')
-        logger.debug(f"Request: {request.method} {request.path}")
+        logger.debug(f"Requête : {request.method} {request.path}")
         if request.content_type and 'json' in request.content_type:
-            logger.debug(f"Request body: {request.get_json(silent=True)}")
+            logger.debug(f"Corps de la requête : {request.get_json(silent=True)}")
 
     @app.after_request
     def log_response(response):
         logger = get_logger('mirofish.request')
-        logger.debug(f"Response: {response.status_code}")
+        logger.debug(f"Réponse : {response.status_code}")
         return response
 
-    # Register blueprints
+    # Enregistrer les blueprints
     from .api import graph_bp, simulation_bp, report_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
 
-    # Health check
+    # Vérification de l'état de santé
     @app.route('/health')
     def health():
         return {'status': 'ok', 'service': 'MiroFish-Offline Backend'}
 
     if should_log_startup:
-        logger.info("MiroFish-Offline Backend startup complete")
+        logger.info("Démarrage du backend MiroFish-Offline terminé")
 
     return app
-

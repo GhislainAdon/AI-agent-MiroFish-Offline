@@ -6,25 +6,25 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">01</span>
-            <span class="step-title">Ontology Generation</span>
+            <span class="step-title">Génération de l'ontologie</span>
           </div>
           <div class="step-status">
-            <span v-if="currentPhase > 0" class="badge success">Completed</span>
-            <span v-else-if="currentPhase === 0" class="badge processing">Generating</span>
-            <span v-else class="badge pending">Waiting</span>
+            <span v-if="currentPhase > 0" class="badge success">Terminé</span>
+            <span v-else-if="currentPhase === 0" class="badge processing">Génération</span>
+            <span v-else class="badge pending">En attente</span>
           </div>
         </div>
         
         <div class="card-content">
           <p class="api-note">POST /api/graph/ontology/generate</p>
           <p class="description">
-            LLM analyzes document content and simulation requirements, extracts reality seeds, and automatically generates appropriate ontology structures
+            Le LLM analyse le contenu du document et les exigences de simulation, extrait les graines de réalité et génère automatiquement les structures d'ontologie appropriées
           </p>
 
           <!-- Loading / Progress -->
           <div v-if="currentPhase === 0 && ontologyProgress" class="progress-section">
             <div class="spinner-sm"></div>
-            <span>{{ ontologyProgress.message || 'Analyzing documents...' }}</span>
+            <span>{{ ontologyProgress.message || 'Analyse des documents...' }}</span>
           </div>
 
           <!-- Detail Overlay -->
@@ -75,7 +75,7 @@
 
           <!-- Generated Entity Tags -->
           <div v-if="projectData?.ontology?.entity_types" class="tags-container" :class="{ 'dimmed': selectedOntologyItem }">
-            <span class="tag-label">GENERATED ENTITY TYPES</span>
+            <span class="tag-label">TYPES D'ENTITÉS GÉNÉRÉS</span>
             <div class="tags-list">
               <span 
                 v-for="entity in projectData.ontology.entity_types" 
@@ -90,7 +90,7 @@
 
           <!-- Generated Relation Tags -->
           <div v-if="projectData?.ontology?.edge_types" class="tags-container" :class="{ 'dimmed': selectedOntologyItem }">
-            <span class="tag-label">GENERATED RELATION TYPES</span>
+            <span class="tag-label">TYPES DE RELATIONS GÉNÉRÉS</span>
             <div class="tags-list">
               <span 
                 v-for="rel in projectData.ontology.edge_types" 
@@ -105,39 +105,39 @@
         </div>
       </div>
 
-      <!-- Step 02: Graph Build -->
+      <!-- Étape 02 : Construction du graphe -->
       <div class="step-card" :class="{ 'active': currentPhase === 1, 'completed': currentPhase > 1 }">
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">02</span>
-            <span class="step-title">GraphRAG Build</span>
+            <span class="step-title">Construction GraphRAG</span>
           </div>
           <div class="step-status">
-            <span v-if="currentPhase > 1" class="badge success">Completed</span>
+            <span v-if="currentPhase > 1" class="badge success">Terminé</span>
             <span v-else-if="currentPhase === 1" class="badge processing">{{ buildProgress?.progress || 0 }}%</span>
-            <span v-else class="badge pending">Waiting</span>
+            <span v-else class="badge pending">En attente</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/graph/build</p>
           <p class="description">
-            Based on the generated ontology, automatically chunk documents and invoke Neo4j to build knowledge graphs, extract entities and relationships, and form temporal memory and community summaries
+            Basé sur l'ontologie générée, découpe automatiquement les documents et invoque Neo4j pour construire les graphes de connaissances, extrait les entités et les relations, et forme la mémoire temporelle et les résumés de communauté
           </p>
           
           <!-- Stats Cards -->
           <div class="stats-grid">
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.nodes }}</span>
-              <span class="stat-label">Entity Nodes</span>
+              <span class="stat-label">Nœuds d'entités</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.edges }}</span>
-              <span class="stat-label">Relation Edges</span>
+              <span class="stat-label">Arêtes de relations</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.types }}</span>
-              <span class="stat-label">SCHEMA Types</span>
+              <span class="stat-label">Types de schéma</span>
             </div>
           </div>
         </div>
@@ -148,23 +148,23 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">03</span>
-            <span class="step-title">Build Complete</span>
+            <span class="step-title">Construction terminée</span>
           </div>
           <div class="step-status">
-            <span v-if="currentPhase >= 2" class="badge accent">In Progress</span>
+            <span v-if="currentPhase >= 2" class="badge accent">En cours</span>
           </div>
         </div>
         
         <div class="card-content">
           <p class="api-note">POST /api/simulation/create</p>
-          <p class="description">Graph build is complete. Please proceed to the next step to set up the simulation environment</p>
+          <p class="description">La construction du graphe est terminée. Veuillez passer à l'étape suivante pour configurer l'environnement de simulation</p>
           <button 
             class="action-btn" 
             :disabled="currentPhase < 2 || creatingSimulation"
             @click="handleEnterEnvSetup"
           >
             <span v-if="creatingSimulation" class="spinner-sm"></span>
-            {{ creatingSimulation ? 'Creating...' : 'Enter Environment Setup ➝' }}
+            {{ creatingSimulation ? 'Création...' : 'Entrer dans la configuration de l'environnement ➝' }}
           </button>
         </div>
       </div>
@@ -173,7 +173,7 @@
     <!-- Bottom Info / Logs -->
     <div class="system-logs">
       <div class="log-header">
-        <span class="log-title">SYSTEM DASHBOARD</span>
+        <span class="log-title">TABLEAU DE BORD SYSTÈME</span>
         <span class="log-id">{{ projectData?.project_id || 'NO_PROJECT' }}</span>
       </div>
       <div class="log-content" ref="logContent">
@@ -232,12 +232,12 @@ const handleEnterEnvSetup = async () => {
         params: { simulationId: res.data.simulation_id }
       })
     } else {
-      console.error('Failed to create simulation:', res.error)
-      alert('Failed to create simulation: ' + (res.error || 'Unknown error'))
+      console.error('Échec de la création de la simulation :', res.error)
+      alert('Échec de la création de la simulation : ' + (res.error || 'Unknown error'))
     }
   } catch (err) {
-    console.error('Simulation creation exception:', err)
-    alert('Simulation creation exception: ' + err.message)
+    console.error('Exception lors de la création de la simulation :', err)
+    alert('Exception lors de la création de la simulation : ' + err.message)
   } finally {
     creatingSimulation.value = false
   }
