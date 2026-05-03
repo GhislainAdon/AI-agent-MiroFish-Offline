@@ -1,6 +1,6 @@
 """
-File Parser Utility
-Supports text extraction from PDF, Markdown, TXT files
+Utilitaire d'analyse de fichiers
+Prend en charge l'extraction de texte à partir de fichiers PDF, Markdown et TXT
 """
 
 import os
@@ -10,29 +10,29 @@ from typing import List, Optional
 
 def _read_text_with_fallback(file_path: str) -> str:
     """
-    Read text file with automatic encoding detection if UTF-8 fails.
+    Lire un fichier texte avec détection automatique de l'encodage si UTF-8 échoue.
 
-    Uses multi-level fallback strategy:
-    1. First try UTF-8 decoding
-    2. Use charset_normalizer for encoding detection
-    3. Fall back to chardet for encoding detection
-    4. Finally use UTF-8 + errors='replace' as fallback
+    Utilise une stratégie de repli à plusieurs niveaux :
+    1. D'abord essayer le décodage UTF-8
+    2. Utiliser charset_normalizer pour la détection d'encodage
+    3. Repliquer vers chardet pour la détection d'encodage
+    4. Enfin utiliser UTF-8 + errors='replace' comme solution de repli
 
     Args:
-        file_path: File path
+        file_path: Chemin du fichier
 
     Returns:
-        Decoded text content
+        Contenu texte décodé
     """
     data = Path(file_path).read_bytes()
     
-    # First try UTF-8
+    # D'abord essayer UTF-8
     try:
         return data.decode('utf-8')
     except UnicodeDecodeError:
         pass
 
-    # Try charset_normalizer for encoding detection
+    # Essayer charset_normalizer pour la détection d'encodage
     encoding = None
     try:
         from charset_normalizer import from_bytes
@@ -42,7 +42,7 @@ def _read_text_with_fallback(file_path: str) -> str:
     except Exception:
         pass
 
-    # Fall back to chardet
+    # Repliquer vers chardet
     if not encoding:
         try:
             import chardet
@@ -51,7 +51,7 @@ def _read_text_with_fallback(file_path: str) -> str:
         except Exception:
             pass
 
-    # Final fallback: use UTF-8 + replace
+    # Solution de repli finale : utiliser UTF-8 + replace
     if not encoding:
         encoding = 'utf-8'
 
@@ -59,30 +59,30 @@ def _read_text_with_fallback(file_path: str) -> str:
 
 
 class FileParser:
-    """File Parser"""
+    """Analyseur de fichiers"""
 
     SUPPORTED_EXTENSIONS = {'.pdf', '.md', '.markdown', '.txt'}
 
     @classmethod
     def extract_text(cls, file_path: str) -> str:
         """
-        Extract text from file
+        Extraire le texte d'un fichier
 
         Args:
-            file_path: File path
+            file_path: Chemin du fichier
 
         Returns:
-            Extracted text content
+            Contenu texte extrait
         """
         path = Path(file_path)
 
         if not path.exists():
-            raise FileNotFoundError(f"File does not exist: {file_path}")
+            raise FileNotFoundError(f"Le fichier n'existe pas : {file_path}")
 
         suffix = path.suffix.lower()
 
         if suffix not in cls.SUPPORTED_EXTENSIONS:
-            raise ValueError(f"Unsupported file format: {suffix}")
+            raise ValueError(f"Format de fichier non pris en charge : {suffix}")
 
         if suffix == '.pdf':
             return cls._extract_from_pdf(file_path)
@@ -91,15 +91,15 @@ class FileParser:
         elif suffix == '.txt':
             return cls._extract_from_txt(file_path)
 
-        raise ValueError(f"Cannot handle file format: {suffix}")
+        raise ValueError(f"Impossible de traiter le format de fichier : {suffix}")
 
     @staticmethod
     def _extract_from_pdf(file_path: str) -> str:
-        """Extract text from PDF"""
+        """Extraire le texte d'un PDF"""
         try:
             import fitz  # PyMuPDF
         except ImportError:
-            raise ImportError("PyMuPDF required: pip install PyMuPDF")
+            raise ImportError("PyMuPDF requis : pip install PyMuPDF")
 
         text_parts = []
         with fitz.open(file_path) as doc:
@@ -112,24 +112,24 @@ class FileParser:
 
     @staticmethod
     def _extract_from_md(file_path: str) -> str:
-        """Extract text from Markdown with automatic encoding detection"""
+        """Extraire le texte d'un Markdown avec détection automatique de l'encodage"""
         return _read_text_with_fallback(file_path)
 
     @staticmethod
     def _extract_from_txt(file_path: str) -> str:
-        """Extract text from TXT with automatic encoding detection"""
+        """Extraire le texte d'un TXT avec détection automatique de l'encodage"""
         return _read_text_with_fallback(file_path)
 
     @classmethod
     def extract_from_multiple(cls, file_paths: List[str]) -> str:
         """
-        Extract text from multiple files and merge
+        Extraire le texte de plusieurs fichiers et fusionner
 
         Args:
-            file_paths: List of file paths
+            file_paths: Liste des chemins de fichiers
 
         Returns:
-            Merged text
+            Texte fusionné
         """
         all_texts = []
 
@@ -137,9 +137,9 @@ class FileParser:
             try:
                 text = cls.extract_text(file_path)
                 filename = Path(file_path).name
-                all_texts.append(f"=== Document {i}: {filename} ===\n{text}")
+                all_texts.append(f"=== Document {i} : {filename} ===\n{text}")
             except Exception as e:
-                all_texts.append(f"=== Document {i}: {file_path} (extraction failed: {str(e)}) ===")
+                all_texts.append(f"=== Document {i} : {file_path} (échec de l'extraction : {str(e)}) ===")
 
         return "\n\n".join(all_texts)
 
@@ -150,15 +150,15 @@ def split_text_into_chunks(
     overlap: int = 50
 ) -> List[str]:
     """
-    Split text into chunks
+    Diviser le texte en morceaux
 
     Args:
-        text: Original text
-        chunk_size: Characters per chunk
-        overlap: Overlapping characters
+        text: Texte original
+        chunk_size: Caractères par morceau
+        overlap: Caractères de chevauchement
 
     Returns:
-        List of text chunks
+        Liste de morceaux de texte
     """
     if len(text) <= chunk_size:
         return [text] if text.strip() else []
@@ -169,9 +169,9 @@ def split_text_into_chunks(
     while start < len(text):
         end = start + chunk_size
 
-        # Try to split at sentence boundaries
+        # Essayer de diviser aux limites des phrases
         if end < len(text):
-            # Find nearest sentence ending
+            # Trouver la fin de phrase la plus proche
             for sep in ['。', '！', '？', '.\n', '!\n', '?\n', '\n\n', '. ', '! ', '? ']:
                 last_sep = text[start:end].rfind(sep)
                 if last_sep != -1 and last_sep > chunk_size * 0.3:
@@ -182,8 +182,7 @@ def split_text_into_chunks(
         if chunk:
             chunks.append(chunk)
 
-        # Next chunk starts at overlap position
+        # Le morceau suivant commence à la position de chevauchement
         start = end - overlap if end < len(text) else len(text)
 
     return chunks
-

@@ -1,7 +1,7 @@
 """
-Graph memory update service that processes agent activities and updates them to Neo4j Graph.
+Service de mise à jour de la mémoire du graphe qui traite les activités des agents et les met à jour dans le graphe Neo4j.
 
-Replaces zep_graph_memory_updater.py — Zep client replaced by GraphStorage.
+Remplace zep_graph_memory_updater.py — le client Zep est remplacé par GraphStorage.
 """
 
 import os
@@ -22,7 +22,7 @@ logger = get_logger('mirofish.graph_memory_updater')
 
 @dataclass
 class AgentActivity:
-    """Agent activity record"""
+    """Enregistrement d'activité d'agent"""
     platform: str           # twitter / reddit
     agent_id: int
     agent_name: str
@@ -33,9 +33,9 @@ class AgentActivity:
 
     def to_episode_text(self) -> str:
         """
-        Convert activity to natural language text description
+        Convertir l'activité en description textuelle en langage naturel
 
-        Use natural language description format so NER extractor can extract entities and relationships
+        Utiliser le format de description en langage naturel pour que l'extracteur NER puisse extraire les entités et les relations
         """
         action_descriptions = {
             "CREATE_POST": self._describe_create_post,
@@ -55,46 +55,46 @@ class AgentActivity:
         describe_func = action_descriptions.get(self.action_type, self._describe_generic)
         description = describe_func()
 
-        return f"{self.agent_name}: {description}"
+        return f"{self.agent_name} : {description}"
 
     def _describe_create_post(self) -> str:
         content = self.action_args.get("content", "")
         if content:
-            return f"Posted a post: \"{content}\""
-        return "Posted a post"
+            return f"A publié une publication : \"{content}\""
+        return "A publié une publication"
 
     def _describe_like_post(self) -> str:
         post_content = self.action_args.get("post_content", "")
         post_author = self.action_args.get("post_author_name", "")
         if post_content and post_author:
-            return f"Liked {post_author}'s post: \"{post_content}\""
+            return f"A aimé la publication de {post_author} : \"{post_content}\""
         elif post_content:
-            return f"Liked a post: \"{post_content}\""
+            return f"A aimé une publication : \"{post_content}\""
         elif post_author:
-            return f"Liked a post by {post_author}"
-        return "Liked a post"
+            return f"A aimé une publication de {post_author}"
+        return "A aimé une publication"
 
     def _describe_dislike_post(self) -> str:
         post_content = self.action_args.get("post_content", "")
         post_author = self.action_args.get("post_author_name", "")
         if post_content and post_author:
-            return f"Disliked {post_author}'s post: \"{post_content}\""
+            return f"N'a pas aimé la publication de {post_author} : \"{post_content}\""
         elif post_content:
-            return f"Disliked a post: \"{post_content}\""
+            return f"N'a pas aimé une publication : \"{post_content}\""
         elif post_author:
-            return f"Disliked a post by {post_author}"
-        return "Disliked a post"
+            return f"N'a pas aimé une publication de {post_author}"
+        return "N'a pas aimé une publication"
 
     def _describe_repost(self) -> str:
         original_content = self.action_args.get("original_content", "")
         original_author = self.action_args.get("original_author_name", "")
         if original_content and original_author:
-            return f"Reposted {original_author}'s post: \"{original_content}\""
+            return f"A repartagé la publication de {original_author} : \"{original_content}\""
         elif original_content:
-            return f"Reposted a post: \"{original_content}\""
+            return f"A repartagé une publication : \"{original_content}\""
         elif original_author:
-            return f"Reposted a post by {original_author}"
-        return "Reposted a post"
+            return f"A repartagé une publication de {original_author}"
+        return "A repartagé une publication"
 
     def _describe_quote_post(self) -> str:
         original_content = self.action_args.get("original_content", "")
@@ -102,22 +102,22 @@ class AgentActivity:
         quote_content = self.action_args.get("quote_content", "") or self.action_args.get("content", "")
         base = ""
         if original_content and original_author:
-            base = f"Quoted {original_author}'s post \"{original_content}\""
+            base = f"A cité la publication de {original_author} \"{original_content}\""
         elif original_content:
-            base = f"Quoted a post \"{original_content}\""
+            base = f"A cité une publication \"{original_content}\""
         elif original_author:
-            base = f"Quoted a post by {original_author}"
+            base = f"A cité une publication de {original_author}"
         else:
-            base = "Quoted a post"
+            base = "A cité une publication"
         if quote_content:
-            base += f", commented: \"{quote_content}\""
+            base += f", avec le commentaire : \"{quote_content}\""
         return base
 
     def _describe_follow(self) -> str:
         target_user_name = self.action_args.get("target_user_name", "")
         if target_user_name:
-            return f"Followed user \"{target_user_name}\""
-        return "Followed a user"
+            return f"A suivi l'utilisateur \"{target_user_name}\""
+        return "A suivi un utilisateur"
 
     def _describe_create_comment(self) -> str:
         content = self.action_args.get("content", "")
@@ -125,60 +125,60 @@ class AgentActivity:
         post_author = self.action_args.get("post_author_name", "")
         if content:
             if post_content and post_author:
-                return f"Commented on {post_author}'s post \"{post_content}\": \"{content}\""
+                return f"A commenté la publication de {post_author} \"{post_content}\" : \"{content}\""
             elif post_content:
-                return f"Commented on post \"{post_content}\": \"{content}\""
+                return f"A commenté la publication \"{post_content}\" : \"{content}\""
             elif post_author:
-                return f"Commented on {post_author}'s post: \"{content}\""
-            return f"Commented: \"{content}\""
-        return "Left a comment"
+                return f"A commenté la publication de {post_author} : \"{content}\""
+            return f"A commenté : \"{content}\""
+        return "A laissé un commentaire"
 
     def _describe_like_comment(self) -> str:
         comment_content = self.action_args.get("comment_content", "")
         comment_author = self.action_args.get("comment_author_name", "")
         if comment_content and comment_author:
-            return f"Liked {comment_author}'s comment: \"{comment_content}\""
+            return f"A aimé le commentaire de {comment_author} : \"{comment_content}\""
         elif comment_content:
-            return f"Liked a comment: \"{comment_content}\""
+            return f"A aimé un commentaire : \"{comment_content}\""
         elif comment_author:
-            return f"Liked a comment by {comment_author}"
-        return "Liked a comment"
+            return f"A aimé un commentaire de {comment_author}"
+        return "A aimé un commentaire"
 
     def _describe_dislike_comment(self) -> str:
         comment_content = self.action_args.get("comment_content", "")
         comment_author = self.action_args.get("comment_author_name", "")
         if comment_content and comment_author:
-            return f"Disliked {comment_author}'s comment: \"{comment_content}\""
+            return f"N'a pas aimé le commentaire de {comment_author} : \"{comment_content}\""
         elif comment_content:
-            return f"Disliked a comment: \"{comment_content}\""
+            return f"N'a pas aimé un commentaire : \"{comment_content}\""
         elif comment_author:
-            return f"Disliked a comment by {comment_author}"
-        return "Disliked a comment"
+            return f"N'a pas aimé un commentaire de {comment_author}"
+        return "N'a pas aimé un commentaire"
 
     def _describe_search(self) -> str:
         query = self.action_args.get("query", "") or self.action_args.get("keyword", "")
-        return f"Searched for \"{query}\""if query else "Performed a search"
+        return f"A recherché \"{query}\"" if query else "A effectué une recherche"
 
     def _describe_search_user(self) -> str:
         query = self.action_args.get("query", "") or self.action_args.get("username", "")
-        return f"Searched for user \"{query}\""if query else "Searched for user"
+        return f"A recherché l'utilisateur \"{query}\"" if query else "A recherché un utilisateur"
 
     def _describe_mute(self) -> str:
         target_user_name = self.action_args.get("target_user_name", "")
         if target_user_name:
-            return f"Muted user \"{target_user_name}\""
-        return "Muted a user"
+            return f"A mis en sourdine l'utilisateur \"{target_user_name}\""
+        return "A mis en sourdine un utilisateur"
 
     def _describe_generic(self) -> str:
-        return f"Executed {self.action_type} action"
+        return f"A exécuté l'action {self.action_type}"
 
 
 class GraphMemoryUpdater:
     """
-    Graph memory update service (via GraphStorage / Neo4j)
+    Service de mise à jour de la mémoire du graphe (via GraphStorage / Neo4j)
 
-    Monitors simulation action logs and sends agent activities to the graph in real-time.
-    Batches activities by platform, accumulating BATCH_SIZE activities before sending each batch.
+    Surveille les journaux d'actions de simulation et envoie les activités des agents au graphe en temps réel.
+    Regroupe les activités par plateforme, accumulant BATCH_SIZE activités avant d'envoyer chaque lot.
     """
 
     BATCH_SIZE = 5
@@ -194,11 +194,11 @@ class GraphMemoryUpdater:
 
     def __init__(self, graph_id: str, storage: GraphStorage):
         """
-        InitializeUpdatedevice
+        Initialiser le mise à jour
 
         Args:
-            graph_id: GraphID
-            storage: GraphStorage instance (injected)
+            graph_id: ID du graphe
+            storage: Instance GraphStorage (injectée)
         """
         self.graph_id = graph_id
         self.storage = storage
@@ -220,13 +220,13 @@ class GraphMemoryUpdater:
         self._failed_count = 0
         self._skipped_count = 0
 
-        logger.info(f"GraphMemoryUpdater initialized: graph_id={graph_id}, batch_size={self.BATCH_SIZE}")
+        logger.info(f"GraphMemoryUpdater initialisé : graph_id={graph_id}, batch_size={self.BATCH_SIZE}")
 
     def _get_platform_display_name(self, platform: str) -> str:
         return self.PLATFORM_DISPLAY_NAMES.get(platform.lower(), platform)
 
     def start(self):
-        """Start background worker thread"""
+        """Démarrer le thread worker en arrière-plan"""
         if self._running:
             return
 
@@ -237,10 +237,10 @@ class GraphMemoryUpdater:
             name=f"GraphMemoryUpdater-{self.graph_id[:8]}"
         )
         self._worker_thread.start()
-        logger.info(f"GraphMemoryUpdater started: graph_id={self.graph_id}")
+        logger.info(f"GraphMemoryUpdater démarré : graph_id={self.graph_id}")
 
     def stop(self):
-        """Stop background worker thread"""
+        """Arrêter le thread worker en arrière-plan"""
         self._running = False
 
         self._flush_remaining()
@@ -248,7 +248,7 @@ class GraphMemoryUpdater:
         if self._worker_thread and self._worker_thread.is_alive():
             self._worker_thread.join(timeout=10)
 
-        logger.info(f"GraphMemoryUpdater stopped: graph_id={self.graph_id}, "
+        logger.info(f"GraphMemoryUpdater arrêté : graph_id={self.graph_id}, "
                      f"total_activities={self._total_activities}, "
                      f"batches_sent={self._total_sent}, "
                      f"items_sent={self._total_items_sent}, "
@@ -256,17 +256,17 @@ class GraphMemoryUpdater:
                      f"skipped={self._skipped_count}")
 
     def add_activity(self, activity: AgentActivity):
-        """Add an agent activity to queue"""
+        """Ajouter une activité d'agent à la file"""
         if activity.action_type == "DO_NOTHING":
             self._skipped_count += 1
             return
 
         self._activity_queue.put(activity)
         self._total_activities += 1
-        logger.debug(f"Add activity to queue: {activity.agent_name} - {activity.action_type}")
+        logger.debug(f"Activité ajoutée à la file : {activity.agent_name} - {activity.action_type}")
 
     def add_activity_from_dict(self, data: Dict[str, Any], platform: str):
-        """Add activity from dict data"""
+        """Ajouter une activité depuis des données de dictionnaire"""
         if "event_type" in data:
             return
 
@@ -283,7 +283,7 @@ class GraphMemoryUpdater:
         self.add_activity(activity)
 
     def _worker_loop(self):
-        """Background worker loop - batch send activities to graph by platform"""
+        """Boucle worker en arrière-plan - envoyer les activités au graphe par lot par plateforme"""
         while self._running or not self._activity_queue.empty():
             try:
                 try:
@@ -305,12 +305,12 @@ class GraphMemoryUpdater:
                     pass
 
             except Exception as e:
-                logger.error(f"Worker loop exception: {e}")
+                logger.error(f"Exception dans la boucle worker : {e}")
                 time.sleep(1)
 
     def _send_batch_activities(self, activities: List[AgentActivity], platform: str):
         """
-        Send batched activities to the graph by merging them as text and using add_text to trigger NER.
+        Envoyer les activités groupées au graphe en les fusionnant en texte et en utilisant add_text pour déclencher NER.
         """
         if not activities:
             return
@@ -325,20 +325,20 @@ class GraphMemoryUpdater:
                 self._total_sent += 1
                 self._total_items_sent += len(activities)
                 display_name = self._get_platform_display_name(platform)
-                logger.info(f"Successfully batch sent {len(activities)} {display_name} activities to graph {self.graph_id}")
-                logger.debug(f"Batch preview: {combined_text[:200]}...")
+                logger.info(f"Envoi par lot réussi de {len(activities)} activités {display_name} au graphe {self.graph_id}")
+                logger.debug(f"Aperçu du lot : {combined_text[:200]}...")
                 return
 
             except Exception as e:
                 if attempt < self.MAX_RETRIES - 1:
-                    logger.warning(f"Batch send to graph failed (attempt {attempt + 1}/{self.MAX_RETRIES}): {e}")
+                    logger.warning(f"Échec de l'envoi par lot au graphe (tentative {attempt + 1}/{self.MAX_RETRIES}) : {e}")
                     time.sleep(self.RETRY_DELAY * (attempt + 1))
                 else:
-                    logger.error(f"Batch send to graph failed after {self.MAX_RETRIES} retries: {e}")
+                    logger.error(f"Échec de l'envoi par lot au graphe après {self.MAX_RETRIES} tentatives : {e}")
                     self._failed_count += 1
 
     def _flush_remaining(self):
-        """Send remaining activities in queue and buffers"""
+        """Envoyer les activités restantes dans la file et les tampons"""
         while not self._activity_queue.empty():
             try:
                 activity = self._activity_queue.get_nowait()
@@ -354,13 +354,13 @@ class GraphMemoryUpdater:
             for platform, buffer in self._platform_buffers.items():
                 if buffer:
                     display_name = self._get_platform_display_name(platform)
-                    logger.info(f"Send remaining {len(buffer)} {display_name} platform activities")
+                    logger.info(f"Envoi des {len(buffer)} activités restantes de la plateforme {display_name}")
                     self._send_batch_activities(buffer, platform)
             for platform in self._platform_buffers:
                 self._platform_buffers[platform] = []
 
     def get_stats(self) -> Dict[str, Any]:
-        """Get statistics"""
+        """Obtenir les statistiques"""
         with self._buffer_lock:
             buffer_sizes = {p: len(b) for p, b in self._platform_buffers.items()}
 
@@ -380,10 +380,10 @@ class GraphMemoryUpdater:
 
 class GraphMemoryManager:
     """
-    Manages graph memory updaters for multiple simulations.
+    Gère les mises à jour de la mémoire du graphe pour plusieurs simulations.
 
-    Each simulation can have its own independent updater instance.
-    NOTE: create_updater() requires a GraphStorage instance — must be passed in.
+    Chaque simulation peut avoir sa propre instance de mise à jour indépendante.
+    NOTE : create_updater() nécessite une instance GraphStorage — doit être passée en paramètre.
     """
 
     _updaters: Dict[str, GraphMemoryUpdater] = {}
@@ -394,12 +394,12 @@ class GraphMemoryManager:
         cls, simulation_id: str, graph_id: str, storage: GraphStorage
     ) -> GraphMemoryUpdater:
         """
-        Create a graph memory updater for a simulation.
+        Créer un mise à jour de la mémoire du graphe pour une simulation.
 
         Args:
-            simulation_id: Simulation ID
-            graph_id: Graph ID
-            storage: GraphStorage instance
+            simulation_id: ID de la simulation
+            graph_id: ID du graphe
+            storage: Instance GraphStorage
         """
         with cls._lock:
             if simulation_id in cls._updaters:
@@ -409,28 +409,28 @@ class GraphMemoryManager:
             updater.start()
             cls._updaters[simulation_id] = updater
 
-            logger.info(f"Create graph memory updater: simulation_id={simulation_id}, graph_id={graph_id}")
+            logger.info(f"Mise à jour de la mémoire du graphe créée : simulation_id={simulation_id}, graph_id={graph_id}")
             return updater
 
     @classmethod
     def get_updater(cls, simulation_id: str) -> Optional[GraphMemoryUpdater]:
-        """Get updater for simulation"""
+        """Obtenir le mise à jour pour la simulation"""
         return cls._updaters.get(simulation_id)
 
     @classmethod
     def stop_updater(cls, simulation_id: str):
-        """Stop and remove updater for simulation"""
+        """Arrêter et supprimer le mise à jour pour la simulation"""
         with cls._lock:
             if simulation_id in cls._updaters:
                 cls._updaters[simulation_id].stop()
                 del cls._updaters[simulation_id]
-                logger.info(f"Stopped graph memory updater: simulation_id={simulation_id}")
+                logger.info(f"Mise à jour de la mémoire du graphe arrêtée : simulation_id={simulation_id}")
 
     _stop_all_done = False
 
     @classmethod
     def stop_all(cls):
-        """Stop all updaters"""
+        """Arrêter tous les mises à jour"""
         if cls._stop_all_done:
             return
         cls._stop_all_done = True
@@ -441,13 +441,13 @@ class GraphMemoryManager:
                     try:
                         updater.stop()
                     except Exception as e:
-                        logger.error(f"Failed to stop updater: simulation_id={simulation_id}, error={e}")
+                        logger.error(f"Échec de l'arrêt du mise à jour : simulation_id={simulation_id}, erreur={e}")
                 cls._updaters.clear()
-            logger.info("Stopped all graph memory updaters")
+            logger.info("Tous les mises à jour de la mémoire du graphe ont été arrêtés")
 
     @classmethod
     def get_all_stats(cls) -> Dict[str, Dict[str, Any]]:
-        """Get statistics for all updaters"""
+        """Obtenir les statistiques de tous les mises à jour"""
         return {
             sim_id: updater.get_stats()
             for sim_id, updater in cls._updaters.items()

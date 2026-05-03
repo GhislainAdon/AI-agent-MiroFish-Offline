@@ -1,6 +1,6 @@
 """
-Project Context Management
-Persists project state on server to avoid frontend passing large data between interfaces
+Gestion du contexte de projet
+Persiste l'état du projet sur le serveur pour éviter que le frontend ne transmette de grandes quantités de données entre les interfaces
 """
 
 import os
@@ -15,32 +15,32 @@ from ..config import Config
 
 
 class ProjectStatus(str, Enum):
-    """Project status"""
-    CREATED = "created"              # Just created, files uploaded
-    ONTOLOGY_GENERATED = "ontology_generated"  # Ontology generated
-    GRAPH_BUILDING = "graph_building"    # Graph building in progress
-    GRAPH_COMPLETED = "graph_completed"  # Graph build completed
-    FAILED = "failed"                # Failed
+    """Statut du projet"""
+    CREATED = "created"              # Vient d'être créé, fichiers téléchargés
+    ONTOLOGY_GENERATED = "ontology_generated"  # Ontologie générée
+    GRAPH_BUILDING = "graph_building"    # Construction du graphe en cours
+    GRAPH_COMPLETED = "graph_completed"  # Construction du graphe terminée
+    FAILED = "failed"                # Échoué
 
 
 @dataclass
 class Project:
-    """Project data model"""
+    """Modèle de données de projet"""
     project_id: str
     name: str
     status: ProjectStatus
     created_at: str
     updated_at: str
 
-    # File information
+    # Informations sur les fichiers
     files: List[Dict[str, str]] = field(default_factory=list)  # [{filename, path, size}]
     total_text_length: int = 0
 
-    # Ontology information (populated after interface 1 generates)
+    # Informations sur l'ontologie (remplies après la génération par l'interface 1)
     ontology: Optional[Dict[str, Any]] = None
     analysis_summary: Optional[str] = None
 
-    # Graph information (populated after interface 2 completes)
+    # Informations sur le graphe (remplies après l'achèvement de l'interface 2)
     graph_id: Optional[str] = None
     graph_build_task_id: Optional[str] = None
 
@@ -49,11 +49,11 @@ class Project:
     chunk_size: int = 500
     chunk_overlap: int = 50
 
-    # Error information
+    # Informations sur l'erreur
     error: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary"""
+        """Convertir en dictionnaire"""
         return {
             "project_id": self.project_id,
             "name": self.name,
@@ -74,14 +74,14 @@ class Project:
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Project':
-        """Create from dictionary"""
+        """Créer à partir d'un dictionnaire"""
         status = data.get('status', 'created')
         if isinstance(status, str):
             status = ProjectStatus(status)
         
         return cls(
             project_id=data['project_id'],
-            name=data.get('name', 'Unnamed Project'),
+            name=data.get('name', 'Projet sans nom'),
             status=status,
             created_at=data.get('created_at', ''),
             updated_at=data.get('updated_at', ''),
@@ -99,46 +99,46 @@ class Project:
 
 
 class ProjectManager:
-    """Project Manager - handles project persistence and retrieval"""
+    """Gestionnaire de projets — gère la persistance et la récupération des projets"""
 
-    # Project storage root directory
+    # Répertoire racine de stockage des projets
     PROJECTS_DIR = os.path.join(Config.UPLOAD_FOLDER, 'projects')
 
     @classmethod
     def _ensure_projects_dir(cls):
-        """Ensure project directory exists"""
+        """S'assurer que le répertoire des projets existe"""
         os.makedirs(cls.PROJECTS_DIR, exist_ok=True)
 
     @classmethod
     def _get_project_dir(cls, project_id: str) -> str:
-        """Get project directory path"""
+        """Obtenir le chemin du répertoire du projet"""
         return os.path.join(cls.PROJECTS_DIR, project_id)
 
     @classmethod
     def _get_project_meta_path(cls, project_id: str) -> str:
-        """Get project metadata file path"""
+        """Obtenir le chemin du fichier de métadonnées du projet"""
         return os.path.join(cls._get_project_dir(project_id), 'project.json')
 
     @classmethod
     def _get_project_files_dir(cls, project_id: str) -> str:
-        """Get project file storage directory"""
+        """Obtenir le répertoire de stockage des fichiers du projet"""
         return os.path.join(cls._get_project_dir(project_id), 'files')
 
     @classmethod
     def _get_project_text_path(cls, project_id: str) -> str:
-        """Get project extracted text storage path"""
+        """Obtenir le chemin de stockage du texte extrait du projet"""
         return os.path.join(cls._get_project_dir(project_id), 'extracted_text.txt')
 
     @classmethod
-    def create_project(cls, name: str = "Unnamed Project") -> Project:
+    def create_project(cls, name: str = "Projet sans nom") -> Project:
         """
-        Create new project
+        Créer un nouveau projet
 
         Args:
-            name: Project name
+            name: Nom du projet
 
         Returns:
-            Newly created Project object
+            Nouvel objet Project créé
         """
         cls._ensure_projects_dir()
 
@@ -153,20 +153,20 @@ class ProjectManager:
             updated_at=now
         )
 
-        # Create project directory structure
+        # Créer la structure de répertoires du projet
         project_dir = cls._get_project_dir(project_id)
         files_dir = cls._get_project_files_dir(project_id)
         os.makedirs(project_dir, exist_ok=True)
         os.makedirs(files_dir, exist_ok=True)
 
-        # Save project metadata
+        # Sauvegarder les métadonnées du projet
         cls.save_project(project)
 
         return project
 
     @classmethod
     def save_project(cls, project: Project) -> None:
-        """Save project metadata"""
+        """Sauvegarder les métadonnées du projet"""
         project.updated_at = datetime.now().isoformat()
         meta_path = cls._get_project_meta_path(project.project_id)
 
@@ -176,13 +176,13 @@ class ProjectManager:
     @classmethod
     def get_project(cls, project_id: str) -> Optional[Project]:
         """
-        Get project
+        Obtenir un projet
 
         Args:
-            project_id: Project ID
+            project_id: Identifiant du projet
 
         Returns:
-            Project object, or None if not found
+            Objet Project, ou None si non trouvé
         """
         meta_path = cls._get_project_meta_path(project_id)
 
@@ -197,13 +197,13 @@ class ProjectManager:
     @classmethod
     def list_projects(cls, limit: int = 50) -> List[Project]:
         """
-        List all projects
+        Lister tous les projets
 
         Args:
-            limit: Result count limit
+            limit: Limite du nombre de résultats
 
         Returns:
-            Project list, sorted by creation time (descending)
+            Liste de projets, triés par date de création (décroissant)
         """
         cls._ensure_projects_dir()
 
@@ -213,7 +213,7 @@ class ProjectManager:
             if project:
                 projects.append(project)
 
-        # Sort by creation time (descending)
+        # Trier par date de création (décroissant)
         projects.sort(key=lambda p: p.created_at, reverse=True)
 
         return projects[:limit]
@@ -221,13 +221,13 @@ class ProjectManager:
     @classmethod
     def delete_project(cls, project_id: str) -> bool:
         """
-        Delete project and all its files
+        Supprimer un projet et tous ses fichiers
 
         Args:
-            project_id: Project ID
+            project_id: Identifiant du projet
 
         Returns:
-            Whether deletion succeeded
+            Si la suppression a réussi
         """
         project_dir = cls._get_project_dir(project_id)
 
@@ -240,28 +240,28 @@ class ProjectManager:
     @classmethod
     def save_file_to_project(cls, project_id: str, file_storage, original_filename: str) -> Dict[str, str]:
         """
-        Save uploaded file to project directory
+        Sauvegarder le fichier téléchargé dans le répertoire du projet
 
         Args:
-            project_id: Project ID
-            file_storage: Flask FileStorage object
-            original_filename: Original filename
+            project_id: Identifiant du projet
+            file_storage: Objet Flask FileStorage
+            original_filename: Nom du fichier original
 
         Returns:
-            File information dictionary {filename, path, size}
+            Dictionnaire d'informations sur le fichier {filename, path, size}
         """
         files_dir = cls._get_project_files_dir(project_id)
         os.makedirs(files_dir, exist_ok=True)
 
-        # Generate safe filename
+        # Générer un nom de fichier sûr
         ext = os.path.splitext(original_filename)[1].lower()
         safe_filename = f"{uuid.uuid4().hex[:8]}{ext}"
         file_path = os.path.join(files_dir, safe_filename)
 
-        # Save file
+        # Sauvegarder le fichier
         file_storage.save(file_path)
 
-        # Get file size
+        # Obtenir la taille du fichier
         file_size = os.path.getsize(file_path)
 
         return {
@@ -273,14 +273,14 @@ class ProjectManager:
 
     @classmethod
     def save_extracted_text(cls, project_id: str, text: str) -> None:
-        """Save extracted text"""
+        """Sauvegarder le texte extrait"""
         text_path = cls._get_project_text_path(project_id)
         with open(text_path, 'w', encoding='utf-8') as f:
             f.write(text)
 
     @classmethod
     def get_extracted_text(cls, project_id: str) -> Optional[str]:
-        """Get extracted text"""
+        """Obtenir le texte extrait"""
         text_path = cls._get_project_text_path(project_id)
 
         if not os.path.exists(text_path):
@@ -291,7 +291,7 @@ class ProjectManager:
 
     @classmethod
     def get_project_files(cls, project_id: str) -> List[str]:
-        """Get all project file paths"""
+        """Obtenir tous les chemins de fichiers du projet"""
         files_dir = cls._get_project_files_dir(project_id)
 
         if not os.path.exists(files_dir):
@@ -302,4 +302,3 @@ class ProjectManager:
             for f in os.listdir(files_dir)
             if os.path.isfile(os.path.join(files_dir, f))
         ]
-

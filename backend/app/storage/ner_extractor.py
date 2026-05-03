@@ -1,9 +1,9 @@
 """
-NER/RE Extractor — entity and relation extraction via local LLM
+Extracteur NER/RE — extraction d'entités et de relations via LLM local
 
-Replaces Zep Cloud's built-in NER/RE pipeline.
-Uses LLMClient.chat_json() with a structured prompt to extract
-entities and relations from text chunks, guided by the graph's ontology.
+Remplace le pipeline NER/RE intégré de Zep Cloud.
+Utilise LLMClient.chat_json() avec un prompt structuré pour extraire
+les entités et les relations des morceaux de texte, guidé par l'ontologie du graphe.
 """
 
 import logging
@@ -13,7 +13,7 @@ from ..utils.llm_client import LLMClient
 
 logger = logging.getLogger('mirofish.ner_extractor')
 
-# System prompt template for NER/RE extraction
+# Modèle de prompt système pour l'extraction NER/RE
 _SYSTEM_PROMPT = """You are a Named Entity Recognition and Relation Extraction system.
 Given a text and an ontology (entity types + relation types), extract all entities and relations.
 
@@ -44,7 +44,7 @@ _USER_PROMPT = """Extract entities and relations from the following text:
 
 
 class NERExtractor:
-    """Extract entities and relations from text using local LLM."""
+    """Extraire les entités et les relations du texte en utilisant un LLM local."""
 
     def __init__(self, llm_client: Optional[LLMClient] = None, max_retries: int = 2):
         self.llm = llm_client or LLMClient()
@@ -52,14 +52,14 @@ class NERExtractor:
 
     def extract(self, text: str, ontology: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Extract entities and relations from text, guided by ontology.
+        Extraire les entités et les relations du texte, guidé par l'ontologie.
 
         Args:
-            text: Input text chunk
-            ontology: Dict with 'entity_types' and 'relation_types' from graph
+            text: Morceau de texte en entrée
+            ontology: Dictionnaire avec 'entity_types' et 'relation_types' du graphe
 
         Returns:
-            Dict with 'entities' and 'relations' lists:
+            Dictionnaire avec les listes 'entities' et 'relations' :
             {
                 "entities": [{"name": str, "type": str, "attributes": dict}],
                 "relations": [{"source": str, "target": str, "type": str, "fact": str}]
@@ -82,7 +82,7 @@ class NERExtractor:
             try:
                 result = self.llm.chat_json(
                     messages=messages,
-                    temperature=0.1,  # Low temp for extraction precision
+                    temperature=0.1,  # Température basse pour la précision de l'extraction
                     max_tokens=4096,
                 )
                 return self._validate_and_clean(result, ontology)
@@ -90,21 +90,21 @@ class NERExtractor:
             except ValueError as e:
                 last_error = e
                 logger.warning(
-                    f"NER extraction failed (attempt {attempt + 1}): invalid JSON — {e}"
+                    f"L'extraction NER a échoué (tentative {attempt + 1}) : JSON invalide — {e}"
                 )
             except Exception as e:
                 last_error = e
-                logger.error(f"NER extraction error: {e}")
+                logger.error(f"Erreur d'extraction NER : {e}")
                 if attempt >= self.max_retries:
                     break
 
         logger.error(
-            f"NER extraction failed after {self.max_retries + 1} attempts: {last_error}"
+            f"L'extraction NER a échoué après {self.max_retries + 1} tentatives : {last_error}"
         )
         return {"entities": [], "relations": []}
 
     def _format_ontology(self, ontology: Dict[str, Any]) -> str:
-        """Format ontology dict into readable text for the LLM prompt."""
+        """Formater le dictionnaire d'ontologie en texte lisible pour le prompt du LLM."""
         parts = []
 
         entity_types = ontology.get("entity_types", [])
@@ -151,11 +151,11 @@ class NERExtractor:
     def _validate_and_clean(
         self, result: Dict[str, Any], ontology: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Validate and normalize LLM output."""
+        """Valider et normaliser la sortie du LLM."""
         entities = result.get("entities", [])
         relations = result.get("relations", [])
 
-        # Get valid type names from ontology
+        # Obtenir les noms de types valides depuis l'ontologie
         valid_entity_types = set()
         for et in ontology.get("entity_types", []):
             if isinstance(et, dict):
@@ -170,7 +170,7 @@ class NERExtractor:
             else:
                 valid_relation_types.add(str(rt).strip())
 
-        # Clean entities
+        # Nettoyer les entités
         cleaned_entities = []
         seen_names = set()
         for entity in entities:
@@ -181,15 +181,15 @@ class NERExtractor:
             if not name:
                 continue
 
-            # Deduplicate by normalized name
+            # Dédupliquer par nom normalisé
             name_lower = name.lower()
             if name_lower in seen_names:
                 continue
             seen_names.add(name_lower)
 
-            # If ontology has types, warn but keep entities with unknown types
+            # Si l'ontologie a des types, avertir mais garder les entités avec des types inconnus
             if valid_entity_types and etype not in valid_entity_types:
-                logger.debug(f"Entity '{name}' has type '{etype}' not in ontology, keeping anyway")
+                logger.debug(f"L'entité '{name}' a le type '{etype}' qui n'est pas dans l'ontologie, conservée quand même")
 
             cleaned_entities.append({
                 "name": name,
@@ -197,7 +197,7 @@ class NERExtractor:
                 "attributes": entity.get("attributes", {}),
             })
 
-        # Clean relations
+        # Nettoyer les relations
         cleaned_relations = []
         entity_names_lower = {e["name"].lower() for e in cleaned_entities}
         for relation in relations:
@@ -211,8 +211,8 @@ class NERExtractor:
             if not source or not target:
                 continue
 
-            # Ensure source and target entities exist
-            # (they might not if LLM hallucinated a relation without the entity)
+            # S'assurer que les entités source et cible existent
+            # (elles peuvent ne pas exister si le LLM a halluciné une relation sans l'entité)
             if source.lower() not in entity_names_lower:
                 cleaned_entities.append({
                     "name": source,

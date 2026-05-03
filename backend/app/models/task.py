@@ -1,6 +1,6 @@
 """
-Task Status Management
-Tracks long-running tasks (like graph building)
+Gestion des statuts de tâche
+Suit les tâches de longue durée (comme la construction de graphes)
 """
 
 import uuid
@@ -12,30 +12,30 @@ from dataclasses import dataclass, field
 
 
 class TaskStatus(str, Enum):
-    """Task status enumeration"""
-    PENDING = "pending"          # Pending
-    PROCESSING = "processing"    # Processing
-    COMPLETED = "completed"      # Completed
-    FAILED = "failed"            # Failed
+    """Énumération des statuts de tâche"""
+    PENDING = "pending"          # En attente
+    PROCESSING = "processing"    # En cours de traitement
+    COMPLETED = "completed"      # Terminé
+    FAILED = "failed"            # Échoué
 
 
 @dataclass
 class Task:
-    """Task data class"""
+    """Classe de données de tâche"""
     task_id: str
     task_type: str
     status: TaskStatus
     created_at: datetime
     updated_at: datetime
-    progress: int = 0              # Overall progress percentage 0-100
-    message: str = ""              # Status message
-    result: Optional[Dict] = None  # Task result
-    error: Optional[str] = None    # Error message
-    metadata: Dict = field(default_factory=dict)  # Additional metadata
-    progress_detail: Dict = field(default_factory=dict)  # Detailed progress information
+    progress: int = 0              # Pourcentage de progression global 0-100
+    message: str = ""              # Message de statut
+    result: Optional[Dict] = None  # Résultat de la tâche
+    error: Optional[str] = None    # Message d'erreur
+    metadata: Dict = field(default_factory=dict)  # Métadonnées supplémentaires
+    progress_detail: Dict = field(default_factory=dict)  # Informations détaillées sur la progression
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary"""
+        """Convertir en dictionnaire"""
         return {
             "task_id": self.task_id,
             "task_type": self.task_type,
@@ -53,15 +53,15 @@ class Task:
 
 class TaskManager:
     """
-    Task Manager
-    Thread-safe task status management
+    Gestionnaire de tâches
+    Gestion de l'état des tâches thread-safe
     """
 
     _instance = None
     _lock = threading.Lock()
 
     def __new__(cls):
-        """Singleton pattern"""
+        """Modèle singleton"""
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -72,14 +72,14 @@ class TaskManager:
 
     def create_task(self, task_type: str, metadata: Optional[Dict] = None) -> str:
         """
-        Create new task
+        Créer une nouvelle tâche
 
         Args:
-            task_type: Task type
-            metadata: Additional metadata
+            task_type: Type de tâche
+            metadata: Métadonnées supplémentaires
 
         Returns:
-            Task ID
+            Identifiant de la tâche
         """
         task_id = str(uuid.uuid4())
         now = datetime.now()
@@ -99,7 +99,7 @@ class TaskManager:
         return task_id
 
     def get_task(self, task_id: str) -> Optional[Task]:
-        """Get task"""
+        """Obtenir une tâche"""
         with self._task_lock:
             return self._tasks.get(task_id)
 
@@ -114,16 +114,16 @@ class TaskManager:
         progress_detail: Optional[Dict] = None
     ):
         """
-        Update task status
+        Mettre à jour le statut d'une tâche
 
         Args:
-            task_id: Task ID
-            status: New status
-            progress: Progress
+            task_id: Identifiant de la tâche
+            status: Nouveau statut
+            progress: Progression
             message: Message
-            result: Result
-            error: Error message
-            progress_detail: Detailed progress information
+            result: Résultat
+            error: Message d'erreur
+            progress_detail: Informations détaillées sur la progression
         """
         with self._task_lock:
             task = self._tasks.get(task_id)
@@ -143,26 +143,26 @@ class TaskManager:
                     task.progress_detail = progress_detail
 
     def complete_task(self, task_id: str, result: Dict):
-        """Mark task as completed"""
+        """Marquer la tâche comme terminée"""
         self.update_task(
             task_id,
             status=TaskStatus.COMPLETED,
             progress=100,
-            message="Task completed",
+            message="Tâche terminée",
             result=result
         )
 
     def fail_task(self, task_id: str, error: str):
-        """Mark task as failed"""
+        """Marquer la tâche comme échouée"""
         self.update_task(
             task_id,
             status=TaskStatus.FAILED,
-            message="Task failed",
+            message="Tâche échouée",
             error=error
         )
 
     def list_tasks(self, task_type: Optional[str] = None) -> list:
-        """List tasks"""
+        """Lister les tâches"""
         with self._task_lock:
             tasks = list(self._tasks.values())
             if task_type:
@@ -170,7 +170,7 @@ class TaskManager:
             return [t.to_dict() for t in sorted(tasks, key=lambda x: x.created_at, reverse=True)]
 
     def cleanup_old_tasks(self, max_age_hours: int = 24):
-        """Clean up old tasks"""
+        """Nettoyer les anciennes tâches"""
         from datetime import timedelta
         cutoff = datetime.now() - timedelta(hours=max_age_hours)
 
@@ -181,4 +181,3 @@ class TaskManager:
             ]
             for tid in old_ids:
                 del self._tasks[tid]
-

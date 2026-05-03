@@ -8,7 +8,7 @@
           <!-- En-tete du rapport -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">Rapport predictif</span>
+              <span class="report-tag">Rapport prédictif</span>
               <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -58,7 +58,7 @@
                       <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
                     </svg>
                   </div>
-                  <span class="loading-text">Generation de {{ section.title }}...</span>
+                  <span class="loading-text">Génération de {{ section.title }}...</span>
                 </div>
               </div>
             </div>
@@ -93,11 +93,11 @@
               <span class="metric-value mono">{{ completedSections }}/{{ totalSections }}</span>
             </div>
             <div class="metric">
-              <span class="metric-label">Ecoule</span>
+              <span class="metric-label">Écoulé</span>
               <span class="metric-value mono">{{ formatElapsedTime }}</span>
             </div>
             <div class="metric">
-              <span class="metric-label">Tools</span>
+              <span class="metric-label">Outils</span>
               <span class="metric-value mono">{{ totalToolCalls }}</span>
             </div>
             <div class="metric metric-right">
@@ -129,7 +129,7 @@
 
           <!-- Bouton d'etape suivante, affiche apres completion -->
           <button v-if="isComplete" class="next-step-btn" @click="goToInteraction">
-            <span>Entrer en interaction avancee</span>
+            <span>Entrer en interaction avancée</span>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
@@ -170,7 +170,7 @@
                       <span class="info-val mono">{{ log.details?.simulation_id }}</span>
                     </div>
                     <div class="info-row" v-if="log.details?.simulation_requirement">
-                      <span class="info-key">Requirement</span>
+                      <span class="info-key">Exigence</span>
                       <span class="info-val">{{ log.details.simulation_requirement }}</span>
                     </div>
                   </template>
@@ -182,7 +182,7 @@
                   <template v-if="log.action === 'planning_complete'">
                     <div class="status-message success">{{ log.details?.message }}</div>
                     <div class="outline-badge" v-if="log.details?.outline">
-                      {{ log.details.outline.sections?.length || 0 }} sections planifiees
+                      {{ log.details.outline.sections?.length || 0 }} sections planifiées
                     </div>
                   </template>
 
@@ -320,7 +320,7 @@
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
-                      <span>Section "{{ log.section_title }}" content generated</span>
+                      <span>Contenu de la section généré</span>
                     </div>
                     <div v-if="expandedLogs.has(log.timestamp) && log.details?.response" class="llm-content">
                       <pre>{{ log.details.response }}</pre>
@@ -334,7 +334,7 @@
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                       </svg>
-                      <span>Report Generation Complete</span>
+                      <span>Génération du rapport terminée</span>
                     </div>
                   </template>
                 </div>
@@ -345,19 +345,19 @@
                   <span v-else class="elapsed-placeholder"></span>
                   
                   <div class="footer-actions">
-                    <!-- Tool Call: Show/Hide Params -->
+                    <!-- Tool Call: Show/Masquer les paramètres -->
                     <button v-if="log.action === 'tool_call' && log.details?.parameters" class="action-btn" @click.stop="toggleLogExpand(log)">
-                      {{ expandedLogs.has(log.timestamp) ? 'Hide Params' : 'Show Params' }}
+                      {{ expandedLogs.has(log.timestamp) ? 'Masquer les paramètres' : 'Afficher les paramètres' }}
                     </button>
                     
-                    <!-- Tool Result: Raw/Structured View -->
+                    <!-- Tool Result: Raw/Vue structurée -->
                     <button v-if="log.action === 'tool_result'" class="action-btn" @click.stop="toggleRawResult(log.timestamp, $event)">
-                      {{ showRawResult[log.timestamp] ? 'Structured View' : 'Raw Output' }}
+                      {{ showRawResult[log.timestamp] ? 'Vue structurée' : 'Sortie brute' }}
                     </button>
                     
-                    <!-- LLM Response: Show/Hide Response -->
+                    <!-- LLM Response: Show/Masquer la réponse -->
                     <button v-if="log.action === 'llm_response' && log.details?.response" class="action-btn" @click.stop="toggleLogExpand(log)">
-                      {{ expandedLogs.has(log.timestamp) ? 'Hide Response' : 'Show Response' }}
+                      {{ expandedLogs.has(log.timestamp) ? 'Masquer la réponse' : 'Afficher la réponse' }}
                     </button>
                   </div>
                 </div>
@@ -368,7 +368,7 @@
           <!-- Empty State -->
           <div v-if="agentLogs.length === 0 && !isComplete" class="workflow-empty">
             <div class="empty-pulse"></div>
-            <span>Waiting for agent activity...</span>
+            <span>En attente de l'activité de l'agent...</span>
           </div>
         </div>
       </div>
@@ -377,7 +377,7 @@
     <!-- Bottom Console Logs -->
     <div class="console-logs">
       <div class="log-header">
-        <span class="log-title">CONSOLE OUTPUT</span>
+        <span class="log-title">SORTIE CONSOLE</span>
         <span class="log-id">{{ reportId || 'NO_REPORT' }}</span>
       </div>
       <div class="log-content" ref="logContent">
@@ -492,37 +492,37 @@ const isLogCollapsed = (log) => {
   return false
 }
 
-// Tool configurations with display names and colors
+// Configuration des outils avec noms d'affichage et couleurs
 const toolConfig = {
   'insight_forge': {
-    name: 'Deep Insight',
+    name: 'Analyse approfondie',
     color: 'purple',
-    icon: 'lightbulb' // Lightbulb icon - represents insight
+    icon: 'lightbulb' // Icône ampoule - représente l'analyse
   },
   'panorama_search': {
-    name: 'Panorama Search',
+    name: 'Recherche panoramique',
     color: 'blue',
-    icon: 'globe' // Globe icon - represents panorama search
+    icon: 'globe' // Icône globe - représente la recherche panoramique
   },
   'interview_agents': {
-    name: 'Agent Interview',
+    name: 'Entretien d\'agent',
     color: 'green',
-    icon: 'users' // User icon - represents conversation
+    icon: 'users' // Icône utilisateurs - représente la conversation
   },
   'quick_search': {
-    name: 'Quick Search',
+    name: 'Recherche rapide',
     color: 'orange',
-    icon: 'zap' // Lightning icon - represents speed
+    icon: 'zap' // Icône éclair - représente la vitesse
   },
   'get_graph_statistics': {
-    name: 'Graph Stats',
+    name: 'Statistiques du graphe',
     color: 'cyan',
-    icon: 'chart' // Chart icon - represents statistics
+    icon: 'chart' // Icône graphique - représente les statistiques
   },
   'get_entities_by_type': {
-    name: 'Entity Query',
+    name: 'Requête d\'entité',
     color: 'pink',
-    icon: 'database' // Database icon - represents entities
+    icon: 'database' // Icône base de données - représente les entités
   }
 }
 
@@ -542,7 +542,7 @@ const getToolIcon = (toolName) => {
 const parseInsightForge = (text) => {
   const result = {
     query: '',
-    simulationRequirement: '',
+    simulationExigence: '',
     stats: { facts: 0, entities: 0, relationships: 0 },
     subQueries: [],
     facts: [],
@@ -557,7 +557,7 @@ const parseInsightForge = (text) => {
 
     // Extract prediction scenario
     const reqMatch = text.match(/Prediction Scenario:\s*(.+?)(?:\n|$)/)
-    if (reqMatch) result.simulationRequirement = reqMatch[1].trim()
+    if (reqMatch) result.simulationExigence = reqMatch[1].trim()
 
     // Extract statistics - match "Related Prediction Facts: X" format
     const factMatch = text.match(/Related Prediction Facts:\s*(\d+)/)
@@ -1002,9 +1002,9 @@ const InsightDisplay = {
           ])
         ]),
         props.result.query && h('div', { class: 'header-topic' }, props.result.query),
-        props.result.simulationRequirement && h('div', { class: 'header-scenario' }, [
+        props.result.simulationExigence && h('div', { class: 'header-scenario' }, [
           h('span', { class: 'scenario-label' }, 'Prediction Scenario: '),
-          h('span', { class: 'scenario-text' }, props.result.simulationRequirement)
+          h('span', { class: 'scenario-text' }, props.result.simulationExigence)
         ])
       ]),
       
@@ -1991,11 +1991,11 @@ const getConnectorClass = (log, idx, total) => {
 
 const getActionLabel = (action) => {
   const labels = {
-    'report_start': 'Report Started',
+    'report_start': 'Rapport démarré',
     'planning_start': 'Planning',
     'planning_complete': 'Plan Complete',
     'section_start': 'Section Start',
-    'section_content': 'Content Ready',
+    'section_content': 'Contenu prêt',
     'section_complete': 'Section Done',
     'tool_call': 'Tool Call',
     'tool_result': 'Tool Result',
@@ -2614,7 +2614,7 @@ watch(() => props.reportId, (newId) => {
   opacity: 1;
 }
 
-/* Waiting Placeholder */
+/* Espace d'attente */
 .waiting-placeholder {
   flex: 1;
   display: flex;

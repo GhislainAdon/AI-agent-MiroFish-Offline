@@ -1,10 +1,10 @@
 """
-Simulation inter-process communication module for Flask and simulation script communication.
+Module de communication inter-processus de simulation pour la communication entre Flask et le script de simulation.
 
-Communication uses a simple filesystem-based command/response model:
-1. Flask writes commands to the commands/ directory.
-2. The simulation script polls the commands directory, executes the command, and writes the response to the responses/ directory.
-3. Flask polls the responses directory and retrieves the result.
+La communication utilise un modèle simple de commande/réponse basé sur le système de fichiers :
+1. Flask écrit les commandes dans le répertoire commands/.
+2. Le script de simulation scrute le répertoire des commandes, exécute la commande, et écrit la réponse dans le répertoire responses/.
+3. Flask scrute le répertoire des réponses et récupère le résultat.
 """
 
 import os
@@ -22,14 +22,14 @@ logger = get_logger('mirofish.simulation_ipc')
 
 
 class CommandType(str, Enum):
-    """Command type"""
-    INTERVIEW = "interview"           # Single Agent interview
-    BATCH_INTERVIEW = "batch_interview"  # Batch interview
-    CLOSE_ENV = "close_env"           # Close environment
+    """Type de commande"""
+    INTERVIEW = "interview"           # Entretien d'un seul agent
+    BATCH_INTERVIEW = "batch_interview"  # Entretien par lot
+    CLOSE_ENV = "close_env"           # Fermer l'environnement
 
 
 class CommandStatus(str, Enum):
-    """Command status"""
+    """Statut de la commande"""
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -38,7 +38,7 @@ class CommandStatus(str, Enum):
 
 @dataclass
 class IPCCommand:
-    """IPC command"""
+    """Commande IPC"""
     command_id: str
     command_type: CommandType
     args: Dict[str, Any]
@@ -64,7 +64,7 @@ class IPCCommand:
 
 @dataclass
 class IPCResponse:
-    """IPC response"""
+    """Réponse IPC"""
     command_id: str
     status: CommandStatus
     result: Optional[Dict[str, Any]] = None
@@ -93,23 +93,23 @@ class IPCResponse:
 
 class SimulationIPCClient:
     """
-    Simulation IPC client for Flask side.
+    Client IPC de simulation côté Flask.
 
-    Used to send commands to the simulation process and wait for responses.
+    Utilisé pour envoyer des commandes au processus de simulation et attendre les réponses.
     """
     
     def __init__(self, simulation_dir: str):
         """
-        Initialize IPC client
+        Initialiser le client IPC
         
         Args:
-            simulation_dir: Simulation data directory
+            simulation_dir: Répertoire de données de simulation
         """
         self.simulation_dir = simulation_dir
         self.commands_dir = os.path.join(simulation_dir, "ipc_commands")
         self.responses_dir = os.path.join(simulation_dir, "ipc_responses")
         
-        # Ensure directories exist
+        # S'assurer que les répertoires existent
         os.makedirs(self.commands_dir, exist_ok=True)
         os.makedirs(self.responses_dir, exist_ok=True)
     
@@ -121,19 +121,19 @@ class SimulationIPCClient:
         poll_interval: float = 0.5
     ) -> IPCResponse:
         """
-        Send command and wait for response
+        Envoyer une commande et attendre la réponse
         
         Args:
-            command_type: Command type
-            args: Command arguments
-            timeout: Timeout (seconds)
-            poll_interval: Poll interval (seconds)
+            command_type: Type de commande
+            args: Arguments de la commande
+            timeout: Délai d'attente (secondes)
+            poll_interval: Intervalle de scrutation (secondes)
             
         Returns:
             IPCResponse
             
         Raises:
-            TimeoutError: Timeout waiting for response
+            TimeoutError: Délai d'attente dépassé pour la réponse
         """
         command_id = str(uuid.uuid4())
         command = IPCCommand(
@@ -142,14 +142,14 @@ class SimulationIPCClient:
             args=args
         )
         
-        # Write command file
+        # Écrire le fichier de commande
         command_file = os.path.join(self.commands_dir, f"{command_id}.json")
         with open(command_file, 'w', encoding='utf-8') as f:
             json.dump(command.to_dict(), f, ensure_ascii=False, indent=2)
         
-        logger.info(f"Send IPC command: {command_type.value}, command_id={command_id}")
+        logger.info(f"Commande IPC envoyée : {command_type.value}, command_id={command_id}")
         
-        # Wait for response
+        # Attendre la réponse
         response_file = os.path.join(self.responses_dir, f"{command_id}.json")
         start_time = time.time()
         
@@ -160,30 +160,30 @@ class SimulationIPCClient:
                         response_data = json.load(f)
                     response = IPCResponse.from_dict(response_data)
 
-                    # Clean up command and response files
+                    # Nettoyer les fichiers de commande et de réponse
                     try:
                         os.remove(command_file)
                         os.remove(response_file)
                     except OSError:
                         pass
                     
-                    logger.info(f"Received IPC response: command_id={command_id}, status={response.status.value}")
+                    logger.info(f"Réponse IPC reçue : command_id={command_id}, statut={response.status.value}")
                     return response
                 except (json.JSONDecodeError, KeyError) as e:
-                    logger.warning(f"Failed to parse response: {e}")
+                    logger.warning(f"Échec de l'analyse de la réponse : {e}")
             
             time.sleep(poll_interval)
         
-        # Timeout
-        logger.error(f"Timeout waiting for IPC response: command_id={command_id}")
+        # Délai dépassé
+        logger.error(f"Délai d'attente dépassé pour la réponse IPC : command_id={command_id}")
         
-        # Clean up command file
+        # Nettoyer le fichier de commande
         try:
             os.remove(command_file)
         except OSError:
             pass
         
-        raise TimeoutError(f"Timeout waiting for command response ({timeout} seconds)")
+        raise TimeoutError(f"Délai d'attente dépassé pour la réponse à la commande ({timeout} secondes)")
     
     def send_interview(
         self,
@@ -193,19 +193,19 @@ class SimulationIPCClient:
         timeout: float = 60.0
     ) -> IPCResponse:
         """
-        Send single Agent interview command
+        Envoyer une commande d'entretien d'un seul agent
         
         Args:
-            agent_id: Agent ID
-            prompt: Interview question
-            platform: Specify platform (optional)
-                - "twitter": only interview Twitter platform
-                - "reddit": only interview Reddit platform  
-                - None: interview both platforms simultaneously in dual-platform simulations, single platform in single-platform simulations
-            timeout: Timeout
+            agent_id: ID de l'agent
+            prompt: Question d'entretien
+            platform: Spécifier la plateforme (optionnel)
+                - "twitter" : interroger uniquement la plateforme Twitter
+                - "reddit" : interroger uniquement la plateforme Reddit  
+                - None : interroger les deux plateformes simultanément dans les simulations double plateforme, plateforme unique dans les simulations mono plateforme
+            timeout: Délai d'attente
             
         Returns:
-            IPCResponse, result field contains interview result
+            IPCResponse, le champ result contient le résultat de l'entretien
         """
         args = {
             "agent_id": agent_id,
@@ -227,18 +227,18 @@ class SimulationIPCClient:
         timeout: float = 120.0
     ) -> IPCResponse:
         """
-        Send batch interview command
+        Envoyer une commande d'entretien par lot
         
         Args:
-            interviews: List of interviews, each element contains {"agent_id": int, "prompt": str, "platform": str(optional)}
-            platform: Default platform (optional, overridden by each interview item's platform)
-                - "twitter": default only interview Twitter platform
-                - "reddit": default only interview Reddit platform
-                - None: interview each Agent on both platforms simultaneously in dual-platform simulations
-            timeout: Timeout
+            interviews: Liste d'entretiens, chaque élément contient {"agent_id": int, "prompt": str, "platform": str(optionnel)}
+            platform: Plateforme par défaut (optionnel, surchargée par la plateforme de chaque élément d'entretien)
+                - "twitter" : interroger uniquement la plateforme Twitter par défaut
+                - "reddit" : interroger uniquement la plateforme Reddit par défaut
+                - None : interroger chaque agent sur les deux plateformes simultanément dans les simulations double plateforme
+            timeout: Délai d'attente
             
         Returns:
-            IPCResponse, result field contains all interview results
+            IPCResponse, le champ result contient tous les résultats des entretiens
         """
         args = {"interviews": interviews}
         if platform:
@@ -252,10 +252,10 @@ class SimulationIPCClient:
     
     def send_close_env(self, timeout: float = 30.0) -> IPCResponse:
         """
-        Send close environment command
+        Envoyer une commande de fermeture d'environnement
         
         Args:
-            timeout: Timeout
+            timeout: Délai d'attente
             
         Returns:
             IPCResponse
@@ -268,9 +268,9 @@ class SimulationIPCClient:
     
     def check_env_alive(self) -> bool:
         """
-        Check if simulation environment is alive
+        Vérifier si l'environnement de simulation est actif
         
-        Judge by checking env_status.json file
+        Détermine en vérifiant le fichier env_status.json
         """
         status_file = os.path.join(self.simulation_dir, "env_status.json")
         if not os.path.exists(status_file):
@@ -286,41 +286,41 @@ class SimulationIPCClient:
 
 class SimulationIPCServer:
     """
-    Simulation IPC server for the simulation script side.
+    Serveur IPC de simulation côté script de simulation.
 
-    Polls the command directory, executes commands, and returns responses.
+    Scrute le répertoire des commandes, exécute les commandes, et retourne les réponses.
     """
     
     def __init__(self, simulation_dir: str):
         """
-        Initialize IPC server
+        Initialiser le serveur IPC
         
         Args:
-            simulation_dir: Simulation data directory
+            simulation_dir: Répertoire de données de simulation
         """
         self.simulation_dir = simulation_dir
         self.commands_dir = os.path.join(simulation_dir, "ipc_commands")
         self.responses_dir = os.path.join(simulation_dir, "ipc_responses")
         
-        # Ensure directories exist
+        # S'assurer que les répertoires existent
         os.makedirs(self.commands_dir, exist_ok=True)
         os.makedirs(self.responses_dir, exist_ok=True)
         
-        # Environment status
+        # Statut de l'environnement
         self._running = False
     
     def start(self):
-        """Mark server as running"""
+        """Marquer le serveur comme démarré"""
         self._running = True
         self._update_env_status("alive")
     
     def stop(self):
-        """Mark server as stopped"""
+        """Marquer le serveur comme arrêté"""
         self._running = False
         self._update_env_status("stopped")
     
     def _update_env_status(self, status: str):
-        """Update environment status file"""
+        """Mettre à jour le fichier de statut de l'environnement"""
         status_file = os.path.join(self.simulation_dir, "env_status.json")
         with open(status_file, 'w', encoding='utf-8') as f:
             json.dump({
@@ -330,15 +330,15 @@ class SimulationIPCServer:
     
     def poll_commands(self) -> Optional[IPCCommand]:
         """
-        Poll command directory, return first pending command
+        Scruter le répertoire des commandes, retourner la première commande en attente
         
         Returns:
-            IPCCommand or None
+            IPCCommand ou None
         """
         if not os.path.exists(self.commands_dir):
             return None
         
-        # Get command files sorted by time
+        # Obtenir les fichiers de commande triés par date
         command_files = []
         for filename in os.listdir(self.commands_dir):
             if filename.endswith('.json'):
@@ -353,23 +353,23 @@ class SimulationIPCServer:
                     data = json.load(f)
                 return IPCCommand.from_dict(data)
             except (json.JSONDecodeError, KeyError, OSError) as e:
-                logger.warning(f"Failed to read command file: {filepath}, {e}")
+                logger.warning(f"Échec de la lecture du fichier de commande : {filepath}, {e}")
                 continue
         
         return None
     
     def send_response(self, response: IPCResponse):
         """
-        Send response
+        Envoyer une réponse
         
         Args:
-            response: IPC response
+            response: Réponse IPC
         """
         response_file = os.path.join(self.responses_dir, f"{response.command_id}.json")
         with open(response_file, 'w', encoding='utf-8') as f:
             json.dump(response.to_dict(), f, ensure_ascii=False, indent=2)
         
-        # Delete command file
+        # Supprimer le fichier de commande
         command_file = os.path.join(self.commands_dir, f"{response.command_id}.json")
         try:
             os.remove(command_file)
@@ -377,7 +377,7 @@ class SimulationIPCServer:
             pass
     
     def send_success(self, command_id: str, result: Dict[str, Any]):
-        """Send success response"""
+        """Envoyer une réponse de succès"""
         self.send_response(IPCResponse(
             command_id=command_id,
             status=CommandStatus.COMPLETED,
@@ -385,7 +385,7 @@ class SimulationIPCServer:
         ))
     
     def send_error(self, command_id: str, error: str):
-        """Send error response"""
+        """Envoyer une réponse d'erreur"""
         self.send_response(IPCResponse(
             command_id=command_id,
             status=CommandStatus.FAILED,

@@ -1,62 +1,62 @@
 """
-OASIS dual-platform parallel simulation preset script
-Run Twitter and Reddit simulations simultaneously with the same configuration file
+Script de simulation parallèle double plateforme OASIS
+Exécuter les simulations Twitter et Reddit simultanément avec le même fichier de configuration
 
-Features:
-- Dual-platform (Twitter + Reddit) parallel simulation
-- Keep environment running after simulation completes (enter wait mode)
-- Support Interview commands via IPC
-- Support single Agent interview and batch interview
-- Support remote environment shutdown command
+Fonctionnalités :
+- Simulation parallèle double plateforme (Twitter + Reddit)
+- Maintenir l'environnement en cours d'exécution après la fin de la simulation (entrer en mode d'attente)
+- Support des commandes Interview via IPC
+- Support de l'interview d'un Agent unique et de l'interview par lot
+- Support de la commande d'arrêt à distance de l'environnement
 
-Usage:
+Utilisation :
     python run_parallel_simulation.py --config simulation_config.json
-    python run_parallel_simulation.py --config simulation_config.json --no-wait  # Close immediately after completion
+    python run_parallel_simulation.py --config simulation_config.json --no-wait  # Fermer immédiatement après la fin
     python run_parallel_simulation.py --config simulation_config.json --twitter-only
     python run_parallel_simulation.py --config simulation_config.json --reddit-only
 
-Log structure:
+Structure des journaux :
     sim_xxx/
     ├── twitter/
-    │   └── actions.jsonl    # Twitter platform action log
+    │   └── actions.jsonl    # Journal des actions de la plateforme Twitter
     ├── reddit/
-    │   └── actions.jsonl    # Reddit platform action log
-    ├── simulation.log       # Main simulation process log
-    └── run_state.json       # Run state (for API queries)
+    │   └── actions.jsonl    # Journal des actions de la plateforme Reddit
+    ├── simulation.log       # Journal du processus principal de simulation
+    └── run_state.json       # État d'exécution (pour les requêtes API)
 """
 
 # ============================================================
-# Fix Windows encoding issue: Set UTF-8 encoding before all imports
-# This is to fix the issue that OASIS third-party library doesn't specify encoding when reading files
+# Correction du problème d'encodage Windows : Définir l'encodage UTF-8 avant toutes les importations
+# Ceci corrige le problème où la bibliothèque tierce OASIS ne spécifie pas l'encodage lors de la lecture des fichiers
 # ============================================================
 import sys
 import os
 
 if sys.platform == 'win32':
-    # Set Python default I/O encoding to UTF-8
-    # This affects all open() calls without specified encoding
+    # Définir l'encodage E/S par défaut de Python sur UTF-8
+    # Ceci affecte tous les appels open() sans encodage spécifié
     os.environ.setdefault('PYTHONUTF8', '1')
     os.environ.setdefault('PYTHONIOENCODING', 'utf-8')
 
-    # Reconfigure standard output stream to UTF-8 (fix console encoding issues)
+    # Reconfigurer le flux de sortie standard en UTF-8 (corriger les problèmes d'encodage de la console)
     if hasattr(sys.stdout, 'reconfigure'):
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     if hasattr(sys.stderr, 'reconfigure'):
         sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
-    # Force set default encoding (affects default encoding of open() function)
-    # Note: This must be set when Python starts, runtime configuration may not work
-    # So we also need to monkey-patch the built-in open function
+    # Forcer l'encodage par défaut (affecte l'encodage par défaut de la fonction open())
+    # Note : Cela doit être défini au démarrage de Python, la configuration à l'exécution peut ne pas fonctionner
+    # Nous devons donc aussi monkey-patcher la fonction open intégrée
     import builtins
     _original_open = builtins.open
 
     def _utf8_open(file, mode='r', buffering=-1, encoding=None, errors=None,
                    newline=None, closefd=True, opener=None):
         """
-        Wrap open() function to use UTF-8 encoding by default for text mode
-        This can fix the issue that third-party libraries (like OASIS) don't specify encoding when reading files
+        Envelopper la fonction open() pour utiliser l'encodage UTF-8 par défaut en mode texte
+        Ceci peut corriger le problème où les bibliothèques tierces (comme OASIS) ne spécifient pas l'encodage lors de la lecture des fichiers
         """
-        # Only set default encoding for text mode (non-binary) without specified encoding
+        # Ne définir l'encodage par défaut que pour le mode texte (non binaire) sans encodage spécifié
         if encoding is None and 'b' not in mode:
             encoding = 'utf-8'
         return _original_open(file, mode, buffering, encoding, errors,
@@ -77,52 +77,52 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
 
 
-# Global variables: for signal handling
+# Variables globales : pour la gestion des signaux
 _shutdown_event = None
 _cleanup_done = False
 
-# Add backend directory to path
-# Script is fixed in backend/scripts/ directory
+# Ajouter le répertoire backend au chemin
+# Le script est fixé dans le répertoire backend/scripts/
 _scripts_dir = os.path.dirname(os.path.abspath(__file__))
 _backend_dir = os.path.abspath(os.path.join(_scripts_dir, '..'))
 _project_root = os.path.abspath(os.path.join(_backend_dir, '..'))
 sys.path.insert(0, _scripts_dir)
 sys.path.insert(0, _backend_dir)
 
-# Load .env file from project root (contains LLM_API_KEY and other configurations)
+# Charger le fichier .env depuis la racine du projet (contient LLM_API_KEY et autres configurations)
 from dotenv import load_dotenv
 _env_file = os.path.join(_project_root, '.env')
 if os.path.exists(_env_file):
     load_dotenv(_env_file)
-    print(f"Loaded environment configuration: {_env_file}")
+    print(f"Configuration d'environnement chargée : {_env_file}")
 else:
-    # Try to load backend/.env
+    # Essayer de charger backend/.env
     _backend_env = os.path.join(_backend_dir, '.env')
     if os.path.exists(_backend_env):
         load_dotenv(_backend_env)
-        print(f"Loaded environment configuration: {_backend_env}")
+        print(f"Configuration d'environnement chargée : {_backend_env}")
 
 
 class MaxTokensWarningFilter(logging.Filter):
-    """Filter out camel-ai max_tokens warnings (we intentionally don't set max_tokens to let the model decide)"""
+    """Filtrer les avertissements max_tokens de camel-ai (nous ne définissons pas intentionnellement max_tokens pour laisser le modèle décider)"""
 
     def filter(self, record):
-        # Filter out logs containing max_tokens warnings
+        # Filtrer les journaux contenant des avertissements max_tokens
         if "max_tokens" in record.getMessage() and "Invalid or missing" in record.getMessage():
             return False
         return True
 
 
-# Add filter immediately when module loads, ensure it takes effect before camel code executes
+# Ajouter le filtre immédiatement au chargement du module, pour qu'il prenne effet avant l'exécution du code camel
 logging.getLogger().addFilter(MaxTokensWarningFilter())
 
 
 def disable_oasis_logging():
     """
-    Disable verbose logging output from OASIS library
-    OASIS logging is too verbose (logs every agent's observation and action), we use our own action_logger
+    Désactiver la sortie de journalisation verbeuse de la bibliothèque OASIS
+    La journalisation OASIS est trop verbeuse (journalise chaque observation et action de l'agent), nous utilisons notre propre action_logger
     """
-    # Disable all OASIS loggers
+    # Désactiver tous les journaux OASIS
     oasis_loggers = [
         "social.agent",
         "social.twitter",
@@ -133,22 +133,22 @@ def disable_oasis_logging():
 
     for logger_name in oasis_loggers:
         logger = logging.getLogger(logger_name)
-        logger.setLevel(logging.CRITICAL)  # Only log critical errors
+        logger.setLevel(logging.CRITICAL)  # Ne journaliser que les erreurs critiques
         logger.handlers.clear()
         logger.propagate = False
 
 
 def init_logging_for_simulation(simulation_dir: str):
     """
-    Initialize simulation log configuration
+    Initialiser la configuration du journal de simulation
 
-    Args:
-        simulation_dir: Simulation directory path
+    Args :
+        simulation_dir : Chemin du répertoire de simulation
     """
-    # Disable OASIS verbose logging
+    # Désactiver la journalisation verbeuse OASIS
     disable_oasis_logging()
 
-    # Clean up old log directory (if exists)
+    # Nettoyer l'ancien répertoire de journaux (s'il existe)
     old_log_dir = os.path.join(simulation_dir, "log")
     if os.path.exists(old_log_dir):
         import shutil
@@ -169,12 +169,12 @@ try:
         generate_reddit_agent_graph
     )
 except ImportError as e:
-    print(f"Error: Missing dependency {e}")
-    print("Please install first: pip install oasis-ai camel-ai")
+    print(f"Erreur : Dépendance manquante {e}")
+    print("Veuillez installer d'abord : pip install oasis-ai camel-ai")
     sys.exit(1)
 
 
-# Twitter available actions (INTERVIEW not included, INTERVIEW can only be triggered manually via ManualAction)
+# Actions Twitter disponibles (INTERVIEW non incluse, INTERVIEW ne peut être déclenchée que manuellement via ManualAction)
 TWITTER_ACTIONS = [
     ActionType.CREATE_POST,
     ActionType.LIKE_POST,
@@ -184,7 +184,7 @@ TWITTER_ACTIONS = [
     ActionType.QUOTE_POST,
 ]
 
-# Reddit available actions (INTERVIEW not included, INTERVIEW can only be triggered manually via ManualAction)
+# Actions Reddit disponibles (INTERVIEW non incluse, INTERVIEW ne peut être déclenchée que manuellement via ManualAction)
 REDDIT_ACTIONS = [
     ActionType.LIKE_POST,
     ActionType.DISLIKE_POST,
@@ -202,13 +202,13 @@ REDDIT_ACTIONS = [
 ]
 
 
-# IPC-related constants
+# Constantes liées à l'IPC
 IPC_COMMANDS_DIR = "ipc_commands"
 IPC_RESPONSES_DIR = "ipc_responses"
 ENV_STATUS_FILE = "env_status.json"
 
 class CommandType:
-    """Command type constants"""
+    """Constantes de type de commande"""
     INTERVIEW = "interview"
     BATCH_INTERVIEW = "batch_interview"
     CLOSE_ENV = "close_env"
@@ -216,9 +216,9 @@ class CommandType:
 
 class ParallelIPCHandler:
     """
-    Dual-platform IPC command handler
+    Gestionnaire de commandes IPC double plateforme
     
-    Manage environments of both platforms, handle Interview commands
+    Gérer les environnements des deux plateformes, gérer les commandes Interview
     """
     
     def __init__(
@@ -239,12 +239,12 @@ class ParallelIPCHandler:
         self.responses_dir = os.path.join(simulation_dir, IPC_RESPONSES_DIR)
         self.status_file = os.path.join(simulation_dir, ENV_STATUS_FILE)
         
-        # Ensure directory exists
+        # S'assurer que le répertoire existe
         os.makedirs(self.commands_dir, exist_ok=True)
         os.makedirs(self.responses_dir, exist_ok=True)
     
     def update_status(self, status: str):
-        """Update environment status"""
+        """Mettre à jour le statut de l'environnement"""
         with open(self.status_file, 'w', encoding='utf-8') as f:
             json.dump({
                 "status": status,
@@ -254,11 +254,11 @@ class ParallelIPCHandler:
             }, f, ensure_ascii=False, indent=2)
     
     def poll_command(self) -> Optional[Dict[str, Any]]:
-        """Poll for pending commands"""
+        """Interroger les commandes en attente"""
         if not os.path.exists(self.commands_dir):
             return None
         
-        # Get command files (sorted by time)
+        # Obtenir les fichiers de commande (triés par heure)
         command_files = []
         for filename in os.listdir(self.commands_dir):
             if filename.endswith('.json'):
@@ -277,7 +277,7 @@ class ParallelIPCHandler:
         return None
     
     def send_response(self, command_id: str, status: str, result: Dict = None, error: str = None):
-        """Send response"""
+        """Envoyer une réponse"""
         response = {
             "command_id": command_id,
             "status": status,
@@ -290,7 +290,7 @@ class ParallelIPCHandler:
         with open(response_file, 'w', encoding='utf-8') as f:
             json.dump(response, f, ensure_ascii=False, indent=2)
         
-        # Delete command file
+        # Supprimer le fichier de commande
         command_file = os.path.join(self.commands_dir, f"{command_id}.json")
         try:
             os.remove(command_file)
@@ -299,13 +299,13 @@ class ParallelIPCHandler:
     
     def _get_env_and_graph(self, platform: str):
         """
-        Get environment and agent_graph for specified platform
+        Obtenir l'environnement et l'agent_graph pour la plateforme spécifiée
         
-        Args:
-            platform: Platform name ("twitter" or "reddit")
+        Args :
+            platform : Nom de la plateforme ("twitter" ou "reddit")
             
-        Returns:
-            (env, agent_graph, platform_name) or (None, None, None)
+        Retourne :
+            (env, agent_graph, nom_plateforme) ou (None, None, None)
         """
         if platform == "twitter" and self.twitter_env:
             return self.twitter_env, self.twitter_agent_graph, "twitter"
@@ -316,15 +316,15 @@ class ParallelIPCHandler:
     
     async def _interview_single_platform(self, agent_id: int, prompt: str, platform: str) -> Dict[str, Any]:
         """
-        Execute Interview on a single platform
+        Exécuter un Interview sur une seule plateforme
         
-        Returns:
-            Dictionary containing result, or dictionary containing error
+        Retourne :
+            Dictionnaire contenant le résultat, ou dictionnaire contenant l'erreur
         """
         env, agent_graph, actual_platform = self._get_env_and_graph(platform)
         
         if not env or not agent_graph:
-            return {"platform": platform, "error": f"{platform}platform unavailable"}
+            return {"platform": platform, "error": f"Plateforme {platform} indisponible"}
         
         try:
             agent = agent_graph.get_agent(agent_id)
@@ -344,36 +344,36 @@ class ParallelIPCHandler:
     
     async def handle_interview(self, command_id: str, agent_id: int, prompt: str, platform: str = None) -> bool:
         """
-        Handle single Agent interview command
+        Gérer la commande d'interview d'un Agent unique
         
-        Args:
-            command_id: Command ID
-            agent_id: Agent ID
-            prompt: Interview question
-            platform: Specify platform (optional)
-                - "twitter": Interview only Twitter platform
-                - "reddit": Interview only Reddit platform
-                - None/unspecified: Interview both platforms simultaneously, return integrated result
+        Args :
+            command_id : ID de commande
+            agent_id : ID de l'Agent
+            prompt : Question d'interview
+            platform : Spécifier la plateforme (optionnel)
+                - "twitter" : Interview uniquement la plateforme Twitter
+                - "reddit" : Interview uniquement la plateforme Reddit
+                - None/non spécifié : Interview les deux plateformes simultanément, retourner le résultat intégré
             
-        Returns:
-            True means success, False means failure
+        Retourne :
+            True signifie succès, False signifie échec
         """
-        # If platform is specified, only interview that platform
+        # Si la plateforme est spécifiée, n'interviewer que cette plateforme
         if platform in ("twitter", "reddit"):
             result = await self._interview_single_platform(agent_id, prompt, platform)
             
             if "error" in result:
                 self.send_response(command_id, "failed", error=result["error"])
-                print(f"  Interview failed: agent_id={agent_id}, platform={platform}, error={result['error']}")
+                print(f"  Interview échouée : agent_id={agent_id}, plateforme={platform}, erreur={result['error']}")
                 return False
             else:
                 self.send_response(command_id, "completed", result=result)
-                print(f"  Interview completed: agent_id={agent_id}, platform={platform}")
+                print(f"  Interview terminée : agent_id={agent_id}, plateforme={platform}")
                 return True
         
-        # Platform not specified: interview both platforms simultaneously
+        # Plateforme non spécifiée : interviewer les deux plateformes simultanément
         if not self.twitter_env and not self.reddit_env:
-            self.send_response(command_id, "failed", error="No available simulation environment")
+            self.send_response(command_id, "failed", error="Aucun environnement de simulation disponible")
             return False
         
         results = {
@@ -383,7 +383,7 @@ class ParallelIPCHandler:
         }
         success_count = 0
         
-        # Interview both platforms in parallel
+        # Interviewer les deux plateformes en parallèle
         tasks = []
         platforms_to_interview = []
         
@@ -395,7 +395,7 @@ class ParallelIPCHandler:
             tasks.append(self._interview_single_platform(agent_id, prompt, "reddit"))
             platforms_to_interview.append("reddit")
         
-        # Execute in parallel
+        # Exécuter en parallèle
         platform_results = await asyncio.gather(*tasks)
         
         for platform_name, platform_result in zip(platforms_to_interview, platform_results):
@@ -405,30 +405,30 @@ class ParallelIPCHandler:
         
         if success_count > 0:
             self.send_response(command_id, "completed", result=results)
-            print(f"  Interview completed: agent_id={agent_id}, success_platforms={success_count}/{len(platforms_to_interview)}")
+            print(f"  Interview terminée : agent_id={agent_id}, plateformes_réussies={success_count}/{len(platforms_to_interview)}")
             return True
         else:
-            errors = [f"{p}: {r.get('error', 'Unknown error')}" for p, r in results["platforms"].items()]
+            errors = [f"{p} : {r.get('error', 'Erreur inconnue')}" for p, r in results["platforms"].items()]
             self.send_response(command_id, "failed", error="; ".join(errors))
-            print(f"  Interview failed: agent_id={agent_id}, All platforms failed")
+            print(f"  Interview échouée : agent_id={agent_id}, Toutes les plateformes ont échoué")
             return False
     
     async def handle_batch_interview(self, command_id: str, interviews: List[Dict], platform: str = None) -> bool:
         """
-        Handle batch interview command
+        Gérer la commande d'interview par lot
         
-        Args:
-            command_id: Command ID
-            interviews: [{"agent_id": int, "prompt": str, "platform": str(optional)}, ...]
-            platform: default platform (can be overridden by each interview item)
-                - "twitter": Interview only Twitter platform
-                - "reddit": Interview only Reddit platform
-                - None/unspecified: Interview both platforms simultaneously for each Agent
+        Args :
+            command_id : ID de commande
+            interviews : [{"agent_id": int, "prompt": str, "platform": str(optionnel)}, ...]
+            platform : plateforme par défaut (peut être remplacée par chaque élément d'interview)
+                - "twitter" : Interview uniquement la plateforme Twitter
+                - "reddit" : Interview uniquement la plateforme Reddit
+                - None/non spécifié : Interview les deux plateformes simultanément pour chaque Agent
         """
-        # Group by platform
+        # Grouper par plateforme
         twitter_interviews = []
         reddit_interviews = []
-        both_platforms_interviews = []  # Need to interview both platforms simultaneously
+        both_platforms_interviews = []  # Besoin d'interviewer les deux plateformes simultanément
         
         for interview in interviews:
             item_platform = interview.get("platform", platform)
@@ -437,10 +437,10 @@ class ParallelIPCHandler:
             elif item_platform == "reddit":
                 reddit_interviews.append(interview)
             else:
-                # Platform not specified: interview both platforms
+                # Plateforme non spécifiée : interviewer les deux plateformes
                 both_platforms_interviews.append(interview)
         
-        # Split both_platforms_interviews to two platforms
+        # Répartir both_platforms_interviews sur les deux plateformes
         if both_platforms_interviews:
             if self.twitter_env:
                 twitter_interviews.extend(both_platforms_interviews)
@@ -449,7 +449,7 @@ class ParallelIPCHandler:
         
         results = {}
         
-        # Handle Twitter platform interview
+        # Gérer l'interview de la plateforme Twitter
         if twitter_interviews and self.twitter_env:
             try:
                 twitter_actions = {}
@@ -463,7 +463,7 @@ class ParallelIPCHandler:
                             action_args={"prompt": prompt}
                         )
                     except Exception as e:
-                        print(f"  Warning: Unable to get Twitter Agent {agent_id}: {e}")
+                        print(f"  Avertissement : Impossible d'obtenir l'Agent Twitter {agent_id} : {e}")
                 
                 if twitter_actions:
                     await self.twitter_env.step(twitter_actions)
@@ -474,9 +474,9 @@ class ParallelIPCHandler:
                         result["platform"] = "twitter"
                         results[f"twitter_{agent_id}"] = result
             except Exception as e:
-                print(f"  Twitter batch Interview failed: {e}")
+                print(f"  Interview par lot Twitter échouée : {e}")
         
-        # Handle Reddit platform interview
+        # Gérer l'interview de la plateforme Reddit
         if reddit_interviews and self.reddit_env:
             try:
                 reddit_actions = {}
@@ -490,7 +490,7 @@ class ParallelIPCHandler:
                             action_args={"prompt": prompt}
                         )
                     except Exception as e:
-                        print(f"  Warning: Unable to get Reddit Agent {agent_id}: {e}")
+                        print(f"  Avertissement : Impossible d'obtenir l'Agent Reddit {agent_id} : {e}")
                 
                 if reddit_actions:
                     await self.reddit_env.step(reddit_actions)
@@ -501,21 +501,21 @@ class ParallelIPCHandler:
                         result["platform"] = "reddit"
                         results[f"reddit_{agent_id}"] = result
             except Exception as e:
-                print(f"  Reddit batch Interview failed: {e}")
+                print(f"  Interview par lot Reddit échouée : {e}")
         
         if results:
             self.send_response(command_id, "completed", result={
                 "interviews_count": len(results),
                 "results": results
             })
-            print(f"  Batch Interview completed: {len(results)} Agents")
+            print(f"  Interview par lot terminée : {len(results)} Agents")
             return True
         else:
-            self.send_response(command_id, "failed", error="No successful interviews")
+            self.send_response(command_id, "failed", error="Aucune interview réussie")
             return False
     
     def _get_interview_result(self, agent_id: int, platform: str) -> Dict[str, Any]:
-        """Get the latest Interview result from database"""
+        """Obtenir le dernier résultat d'Interview depuis la base de données"""
         db_path = os.path.join(self.simulation_dir, f"{platform}_simulation.db")
         
         result = {
@@ -531,7 +531,7 @@ class ParallelIPCHandler:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
             
-            # Query the latest Interview record
+            # Interroger le dernier enregistrement Interview
             cursor.execute("""
                 SELECT user_id, info, created_at
                 FROM trace
@@ -553,16 +553,16 @@ class ParallelIPCHandler:
             conn.close()
             
         except Exception as e:
-            print(f"  Failed to read Interview result: {e}")
+            print(f"  Échec de la lecture du résultat Interview : {e}")
         
         return result
     
     async def process_commands(self) -> bool:
         """
-        Process all pending commands
+        Traiter toutes les commandes en attente
         
-        Returns:
-            True means continue running, False means should exit
+        Retourne :
+            True signifie continuer l'exécution, False signifie qu'il faut quitter
         """
         command = self.poll_command()
         if not command:
@@ -572,7 +572,7 @@ class ParallelIPCHandler:
         command_type = command.get("command_type")
         args = command.get("args", {})
         
-        print(f"\nReceived IPC command: {command_type}, id={command_id}")
+        print(f"\nCommande IPC reçue : {command_type}, id={command_id}")
         
         if command_type == CommandType.INTERVIEW:
             await self.handle_interview(
@@ -592,25 +592,25 @@ class ParallelIPCHandler:
             return True
             
         elif command_type == CommandType.CLOSE_ENV:
-            print("Received close environment command")
-            self.send_response(command_id, "completed", result={"message": "Environment will close"})
+            print("Commande de fermeture de l'environnement reçue")
+            self.send_response(command_id, "completed", result={"message": "L'environnement va se fermer"})
             return False
         
         else:
-            self.send_response(command_id, "failed", error=f"Unknown command type: {command_type}")
+            self.send_response(command_id, "failed", error=f"Type de commande inconnu : {command_type}")
             return True
 
 
 def load_config(config_path: str) -> Dict[str, Any]:
-    """Load configuration file"""
+    """Charger le fichier de configuration"""
     with open(config_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 
-# Non-core action types to be filtered (these actions have low analytical value)
+# Types d'actions non essentielles à filtrer (ces actions ont une faible valeur analytique)
 FILTERED_ACTIONS = {'refresh', 'sign_up'}
 
-# Action type mapping table (Database name -> standard name)
+# Table de correspondance des types d'actions (Nom de base de données -> nom standard)
 ACTION_TYPE_MAP = {
     'create_post': 'CREATE_POST',
     'like_post': 'LIKE_POST',
@@ -632,15 +632,15 @@ ACTION_TYPE_MAP = {
 
 def get_agent_names_from_config(config: Dict[str, Any]) -> Dict[int, str]:
     """
-    Get mapping of agent_id -> entity_name from simulation_config
+    Obtenir la correspondance agent_id -> entity_name depuis simulation_config
     
-    This allows displaying real entity names in actions.jsonl instead of codes like "Agent_0"
+    Ceci permet d'afficher les vrais noms d'entités dans actions.jsonl au lieu de codes comme "Agent_0"
     
-    Args:
-        config: Content of simulation_config.json
+    Args :
+        config : Contenu de simulation_config.json
         
-    Returns:
-        Mapping dictionary of agent_id -> entity_name
+    Retourne :
+        Dictionnaire de correspondance agent_id -> entity_name
     """
     agent_names = {}
     agent_configs = config.get("agent_configs", [])
@@ -660,17 +660,17 @@ def fetch_new_actions_from_db(
     agent_names: Dict[int, str]
 ) -> Tuple[List[Dict[str, Any]], int]:
     """
-    Get new action records from Database and supplement complete context information
+    Obtenir les nouveaux enregistrements d'actions depuis la base de données et compléter les informations de contexte
     
-    Args:
-        db_path: Database file path
-        last_rowid: Maximum rowid value from last read (use rowid instead of created_at because different platforms have different created_at formats)
-        agent_names: agent_id -> agent_name mapping
+    Args :
+        db_path : Chemin du fichier de base de données
+        last_rowid : Valeur maximale de rowid de la dernière lecture (utiliser rowid au lieu de created_at car différentes plateformes ont différents formats de created_at)
+        agent_names : Correspondance agent_id -> agent_name
         
-    Returns:
+    Retourne :
         (actions_list, new_last_rowid)
-        - actions_list: List of actions, each element contains agent_id, agent_name, action_type, action_args (including context information)
-        - new_last_rowid: New maximum rowid value
+        - actions_list : Liste d'actions, chaque élément contient agent_id, agent_name, action_type, action_args (y compris les informations de contexte)
+        - new_last_rowid : Nouvelle valeur maximale de rowid
     """
     actions = []
     new_last_rowid = last_rowid
@@ -682,8 +682,8 @@ def fetch_new_actions_from_db(
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
-        # Use rowid to track processed records (rowid is SQLite's built-in auto-increment field)
-        # This avoids created_at format differences (Twitter uses integers, Reddit uses datetime strings)
+        # Utiliser rowid pour suivre les enregistrements traités (rowid est le champ auto-incrémenté intégré de SQLite)
+        # Ceci évite les différences de format created_at (Twitter utilise des entiers, Reddit utilise des chaînes datetime)
         cursor.execute("""
             SELECT rowid, user_id, action, info
             FROM trace
@@ -692,20 +692,20 @@ def fetch_new_actions_from_db(
         """, (last_rowid,))
         
         for rowid, user_id, action, info_json in cursor.fetchall():
-            # Update maximum rowid
+            # Mettre à jour le rowid maximal
             new_last_rowid = rowid
             
-            # Filter non-core actions
+            # Filtrer les actions non essentielles
             if action in FILTERED_ACTIONS:
                 continue
             
-            # Parse action arguments
+            # Analyser les arguments de l'action
             try:
                 action_args = json.loads(info_json) if info_json else {}
             except json.JSONDecodeError:
                 action_args = {}
             
-            # Simplify action_args, keep only key fields (keep full content, no truncation)
+            # Simplifier action_args, ne garder que les champs clés (conserver le contenu complet, pas de troncature)
             simplified_args = {}
             if 'content' in action_args:
                 simplified_args['content'] = action_args['content']
@@ -726,10 +726,10 @@ def fetch_new_actions_from_db(
             if 'dislike_id' in action_args:
                 simplified_args['dislike_id'] = action_args['dislike_id']
             
-            # Convert action type names
+            # Convertir les noms de types d'actions
             action_type = ACTION_TYPE_MAP.get(action, action.upper())
             
-            # Supplement context information (post content, usernames, etc.)
+            # Compléter les informations de contexte (contenu des publications, noms d'utilisateurs, etc.)
             _enrich_action_context(cursor, action_type, simplified_args, agent_names)
             
             actions.append({
@@ -741,7 +741,7 @@ def fetch_new_actions_from_db(
         
         conn.close()
     except Exception as e:
-        print(f"Failed to read Database actions: {e}")
+        print(f"Échec de la lecture des actions de la base de données : {e}")
     
     return actions, new_last_rowid
 
@@ -753,16 +753,16 @@ def _enrich_action_context(
     agent_names: Dict[int, str]
 ) -> None:
     """
-    for actionSupplement context information (post content, usernames, etc.)
+    Compléter les informations de contexte pour les actions (contenu des publications, noms d'utilisateurs, etc.)
     
-    Args:
-        cursor: Database cursor
-        action_type: Action type
-        action_args: Action arguments (will be modified)
-        agent_names: agent_id -> agent_name mapping
+    Args :
+        cursor : Curseur de base de données
+        action_type : Type d'action
+        action_args : Arguments de l'action (sera modifié)
+        agent_names : Correspondance agent_id -> agent_name
     """
     try:
-        # Like/dislike post: supplement post content and author
+        # Like/dislike publication : compléter le contenu de la publication et l'auteur
         if action_type in ('LIKE_POST', 'DISLIKE_POST'):
             post_id = action_args.get('post_id')
             if post_id:
@@ -771,11 +771,11 @@ def _enrich_action_context(
                     action_args['post_content'] = post_info.get('content', '')
                     action_args['post_author_name'] = post_info.get('author_name', '')
         
-        # Repost: supplement original post content and author
+        # Repost : compléter le contenu de la publication originale et l'auteur
         elif action_type == 'REPOST':
             new_post_id = action_args.get('new_post_id')
             if new_post_id:
-                # Repost's original_post_id points to original post
+                # Le original_post_id du repost pointe vers la publication originale
                 cursor.execute("""
                     SELECT original_post_id FROM post WHERE post_id = ?
                 """, (new_post_id,))
@@ -787,7 +787,7 @@ def _enrich_action_context(
                         action_args['original_content'] = original_info.get('content', '')
                         action_args['original_author_name'] = original_info.get('author_name', '')
         
-        # Quote post: supplement original post content, author, and quote comment
+        # Citer une publication : compléter le contenu de la publication originale, l'auteur et le commentaire de citation
         elif action_type == 'QUOTE_POST':
             quoted_id = action_args.get('quoted_id')
             new_post_id = action_args.get('new_post_id')
@@ -798,7 +798,7 @@ def _enrich_action_context(
                     action_args['original_content'] = original_info.get('content', '')
                     action_args['original_author_name'] = original_info.get('author_name', '')
             
-            # Get quote post comment content (quote_content)
+            # Obtenir le contenu du commentaire de la publication citée (quote_content)
             if new_post_id:
                 cursor.execute("""
                     SELECT quote_content FROM post WHERE post_id = ?
@@ -807,11 +807,11 @@ def _enrich_action_context(
                 if row and row[0]:
                     action_args['quote_content'] = row[0]
         
-        # Follow user: supplement followed user name
+        # Suivre un utilisateur : compléter le nom de l'utilisateur suivi
         elif action_type == 'FOLLOW':
             follow_id = action_args.get('follow_id')
             if follow_id:
-                # Get followee_id from follow table
+                # Obtenir followee_id depuis la table follow
                 cursor.execute("""
                     SELECT followee_id FROM follow WHERE follow_id = ?
                 """, (follow_id,))
@@ -822,16 +822,16 @@ def _enrich_action_context(
                     if target_name:
                         action_args['target_user_name'] = target_name
         
-        # Mute user: supplement muted user name
+        # Mettre en sourdine un utilisateur : compléter le nom de l'utilisateur mis en sourdine
         elif action_type == 'MUTE':
-            # Get user_id or target_id from action_args
+            # Obtenir user_id ou target_id depuis action_args
             target_id = action_args.get('user_id') or action_args.get('target_id')
             if target_id:
                 target_name = _get_user_name(cursor, target_id, agent_names)
                 if target_name:
                     action_args['target_user_name'] = target_name
         
-        # Like/dislike comment: supplement comment content and author
+        # Like/dislike commentaire : compléter le contenu du commentaire et l'auteur
         elif action_type in ('LIKE_COMMENT', 'DISLIKE_COMMENT'):
             comment_id = action_args.get('comment_id')
             if comment_id:
@@ -840,7 +840,7 @@ def _enrich_action_context(
                     action_args['comment_content'] = comment_info.get('content', '')
                     action_args['comment_author_name'] = comment_info.get('author_name', '')
         
-        # Post comment: supplement commented post information
+        # Publier un commentaire : compléter les informations de la publication commentée
         elif action_type == 'CREATE_COMMENT':
             post_id = action_args.get('post_id')
             if post_id:
@@ -850,8 +850,8 @@ def _enrich_action_context(
                     action_args['post_author_name'] = post_info.get('author_name', '')
     
     except Exception as e:
-        # Context supplement failure does not affect main process
-        print(f"Failed to supplement action context: {e}")
+        # L'échec de la complémentation du contexte n'affecte pas le processus principal
+        print(f"Échec de la complémentation du contexte de l'action : {e}")
 
 
 def _get_post_info(
@@ -860,15 +860,15 @@ def _get_post_info(
     agent_names: Dict[int, str]
 ) -> Optional[Dict[str, str]]:
     """
-    Get post information
+    Obtenir les informations d'une publication
     
-    Args:
-        cursor: Database cursor
-        post_id: Post ID
-        agent_names: agent_id -> agent_name mapping
+    Args :
+        cursor : Curseur de base de données
+        post_id : ID de la publication
+        agent_names : Correspondance agent_id -> agent_name
         
-    Returns:
-        Dictionary containing content and author_name, or None
+    Retourne :
+        Dictionnaire contenant content et author_name, ou None
     """
     try:
         cursor.execute("""
@@ -883,12 +883,12 @@ def _get_post_info(
             user_id = row[1]
             agent_id = row[2]
             
-            # Preferentially use name from agent_names
+            # Utiliser de préférence le nom de agent_names
             author_name = ''
             if agent_id is not None and agent_id in agent_names:
                 author_name = agent_names[agent_id]
             elif user_id:
-                # Get name from user table
+                # Obtenir le nom depuis la table user
                 cursor.execute("SELECT name, user_name FROM user WHERE user_id = ?", (user_id,))
                 user_row = cursor.fetchone()
                 if user_row:
@@ -906,15 +906,15 @@ def _get_user_name(
     agent_names: Dict[int, str]
 ) -> Optional[str]:
     """
-    Get user name
+    Obtenir le nom d'un utilisateur
     
-    Args:
-        cursor: Database cursor
-        user_id: User ID
-        agent_names: agent_id -> agent_name mapping
+    Args :
+        cursor : Curseur de base de données
+        user_id : ID de l'utilisateur
+        agent_names : Correspondance agent_id -> agent_name
         
-    Returns:
-        User name, or None
+    Retourne :
+        Nom de l'utilisateur, ou None
     """
     try:
         cursor.execute("""
@@ -926,7 +926,7 @@ def _get_user_name(
             name = row[1]
             user_name = row[2]
             
-            # Preferentially use name from agent_names
+            # Utiliser de préférence le nom de agent_names
             if agent_id is not None and agent_id in agent_names:
                 return agent_names[agent_id]
             return name or user_name or ''
@@ -941,15 +941,15 @@ def _get_comment_info(
     agent_names: Dict[int, str]
 ) -> Optional[Dict[str, str]]:
     """
-    Get comment information
+    Obtenir les informations d'un commentaire
     
-    Args:
-        cursor: Database cursor
-        comment_id: Comment ID
-        agent_names: agent_id -> agent_name mapping
+    Args :
+        cursor : Curseur de base de données
+        comment_id : ID du commentaire
+        agent_names : Correspondance agent_id -> agent_name
         
-    Returns:
-        Dictionary containing content and author_name, or None
+    Retourne :
+        Dictionnaire contenant content et author_name, ou None
     """
     try:
         cursor.execute("""
@@ -964,12 +964,12 @@ def _get_comment_info(
             user_id = row[1]
             agent_id = row[2]
             
-            # Preferentially use name from agent_names
+            # Utiliser de préférence le nom de agent_names
             author_name = ''
             if agent_id is not None and agent_id in agent_names:
                 author_name = agent_names[agent_id]
             elif user_id:
-                # Get name from user table
+                # Obtenir le nom depuis la table user
                 cursor.execute("SELECT name, user_name FROM user WHERE user_id = ?", (user_id,))
                 user_row = cursor.fetchone()
                 if user_row:
@@ -983,48 +983,48 @@ def _get_comment_info(
 
 def create_model(config: Dict[str, Any], use_boost: bool = False):
     """
-    Create LLM model
+    Créer le modèle LLM
     
-    Support dual LLM configuration for acceleration during parallel simulation：
-    - Common configuration：LLM_API_KEY, LLM_BASE_URL, LLM_MODEL_NAME
-    - Acceleration configuration (optional)：LLM_BOOST_API_KEY, LLM_BOOST_BASE_URL, LLM_BOOST_MODEL_NAME
+    Support de la configuration double LLM pour l'accélération pendant la simulation parallèle :
+    - Configuration commune : LLM_API_KEY, LLM_BASE_URL, LLM_MODEL_NAME
+    - Configuration d'accélération (optionnelle) : LLM_BOOST_API_KEY, LLM_BOOST_BASE_URL, LLM_BOOST_MODEL_NAME
     
-    If acceleration LLM is configured, different platforms can use different API providers during parallel simulation to improve concurrency.
+    Si le LLM d'accélération est configuré, différentes plateformes peuvent utiliser différents fournisseurs d'API pendant la simulation parallèle pour améliorer la concurrence.
     
-    Args:
-        config: Simulation configuration dictionary
-        use_boost: Whether to use acceleration LLM configuration (if available)
+    Args :
+        config : Dictionnaire de configuration de simulation
+        use_boost : S'il faut utiliser la configuration LLM d'accélération (si disponible)
     """
-    # Check if acceleration configuration exists
+    # Vérifier si la configuration d'accélération existe
     boost_api_key = os.environ.get("LLM_BOOST_API_KEY", "")
     boost_base_url = os.environ.get("LLM_BOOST_BASE_URL", "")
     boost_model = os.environ.get("LLM_BOOST_MODEL_NAME", "")
     has_boost_config = bool(boost_api_key)
     
-    # Choose which LLM to use based on parameters and configuration
+    # Choisir quel LLM utiliser en fonction des paramètres et de la configuration
     if use_boost and has_boost_config:
-        # Use acceleration configuration
+        # Utiliser la configuration d'accélération
         llm_api_key = boost_api_key
         llm_base_url = boost_base_url
         llm_model = boost_model or os.environ.get("LLM_MODEL_NAME", "")
-        config_label = "[Acceleration LLM]"
+        config_label = "[LLM d'accélération]"
     else:
-        # useCommon configuration
+        # Utiliser la configuration commune
         llm_api_key = os.environ.get("LLM_API_KEY", "")
         llm_base_url = os.environ.get("LLM_BASE_URL", "")
         llm_model = os.environ.get("LLM_MODEL_NAME", "")
-        config_label = "[Common LLM]"
+        config_label = "[LLM commun]"
     
-    # If model name is not in .env, use config as fallback
+    # Si le nom du modèle n'est pas dans .env, utiliser la configuration comme solution de secours
     if not llm_model:
         llm_model = config.get("llm_model", "gpt-4o-mini")
     
-    # Set environment variables required by camel-ai
+    # Définir les variables d'environnement requises par camel-ai
     if llm_api_key:
         os.environ["OPENAI_API_KEY"] = llm_api_key
     
     if not os.environ.get("OPENAI_API_KEY"):
-        raise ValueError("Missing API Key configuration, please set LLM_API_KEY in .env file in project root")
+        raise ValueError("Configuration de clé API manquante, veuillez définir LLM_API_KEY dans le fichier .env à la racine du projet")
     
     if llm_base_url:
         os.environ["OPENAI_API_BASE_URL"] = llm_base_url
@@ -1043,7 +1043,7 @@ def get_active_agents_for_round(
     current_hour: int,
     round_num: int
 ) -> List:
-    """Decide which Agents to activate this round based on time and configuration"""
+    """Décider quels Agents activer ce tour en fonction de l'heure et de la configuration"""
     time_config = config.get("time_config", {})
     agent_configs = config.get("agent_configs", [])
     
@@ -1091,7 +1091,7 @@ def get_active_agents_for_round(
 
 
 class PlatformSimulation:
-    """Platform simulation result container"""
+    """Conteneur de résultat de simulation par plateforme"""
     def __init__(self):
         self.env = None
         self.agent_graph = None
@@ -1105,17 +1105,17 @@ async def run_twitter_simulation(
     main_logger: Optional[SimulationLogManager] = None,
     max_rounds: Optional[int] = None
 ) -> PlatformSimulation:
-    """Run Twitter simulation
+    """Exécuter la simulation Twitter
     
-    Args:
-        config: Simulation configuration
-        simulation_dir: Simulation directory
-        action_logger: Action logger
-        main_logger: Main logger manager
-        max_rounds: Maximum simulation rounds (optional, used to truncate long simulations)
+    Args :
+        config : Configuration de simulation
+        simulation_dir : Répertoire de simulation
+        action_logger : Journaliseur d'actions
+        main_logger : Gestionnaire de journal principal
+        max_rounds : Nombre maximum de tours de simulation (optionnel, utilisé pour tronquer les longues simulations)
         
-    Returns:
-        PlatformSimulation: Result object containing env and agent_graph
+    Retourne :
+        PlatformSimulation : Objet résultat contenant env et agent_graph
     """
     result = PlatformSimulation()
     
@@ -1124,15 +1124,15 @@ async def run_twitter_simulation(
             main_logger.info(f"[Twitter] {msg}")
         print(f"[Twitter] {msg}")
     
-    log_info("Initializing...")
+    log_info("Initialisation...")
     
-    # Twitter use common LLM configuration
+    # Twitter utilise la configuration LLM commune
     model = create_model(config, use_boost=False)
     
-    # OASIS Twitter uses CSV format
+    # OASIS Twitter utilise le format CSV
     profile_path = os.path.join(simulation_dir, "twitter_profiles.csv")
     if not os.path.exists(profile_path):
-        log_info(f"Error: Profile file does not exist: {profile_path}")
+        log_info(f"Erreur : Le fichier de profil n'existe pas : {profile_path}")
         return result
     
     result.agent_graph = await generate_twitter_agent_graph(
@@ -1141,9 +1141,9 @@ async def run_twitter_simulation(
         available_actions=TWITTER_ACTIONS,
     )
     
-    # Get Agent real name mapping from config (use entity_name instead of default Agent_X)
+    # Obtenir la correspondance des vrais noms d'Agents depuis la config (utiliser entity_name au lieu du Agent_X par défaut)
     agent_names = get_agent_names_from_config(config)
-    # If an agent is not in config, use OASIS default name
+    # Si un agent n'est pas dans la config, utiliser le nom par défaut OASIS
     for agent_id, agent in result.agent_graph.get_agents():
         if agent_id not in agent_names:
             agent_names[agent_id] = getattr(agent, 'name', f'Agent_{agent_id}')
@@ -1156,25 +1156,25 @@ async def run_twitter_simulation(
         agent_graph=result.agent_graph,
         platform=oasis.DefaultPlatformType.TWITTER,
         database_path=db_path,
-        semaphore=30,  # Limit maximum concurrent LLM requests to prevent API overload
+        semaphore=30,  # Limiter le nombre maximal de requêtes LLM simultanées pour éviter la surcharge de l'API
     )
     
     await result.env.reset()
-    log_info("Environment started")
+    log_info("Environnement démarré")
     
     if action_logger:
         action_logger.log_simulation_start(config)
     
     total_actions = 0
-    last_rowid = 0  # Track last processed row in Database (use rowid to avoid created_at format differences)
+    last_rowid = 0  # Suivre la dernière ligne traitée dans la base de données (utiliser rowid pour éviter les différences de format created_at)
     
-    # Execute initial events
+    # Exécuter les événements initiaux
     event_config = config.get("event_config", {})
     initial_posts = event_config.get("initial_posts", [])
     
-    # Log round 0 start (initial event phase)
+    # Enregistrer le début du tour 0 (phase d'événements initiaux)
     if action_logger:
-        action_logger.log_round_start(0, 0)  # round 0, simulated_hour 0
+        action_logger.log_round_start(0, 0)  # tour 0, heure_simulée 0
     
     initial_action_count = 0
     if initial_posts:
@@ -1204,32 +1204,32 @@ async def run_twitter_simulation(
         
         if initial_actions:
             await result.env.step(initial_actions)
-            log_info(f"Published {len(initial_actions)} initial posts")
+            log_info(f"{len(initial_actions)} publications initiales publiées")
     
-    # Log round 0 end
+    # Enregistrer la fin du tour 0
     if action_logger:
         action_logger.log_round_end(0, initial_action_count)
     
-    # Main simulation loop
+    # Boucle de simulation principale
     time_config = config.get("time_config", {})
     total_hours = time_config.get("total_simulation_hours", 72)
     minutes_per_round = time_config.get("minutes_per_round", 30)
     total_rounds = (total_hours * 60) // minutes_per_round
     
-    # If maximum rounds specified, truncate
+    # Si le nombre maximum de tours est spécifié, tronquer
     if max_rounds is not None and max_rounds > 0:
         original_rounds = total_rounds
         total_rounds = min(total_rounds, max_rounds)
         if total_rounds < original_rounds:
-            log_info(f"Rounds truncated: {original_rounds} -> {total_rounds} (max_rounds={max_rounds})")
+            log_info(f"Tours tronqués : {original_rounds} -> {total_rounds} (max_rounds={max_rounds})")
     
     start_time = datetime.now()
     
     for round_num in range(total_rounds):
-        # Check if received exit signal
+        # Vérifier si un signal de sortie a été reçu
         if _shutdown_event and _shutdown_event.is_set():
             if main_logger:
-                main_logger.info(f"Received exit signal，at round {round_num + 1} stop simulation")
+                main_logger.info(f"Signal de sortie reçu, arrêt de la simulation au tour {round_num + 1}")
             break
         
         simulated_minutes = round_num * minutes_per_round
@@ -1240,12 +1240,12 @@ async def run_twitter_simulation(
             result.env, config, simulated_hour, round_num
         )
         
-        # Log round start regardless of active agents
+        # Enregistrer le début du tour indépendamment des agents actifs
         if action_logger:
             action_logger.log_round_start(round_num + 1, simulated_hour)
         
         if not active_agents:
-            # Log round end even without active agents (actions_count=0)
+            # Enregistrer la fin du tour même sans agents actifs (actions_count=0)
             if action_logger:
                 action_logger.log_round_end(round_num + 1, 0)
             continue
@@ -1253,7 +1253,7 @@ async def run_twitter_simulation(
         actions = {agent: LLMAction() for _, agent in active_agents}
         await result.env.step(actions)
         
-        # Get actual executed actions from Database and log
+        # Obtenir les actions réellement exécutées depuis la base de données et les enregistrer
         actual_actions, last_rowid = fetch_new_actions_from_db(
             db_path, last_rowid, agent_names
         )
@@ -1278,14 +1278,14 @@ async def run_twitter_simulation(
             progress = (round_num + 1) / total_rounds * 100
             log_info(f"Day {simulated_day}, {simulated_hour:02d}:00 - Round {round_num + 1}/{total_rounds} ({progress:.1f}%)")
     
-    # Note: Do not close environment, keep for Interview use
+    # Note : Ne pas fermer l'environnement, le conserver pour l'utilisation Interview
     
     if action_logger:
         action_logger.log_simulation_end(total_rounds, total_actions)
     
     result.total_actions = total_actions
     elapsed = (datetime.now() - start_time).total_seconds()
-    log_info(f"Simulation loop completed! Time taken: {elapsed:.1f}seconds, Total actions: {total_actions}")
+    log_info(f"Boucle de simulation terminée ! Temps écoulé : {elapsed:.1f} secondes, Actions totales : {total_actions}")
     
     return result
 
@@ -1297,17 +1297,17 @@ async def run_reddit_simulation(
     main_logger: Optional[SimulationLogManager] = None,
     max_rounds: Optional[int] = None
 ) -> PlatformSimulation:
-    """Run Reddit simulation
+    """Exécuter la simulation Reddit
     
-    Args:
-        config: Simulation configuration
-        simulation_dir: Simulation directory
-        action_logger: Action logger
-        main_logger: Main logger manager
-        max_rounds: Maximum simulation rounds (optional, used to truncate long simulations)
+    Args :
+        config : Configuration de simulation
+        simulation_dir : Répertoire de simulation
+        action_logger : Journaliseur d'actions
+        main_logger : Gestionnaire de journal principal
+        max_rounds : Nombre maximum de tours de simulation (optionnel, utilisé pour tronquer les longues simulations)
         
-    Returns:
-        PlatformSimulation: Result object containing env and agent_graph
+    Retourne :
+        PlatformSimulation : Objet résultat contenant env et agent_graph
     """
     result = PlatformSimulation()
     
@@ -1316,14 +1316,14 @@ async def run_reddit_simulation(
             main_logger.info(f"[Reddit] {msg}")
         print(f"[Reddit] {msg}")
     
-    log_info("Initializing...")
+    log_info("Initialisation...")
     
-    # Reddit use acceleration LLM configuration(if available，otherwise fallback toCommon configuration）
+    # Reddit utilise la configuration LLM d'accélération (si disponible, sinon utilise la configuration commune)
     model = create_model(config, use_boost=True)
     
     profile_path = os.path.join(simulation_dir, "reddit_profiles.json")
     if not os.path.exists(profile_path):
-        log_info(f"Error: Profile file does not exist: {profile_path}")
+        log_info(f"Erreur : Le fichier de profil n'existe pas : {profile_path}")
         return result
     
     result.agent_graph = await generate_reddit_agent_graph(
@@ -1332,9 +1332,9 @@ async def run_reddit_simulation(
         available_actions=REDDIT_ACTIONS,
     )
     
-    # Get Agent real name mapping from config (use entity_name instead of default Agent_X)
+    # Obtenir la correspondance des vrais noms d'Agents depuis la config (utiliser entity_name au lieu du Agent_X par défaut)
     agent_names = get_agent_names_from_config(config)
-    # If an agent is not in config, use OASIS default name
+    # Si un agent n'est pas dans la config, utiliser le nom par défaut OASIS
     for agent_id, agent in result.agent_graph.get_agents():
         if agent_id not in agent_names:
             agent_names[agent_id] = getattr(agent, 'name', f'Agent_{agent_id}')
@@ -1347,25 +1347,25 @@ async def run_reddit_simulation(
         agent_graph=result.agent_graph,
         platform=oasis.DefaultPlatformType.REDDIT,
         database_path=db_path,
-        semaphore=30,  # Limit maximum concurrent LLM requests to prevent API overload
+        semaphore=30,  # Limiter le nombre maximal de requêtes LLM simultanées pour éviter la surcharge de l'API
     )
     
     await result.env.reset()
-    log_info("Environment started")
+    log_info("Environnement démarré")
     
     if action_logger:
         action_logger.log_simulation_start(config)
     
     total_actions = 0
-    last_rowid = 0  # Track last processed row in Database (use rowid to avoid created_at format differences)
+    last_rowid = 0  # Suivre la dernière ligne traitée dans la base de données (utiliser rowid pour éviter les différences de format created_at)
     
-    # Execute initial events
+    # Exécuter les événements initiaux
     event_config = config.get("event_config", {})
     initial_posts = event_config.get("initial_posts", [])
     
-    # Log round 0 start (initial event phase)
+    # Enregistrer le début du tour 0 (phase d'événements initiaux)
     if action_logger:
-        action_logger.log_round_start(0, 0)  # round 0, simulated_hour 0
+        action_logger.log_round_start(0, 0)  # tour 0, heure_simulée 0
     
     initial_action_count = 0
     if initial_posts:
@@ -1403,32 +1403,32 @@ async def run_reddit_simulation(
         
         if initial_actions:
             await result.env.step(initial_actions)
-            log_info(f"Published {len(initial_actions)} initial posts")
+            log_info(f"{len(initial_actions)} publications initiales publiées")
     
-    # Log round 0 end
+    # Enregistrer la fin du tour 0
     if action_logger:
         action_logger.log_round_end(0, initial_action_count)
     
-    # Main simulation loop
+    # Boucle de simulation principale
     time_config = config.get("time_config", {})
     total_hours = time_config.get("total_simulation_hours", 72)
     minutes_per_round = time_config.get("minutes_per_round", 30)
     total_rounds = (total_hours * 60) // minutes_per_round
     
-    # If maximum rounds specified, truncate
+    # Si le nombre maximum de tours est spécifié, tronquer
     if max_rounds is not None and max_rounds > 0:
         original_rounds = total_rounds
         total_rounds = min(total_rounds, max_rounds)
         if total_rounds < original_rounds:
-            log_info(f"Rounds truncated: {original_rounds} -> {total_rounds} (max_rounds={max_rounds})")
+            log_info(f"Tours tronqués : {original_rounds} -> {total_rounds} (max_rounds={max_rounds})")
     
     start_time = datetime.now()
     
     for round_num in range(total_rounds):
-        # Check if received exit signal
+        # Vérifier si un signal de sortie a été reçu
         if _shutdown_event and _shutdown_event.is_set():
             if main_logger:
-                main_logger.info(f"Received exit signal，at round {round_num + 1} stop simulation")
+                main_logger.info(f"Signal de sortie reçu, arrêt de la simulation au tour {round_num + 1}")
             break
         
         simulated_minutes = round_num * minutes_per_round
@@ -1439,12 +1439,12 @@ async def run_reddit_simulation(
             result.env, config, simulated_hour, round_num
         )
         
-        # Log round start regardless of active agents
+        # Enregistrer le début du tour indépendamment des agents actifs
         if action_logger:
             action_logger.log_round_start(round_num + 1, simulated_hour)
         
         if not active_agents:
-            # Log round end even without active agents (actions_count=0)
+            # Enregistrer la fin du tour même sans agents actifs (actions_count=0)
             if action_logger:
                 action_logger.log_round_end(round_num + 1, 0)
             continue
@@ -1452,7 +1452,7 @@ async def run_reddit_simulation(
         actions = {agent: LLMAction() for _, agent in active_agents}
         await result.env.step(actions)
         
-        # Get actual executed actions from Database and log
+        # Obtenir les actions réellement exécutées depuis la base de données et les enregistrer
         actual_actions, last_rowid = fetch_new_actions_from_db(
             db_path, last_rowid, agent_names
         )
@@ -1477,76 +1477,76 @@ async def run_reddit_simulation(
             progress = (round_num + 1) / total_rounds * 100
             log_info(f"Day {simulated_day}, {simulated_hour:02d}:00 - Round {round_num + 1}/{total_rounds} ({progress:.1f}%)")
     
-    # Note: Do not close environment, keep for Interview use
+    # Note : Ne pas fermer l'environnement, le conserver pour l'utilisation Interview
     
     if action_logger:
         action_logger.log_simulation_end(total_rounds, total_actions)
     
     result.total_actions = total_actions
     elapsed = (datetime.now() - start_time).total_seconds()
-    log_info(f"Simulation loop completed! Time taken: {elapsed:.1f}seconds, Total actions: {total_actions}")
+    log_info(f"Boucle de simulation terminée ! Temps écoulé : {elapsed:.1f} secondes, Actions totales : {total_actions}")
     
     return result
 
 
 async def main():
-    parser = argparse.ArgumentParser(description='OASIS Dual-Platform Parallel Simulation')
+    parser = argparse.ArgumentParser(description='Simulation parallèle double plateforme OASIS')
     parser.add_argument(
         '--config', 
         type=str, 
         required=True,
-        help='Configuration file path (simulation_config.json)'
+        help='Chemin du fichier de configuration (simulation_config.json)'
     )
     parser.add_argument(
         '--twitter-only',
         action='store_true',
-        help='Only run Twitter simulation'
+        help='Exécuter uniquement la simulation Twitter'
     )
     parser.add_argument(
         '--reddit-only',
         action='store_true',
-        help='Only run Reddit simulation'
+        help='Exécuter uniquement la simulation Reddit'
     )
     parser.add_argument(
         '--max-rounds',
         type=int,
         default=None,
-        help='Maximum simulation rounds (optional, used to truncate long simulations)'
+        help='Nombre maximum de tours de simulation (optionnel, utilisé pour tronquer les longues simulations)'
     )
     parser.add_argument(
         '--no-wait',
         action='store_true',
         default=False,
-        help='Close environment immediately after simulation completes, do not enter wait mode'
+        help="Fermer l'environnement immédiatement après la fin de la simulation, ne pas entrer en mode d'attente"
     )
     
     args = parser.parse_args()
     
-    # Create shutdown event at the start of main function to ensure the whole program can respond to exit signal
+    # Créer l'événement d'arrêt au début de la fonction main pour assurer que tout le programme puisse répondre au signal de sortie
     global _shutdown_event
     _shutdown_event = asyncio.Event()
     
     if not os.path.exists(args.config):
-        print(f"Error: Configuration file does not exist: {args.config}")
+        print(f"Erreur : Le fichier de configuration n'existe pas : {args.config}")
         sys.exit(1)
     
     config = load_config(args.config)
     simulation_dir = os.path.dirname(args.config) or "."
     wait_for_commands = not args.no_wait
     
-    # Initialize logging configuration (disable OASIS logs, clean up old files)
+    # Initialiser la configuration de journalisation (désactiver les journaux OASIS, nettoyer les anciens fichiers)
     init_logging_for_simulation(simulation_dir)
     
-    # Create log manager
+    # Créer le gestionnaire de journaux
     log_manager = SimulationLogManager(simulation_dir)
     twitter_logger = log_manager.get_twitter_logger()
     reddit_logger = log_manager.get_reddit_logger()
     
     log_manager.info("=" * 60)
-    log_manager.info("OASIS dual-platform parallel simulation")
-    log_manager.info(f"Configuration file: {args.config}")
-    log_manager.info(f"Simulation ID: {config.get('simulation_id', 'unknown')}")
-    log_manager.info(f"Wait mode: {'Enabled' if wait_for_commands else 'Disabled'}")
+    log_manager.info("Simulation parallèle double plateforme OASIS")
+    log_manager.info(f"Fichier de configuration : {args.config}")
+    log_manager.info(f"ID de simulation : {config.get('simulation_id', 'inconnu')}")
+    log_manager.info(f"Mode d'attente : {'Activé' if wait_for_commands else 'Désactivé'}")
     log_manager.info("=" * 60)
     
     time_config = config.get("time_config", {})
@@ -1554,25 +1554,25 @@ async def main():
     minutes_per_round = time_config.get('minutes_per_round', 30)
     config_total_rounds = (total_hours * 60) // minutes_per_round
     
-    log_manager.info(f"Simulation parameters:")
-    log_manager.info(f"  - Total simulation duration: {total_hours}hours")
-    log_manager.info(f"  - Time per round: {minutes_per_round}minutes")
-    log_manager.info(f"  - Configured total rounds: {config_total_rounds}")
+    log_manager.info(f"Paramètres de simulation :")
+    log_manager.info(f"  - Durée totale de simulation : {total_hours} heures")
+    log_manager.info(f"  - Temps par tour : {minutes_per_round} minutes")
+    log_manager.info(f"  - Tours totaux configurés : {config_total_rounds}")
     if args.max_rounds:
-        log_manager.info(f"  - Maximum rounds limit: {args.max_rounds}")
+        log_manager.info(f"  - Limite maximale de tours : {args.max_rounds}")
         if args.max_rounds < config_total_rounds:
-            log_manager.info(f"  - Actual execution rounds: {args.max_rounds} (Truncated)")
-    log_manager.info(f"  - Number of Agents: {len(config.get('agent_configs', []))}")
+            log_manager.info(f"  - Tours réellement exécutés : {args.max_rounds} (Tronqué)")
+    log_manager.info(f"  - Nombre d'Agents : {len(config.get('agent_configs', []))}")
     
-    log_manager.info("Log structure:")
-    log_manager.info(f"  - Main log: simulation.log")
-    log_manager.info(f"  - Twitter actions: twitter/actions.jsonl")
-    log_manager.info(f"  - Reddit actions: reddit/actions.jsonl")
+    log_manager.info("Structure des journaux :")
+    log_manager.info(f"  - Journal principal : simulation.log")
+    log_manager.info(f"  - Actions Twitter : twitter/actions.jsonl")
+    log_manager.info(f"  - Actions Reddit : reddit/actions.jsonl")
     log_manager.info("=" * 60)
     
     start_time = datetime.now()
     
-    # Store simulation results of both platforms
+    # Stocker les résultats de simulation des deux plateformes
     twitter_result: Optional[PlatformSimulation] = None
     reddit_result: Optional[PlatformSimulation] = None
     
@@ -1581,7 +1581,7 @@ async def main():
     elif args.reddit_only:
         reddit_result = await run_reddit_simulation(config, simulation_dir, reddit_logger, log_manager, args.max_rounds)
     else:
-        # Run in parallel (each platform uses independent logger)
+        # Exécuter en parallèle (chaque plateforme utilise un journaliseur indépendant)
         results = await asyncio.gather(
             run_twitter_simulation(config, simulation_dir, twitter_logger, log_manager, args.max_rounds),
             run_reddit_simulation(config, simulation_dir, reddit_logger, log_manager, args.max_rounds),
@@ -1590,17 +1590,17 @@ async def main():
     
     total_elapsed = (datetime.now() - start_time).total_seconds()
     log_manager.info("=" * 60)
-    log_manager.info(f"Simulation loop completed! Total time: {total_elapsed:.1f}seconds")
+    log_manager.info(f"Boucle de simulation terminée ! Temps total : {total_elapsed:.1f} secondes")
     
-    # Whether to enter wait mode
+    # S'il faut entrer en mode d'attente
     if wait_for_commands:
         log_manager.info("")
         log_manager.info("=" * 60)
-        log_manager.info("Enter wait mode - environment keeps running")
-        log_manager.info("Supported commands: interview, batch_interview, close_env")
+        log_manager.info("Entrée en mode d'attente - l'environnement reste en cours d'exécution")
+        log_manager.info("Commandes supportées : interview, batch_interview, close_env")
         log_manager.info("=" * 60)
         
-        # Create IPC handler
+        # Créer le gestionnaire IPC
         ipc_handler = ParallelIPCHandler(
             simulation_dir=simulation_dir,
             twitter_env=twitter_result.env if twitter_result else None,
@@ -1610,40 +1610,40 @@ async def main():
         )
         ipc_handler.update_status("alive")
         
-        # Command wait loop (using global _shutdown_event)
+        # Boucle d'attente de commandes (utilisant le _shutdown_event global)
         try:
             while not _shutdown_event.is_set():
                 should_continue = await ipc_handler.process_commands()
                 if not should_continue:
                     break
-                # Use wait_for instead of sleep to respond to shutdown_event
+                # Utiliser wait_for au lieu de sleep pour répondre au shutdown_event
                 try:
                     await asyncio.wait_for(_shutdown_event.wait(), timeout=0.5)
-                    break  # Received exit signal
+                    break  # Signal de sortie reçu
                 except asyncio.TimeoutError:
-                    pass  # Timeout continue loop
+                    pass  # Délai dépassé, continuer la boucle
         except KeyboardInterrupt:
-            print("\nReceived interrupt signal")
+            print("\nSignal d'interruption reçu")
         except asyncio.CancelledError:
-            print("\nTask was cancelled")
+            print("\nTâche annulée")
         except Exception as e:
-            print(f"\nError processing command: {e}")
+            print(f"\nErreur lors du traitement de la commande : {e}")
         
-        log_manager.info("\nClose environment...")
+        log_manager.info("\nFermeture de l'environnement...")
         ipc_handler.update_status("stopped")
     
-    # Close environment
+    # Fermer l'environnement
     if twitter_result and twitter_result.env:
         await twitter_result.env.close()
-        log_manager.info("[Twitter] Environment closed")
+        log_manager.info("[Twitter] Environnement fermé")
     
     if reddit_result and reddit_result.env:
         await reddit_result.env.close()
-        log_manager.info("[Reddit] Environment closed")
+        log_manager.info("[Reddit] Environnement fermé")
     
     log_manager.info("=" * 60)
-    log_manager.info(f"All completed!")
-    log_manager.info(f"Log files:")
+    log_manager.info(f"Tout est terminé !")
+    log_manager.info(f"Fichiers journaux :")
     log_manager.info(f"  - {os.path.join(simulation_dir, 'simulation.log')}")
     log_manager.info(f"  - {os.path.join(simulation_dir, 'twitter', 'actions.jsonl')}")
     log_manager.info(f"  - {os.path.join(simulation_dir, 'reddit', 'actions.jsonl')}")
@@ -1652,29 +1652,29 @@ async def main():
 
 def setup_signal_handlers(loop=None):
     """
-    Set signal handlers to ensure proper exit when receiving SIGTERM/SIGINT
+    Configurer les gestionnaires de signaux pour assurer une sortie propre lors de la réception de SIGTERM/SIGINT
     
-    Persistent simulation scenario：Simulation completeafter does not exit，Wait for interview command
-    When receiving termination signal, need to：
-    1. Notify asyncio loop to exit wait
-    2. Give program a chance to clean up resources properly (close database, environment, etc.)
-    3. Then exit
+    Scénario de simulation persistante : La simulation terminée ne quitte pas, attend les commandes d'interview
+    Lors de la réception d'un signal de terminaison, il faut :
+    1. Notifier la boucle asyncio de quitter l'attente
+    2. Donner au programme une chance de nettoyer correctement les ressources (fermer la base de données, l'environnement, etc.)
+    3. Puis quitter
     """
     def signal_handler(signum, frame):
         global _cleanup_done
         sig_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
-        print(f"\nReceived {sig_name} signal, exiting...")
+        print(f"\nSignal {sig_name} reçu, fermeture en cours...")
         
         if not _cleanup_done:
             _cleanup_done = True
-            # Set event to notify asyncio loop to exit (give loop a chance to clean up)
+            # Définir l'événement pour notifier la boucle asyncio de quitter (donner à la boucle une chance de nettoyer)
             if _shutdown_event:
                 _shutdown_event.set()
         
-        # Don't directly sys.exit(), let asyncio loop exit normally and clean up
-        # Force exit only if signal is received repeatedly
+        # Ne pas appeler sys.exit() directement, laisser la boucle asyncio quitter normalement et nettoyer
+        # Forcer la sortie uniquement si le signal est reçu de manière répétée
         else:
-            print("Force exit...")
+            print("Forcer la sortie...")
             sys.exit(1)
     
     signal.signal(signal.SIGTERM, signal_handler)
@@ -1686,14 +1686,14 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nProgram interrupted")
+        print("\nProgramme interrompu")
     except SystemExit:
         pass
     finally:
-        # Clean up multiprocessing resource tracker (prevent warning on exit)
+        # Nettoyer le traqueur de ressources multiprocessing (prévient les avertissements à la sortie)
         try:
             from multiprocessing import resource_tracker
             resource_tracker._resource_tracker._stop()
         except Exception:
             pass
-        print("Simulation process exited")
+        print("Processus de simulation terminé")

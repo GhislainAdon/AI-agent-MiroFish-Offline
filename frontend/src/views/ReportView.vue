@@ -15,14 +15,14 @@
             :class="{ active: viewMode === mode }"
             @click="viewMode = mode"
           >
-            {{ { graph: 'Graph', split: 'Split', workbench: 'Workbench' }[mode] }}
+            {{ { graph: 'Graphe', split: 'Divisé', workbench: 'Espace de travail' }[mode] }}
           </button>
         </div>
       </div>
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">Step 4/5</span>
+          <span class="step-num">Étape 4/5</span>
           <span class="step-name">Rapport</span>
         </div>
         <div class="step-divider"></div>
@@ -109,9 +109,9 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (currentStatus.value === 'error') return 'Error'
-  if (currentStatus.value === 'completed') return 'Termine'
-  return 'Generation'
+  if (currentStatus.value === 'error') return 'Erreur'
+  if (currentStatus.value === 'completed') return 'Terminé'
+  return 'Génération'
 })
 
 // --- Helpers ---
@@ -139,7 +139,7 @@ const toggleMaximize = (target) => {
 // --- Data Logic ---
 const loadReportData = async () => {
   try {
-    addLog(`Chargement du rapport: ${currentReportId.value}`)
+    addLog(`Chargement du rapport : ${currentReportId.value}`)
     
     // Get report info to retrieve simulation_id
     const reportRes = await getReport(currentReportId.value)
@@ -158,7 +158,7 @@ const loadReportData = async () => {
             const projRes = await getProject(simData.project_id)
             if (projRes.success && projRes.data) {
               projectData.value = projRes.data
-              addLog(`Project loaded: ${projRes.data.project_id}`)
+              addLog(`Projet chargé : ${projRes.data.project_id}`)
               
               // Get graph data
               if (projRes.data.graph_id) {
@@ -169,7 +169,7 @@ const loadReportData = async () => {
         }
       }
     } else {
-      addLog(`Echec du chargement du rapport: ${reportRes.error || 'Erreur inconnue'}`)
+      addLog(`Échec du chargement du rapport: ${reportRes.error || 'Erreur inconnue'}`)
     }
   } catch (err) {
     addLog(`Load error: ${err.message}`)
@@ -183,10 +183,10 @@ const loadGraph = async (graphId) => {
     const res = await getGraphData(graphId)
     if (res.success) {
       graphData.value = res.data
-      addLog('Graph data loaded successfully')
+      addLog('Données du graphe chargées avec succès')
     }
   } catch (err) {
-    addLog(`Graph load failed: ${err.message}`)
+    addLog(`Échec du chargement du graphe : ${err.message}`)
   } finally {
     graphLoading.value = false
   }
@@ -207,7 +207,7 @@ watch(() => route.params.reportId, (newId) => {
 }, { immediate: true })
 
 onMounted(() => {
-  addLog('Vue rapport initialisee')
+  addLog('Vue rapport initialisée')
   loadReportData()
 })
 </script>

@@ -1,8 +1,8 @@
 """
-SearchService — hybrid search (vector + keyword) over Neo4j graph data.
+SearchService — recherche hybride (vectorielle + par mots-clés) sur les données de graphe Neo4j.
 
-Replaces Zep Cloud's built-in search with reranker.
-Scoring: 0.7 * vector_score + 0.3 * keyword_score (BM25 via fulltext index).
+Remplace la recherche intégrée de Zep Cloud avec un reclasseur.
+Score : 0.7 * score_vectoriel + 0.3 * score_mots-clés (BM25 via index plein texte).
 """
 
 import logging
@@ -14,7 +14,7 @@ from .embedding_service import EmbeddingService
 
 logger = logging.getLogger('mirofish.search')
 
-# Cypher for vector search on edges (facts)
+# Cypher pour la recherche vectorielle sur les arêtes (faits)
 _VECTOR_SEARCH_EDGES = """
 CALL db.index.vector.queryRelationships('fact_embedding', $limit, $query_vector)
 YIELD relationship, score
@@ -24,7 +24,7 @@ ORDER BY score DESC
 LIMIT $limit
 """
 
-# Cypher for vector search on nodes (entities)
+# Cypher pour la recherche vectorielle sur les nœuds (entités)
 _VECTOR_SEARCH_NODES = """
 CALL db.index.vector.queryNodes('entity_embedding', $limit, $query_vector)
 YIELD node, score
@@ -34,7 +34,7 @@ ORDER BY score DESC
 LIMIT $limit
 """
 
-# Cypher for fulltext (BM25) search on edges
+# Cypher pour la recherche plein texte (BM25) sur les arêtes
 _FULLTEXT_SEARCH_EDGES = """
 CALL db.index.fulltext.queryRelationships('fact_fulltext', $query_text)
 YIELD relationship, score
@@ -44,7 +44,7 @@ ORDER BY score DESC
 LIMIT $limit
 """
 
-# Cypher for fulltext search on nodes
+# Cypher pour la recherche plein texte sur les nœuds
 _FULLTEXT_SEARCH_NODES = """
 CALL db.index.fulltext.queryNodes('entity_fulltext', $query_text)
 YIELD node, score
@@ -56,7 +56,7 @@ LIMIT $limit
 
 
 class SearchService:
-    """Hybrid search combining vector similarity and keyword matching."""
+    """Recherche hybride combinant similarité vectorielle et correspondance par mots-clés."""
 
     VECTOR_WEIGHT = 0.7
     KEYWORD_WEIGHT = 0.3
@@ -72,23 +72,23 @@ class SearchService:
         limit: int = 10,
     ) -> List[Dict[str, Any]]:
         """
-        Search edges (facts/relations) using hybrid scoring.
+        Rechercher des arêtes (faits/relations) en utilisant le score hybride.
 
-        Returns list of dicts with edge properties + 'score'.
+        Retourne une liste de dictionnaires avec les propriétés de l'arête + 'score'.
         """
         query_vector = self.embedding.embed(query)
 
-        # Vector search
+        # Recherche vectorielle
         vector_results = self._run_edge_vector_search(
             session, graph_id, query_vector, limit * 2
         )
 
-        # Keyword search
+        # Recherche par mots-clés
         keyword_results = self._run_edge_keyword_search(
             session, graph_id, query, limit * 2
         )
 
-        # Merge and rank
+        # Fusionner et classer
         merged = self._merge_results(
             vector_results, keyword_results, key="uuid", limit=limit
         )
@@ -102,9 +102,9 @@ class SearchService:
         limit: int = 10,
     ) -> List[Dict[str, Any]]:
         """
-        Search nodes (entities) using hybrid scoring.
+        Rechercher des nœuds (entités) en utilisant le score hybride.
 
-        Returns list of dicts with node properties + 'score'.
+        Retourne une liste de dictionnaires avec les propriétés du nœud + 'score'.
         """
         query_vector = self.embedding.embed(query)
 
@@ -124,7 +124,7 @@ class SearchService:
     def _run_edge_vector_search(
         self, session: Neo4jSession, graph_id: str, query_vector: List[float], limit: int
     ) -> List[Dict[str, Any]]:
-        """Run vector similarity search on edge fact_embedding."""
+        """Exécuter une recherche de similarité vectorielle sur l'embedding de fait des arêtes."""
         try:
             result = session.run(
                 _VECTOR_SEARCH_EDGES,
@@ -137,15 +137,15 @@ class SearchService:
                 for record in result
             ]
         except Exception as e:
-            logger.warning(f"Vector edge search failed (index may not exist yet): {e}")
+            logger.warning(f"La recherche vectorielle d'arêtes a échoué (l'index peut ne pas exister encore) : {e}")
             return []
 
     def _run_edge_keyword_search(
         self, session: Neo4jSession, graph_id: str, query: str, limit: int
     ) -> List[Dict[str, Any]]:
-        """Run fulltext (BM25) search on edge fact + name."""
+        """Exécuter une recherche plein texte (BM25) sur le fait et le nom de l'arête."""
         try:
-            # Escape special Lucene characters in query
+            # Échapper les caractères spéciaux Lucene dans la requête
             safe_query = self._escape_lucene(query)
             result = session.run(
                 _FULLTEXT_SEARCH_EDGES,
@@ -158,13 +158,13 @@ class SearchService:
                 for record in result
             ]
         except Exception as e:
-            logger.warning(f"Keyword edge search failed: {e}")
+            logger.warning(f"La recherche par mots-clés d'arêtes a échoué : {e}")
             return []
 
     def _run_node_vector_search(
         self, session: Neo4jSession, graph_id: str, query_vector: List[float], limit: int
     ) -> List[Dict[str, Any]]:
-        """Run vector similarity search on entity embedding."""
+        """Exécuter une recherche de similarité vectorielle sur l'embedding d'entité."""
         try:
             result = session.run(
                 _VECTOR_SEARCH_NODES,
@@ -177,13 +177,13 @@ class SearchService:
                 for record in result
             ]
         except Exception as e:
-            logger.warning(f"Vector node search failed: {e}")
+            logger.warning(f"La recherche vectorielle de nœuds a échoué : {e}")
             return []
 
     def _run_node_keyword_search(
         self, session: Neo4jSession, graph_id: str, query: str, limit: int
     ) -> List[Dict[str, Any]]:
-        """Run fulltext search on entity name + summary."""
+        """Exécuter une recherche plein texte sur le nom et le résumé de l'entité."""
         try:
             safe_query = self._escape_lucene(query)
             result = session.run(
@@ -197,7 +197,7 @@ class SearchService:
                 for record in result
             ]
         except Exception as e:
-            logger.warning(f"Keyword node search failed: {e}")
+            logger.warning(f"La recherche par mots-clés de nœuds a échoué : {e}")
             return []
 
     def _merge_results(
@@ -208,19 +208,19 @@ class SearchService:
         limit: int,
     ) -> List[Dict[str, Any]]:
         """
-        Merge vector and keyword results with weighted scoring.
+        Fusionner les résultats vectoriels et par mots-clés avec un score pondéré.
 
-        Normalizes scores to [0, 1] range before combining.
+        Normalise les scores dans la plage [0, 1] avant la combinaison.
         """
-        # Normalize vector scores
+        # Normaliser les scores vectoriels
         v_max = max((r["_score"] for r in vector_results), default=1.0) or 1.0
         v_scores = {r[key]: r["_score"] / v_max for r in vector_results}
 
-        # Normalize keyword scores
+        # Normaliser les scores par mots-clés
         k_max = max((r["_score"] for r in keyword_results), default=1.0) or 1.0
         k_scores = {r[key]: r["_score"] / k_max for r in keyword_results}
 
-        # Build combined result map
+        # Construire la carte de résultats combinés
         all_items: Dict[str, Dict[str, Any]] = {}
         for r in vector_results:
             all_items[r[key]] = {k: v for k, v in r.items() if k != "_score"}
@@ -228,7 +228,7 @@ class SearchService:
             if r[key] not in all_items:
                 all_items[r[key]] = {k: v for k, v in r.items() if k != "_score"}
 
-        # Calculate hybrid scores
+        # Calculer les scores hybrides
         scored = []
         for uid, item in all_items.items():
             v = v_scores.get(uid, 0.0)
@@ -237,13 +237,13 @@ class SearchService:
             item["score"] = combined
             scored.append(item)
 
-        # Sort by combined score descending
+        # Trier par score combiné décroissant
         scored.sort(key=lambda x: x["score"], reverse=True)
         return scored[:limit]
 
     @staticmethod
     def _escape_lucene(query: str) -> str:
-        """Escape special Lucene query characters."""
+        """Échapper les caractères spéciaux de requête Lucene."""
         special = r'+-&|!(){}[]^"~*?:\/'
         result = []
         for ch in query:

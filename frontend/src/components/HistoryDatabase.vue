@@ -13,7 +13,7 @@
     <!-- Title section -->
     <div class="section-header">
       <div class="section-line"></div>
-      <span class="section-title">Simulation Records</span>
+      <span class="section-title">Historique des simulations</span>
       <div class="section-line"></div>
     </div>
 
@@ -36,16 +36,16 @@
             <span
               class="status-icon"
               :class="{ available: project.project_id, unavailable: !project.project_id }"
-              title="Graph Construction"
+              title="Construction du graphe"
             >◇</span>
             <span
               class="status-icon available"
-              title="Environment Setup"
+              title="Configuration de l'environnement"
             >◈</span>
             <span
               class="status-icon"
               :class="{ available: project.report_id, unavailable: !project.report_id }"
-              title="Analysis Report"
+              title="Rapport d'analyse"
             >◆</span>
           </div>
         </div>
@@ -67,13 +67,13 @@
             </div>
             <!-- If there are more files, show indicator -->
             <div v-if="project.files.length > 3" class="files-more">
-              +{{ project.files.length - 3 }} files
+              +{{ project.files.length - 3 }} fichiers
             </div>
           </div>
           <!-- Placeholder when no files -->
           <div class="files-empty" v-else>
             <span class="empty-file-icon">◇</span>
-            <span class="empty-file-text">No Files</span>
+            <span class="empty-file-text">Aucun fichier</span>
           </div>
         </div>
 
@@ -102,7 +102,7 @@
     <!-- Loading state -->
     <div v-if="loading" class="loading-state">
       <span class="loading-spinner"></span>
-      <span class="loading-text">Loading...</span>
+      <span class="loading-text">Chargement...</span>
     </div>
 
     <!-- Simulation playback details modal -->
@@ -126,27 +126,27 @@
             <div class="modal-body">
               <!-- Simulation requirement -->
               <div class="modal-section">
-                <div class="modal-label">Simulation Requirement</div>
-                <div class="modal-requirement">{{ selectedProject.simulation_requirement || 'None' }}</div>
+                <div class="modal-label">Exigence de simulation</div>
+                <div class="modal-requirement">{{ selectedProject.simulation_requirement || 'Aucune' }}</div>
               </div>
 
               <!-- File list -->
               <div class="modal-section">
-                <div class="modal-label">Associated Files</div>
+                <div class="modal-label">Fichiers associés</div>
                 <div class="modal-files" v-if="selectedProject.files && selectedProject.files.length > 0">
                   <div v-for="(file, index) in selectedProject.files" :key="index" class="modal-file-item">
                     <span class="file-tag" :class="getFileType(file.filename)">{{ getFileTypeLabel(file.filename) }}</span>
                     <span class="modal-file-name">{{ file.filename }}</span>
                   </div>
                 </div>
-                <div class="modal-empty" v-else>No Associated Files</div>
+                <div class="modal-empty" v-else>Aucun fichier associé</div>
               </div>
             </div>
 
             <!-- Simulation playback divider -->
             <div class="modal-divider">
               <span class="divider-line"></span>
-              <span class="divider-text">Simulation Playback</span>
+              <span class="divider-text">Relecture de simulation</span>
               <span class="divider-line"></span>
             </div>
 
@@ -159,7 +159,7 @@
               >
                 <span class="btn-step">Step1</span>
                 <span class="btn-icon">◇</span>
-                <span class="btn-text">Graph Construction</span>
+                <span class="btn-text">Construction du graphe</span>
               </button>
               <button
                 class="modal-btn btn-simulation"
@@ -167,7 +167,7 @@
               >
                 <span class="btn-step">Step2</span>
                 <span class="btn-icon">◈</span>
-                <span class="btn-text">Environment Setup</span>
+                <span class="btn-text">Configuration de l'environnement</span>
               </button>
               <button
                 class="modal-btn btn-report"
@@ -176,12 +176,12 @@
               >
                 <span class="btn-step">Step4</span>
                 <span class="btn-icon">◆</span>
-                <span class="btn-text">Analysis Report</span>
+                <span class="btn-text">Rapport d'analyse</span>
               </button>
             </div>
             <!-- Playback unavailable notice -->
             <div class="modal-playback-hint">
-              <span class="hint-text">Step3 "Start Simulation" and Step5 "Deep Interaction" must be launched during execution and do not support history playback</span>
+              <span class="hint-text">L'étape 3 « Démarrer la simulation » et l'étape 5 « Interaction approfondie » doivent être lancées pendant l'exécution et ne prennent pas en charge la relecture historique</span>
             </div>
           </div>
         </div>
@@ -291,7 +291,7 @@ const getCardStyle = (index) => {
 // Get style class based on round progress
 const getProgressClass = (simulation) => {
   const current = simulation.current_round || 0
-  const total = simulation.total_rounds || 0
+  const total = simulation.total_tours || 0
 
   if (total === 0 || current === 0) {
     // Not started
@@ -337,7 +337,7 @@ const truncateText = (text, maxLength) => {
 
 // Generate title from simulation requirement (first 20 characters)
 const getSimulationTitle = (requirement) => {
-  if (!requirement) return 'Unnamed Simulation'
+  if (!requirement) return 'Simulation sans nom'
   const title = requirement.slice(0, 20)
   return requirement.length > 20 ? title + '...' : title
 }
@@ -349,12 +349,12 @@ const formatSimulationId = (simulationId) => {
   return `SIM_${prefix.toUpperCase()}`
 }
 
-// Format round display (current round/total rounds)
+// Format round display (current round/total tours)
 const formatRounds = (simulation) => {
   const current = simulation.current_round || 0
-  const total = simulation.total_rounds || 0
-  if (total === 0) return 'Not Started'
-  return `${current}/${total} rounds`
+  const total = simulation.total_tours || 0
+  if (total === 0) return 'Non démarré'
+  return `${current}/${total} tours`
 }
 
 // Get file type (for styling)
@@ -382,7 +382,7 @@ const getFileTypeLabel = (filename) => {
 
 // Truncate filename (preserve extension)
 const truncateFilename = (filename, maxLength) => {
-  if (!filename) return 'Unknown File'
+  if (!filename) return 'Fichier inconnu'
   if (filename.length <= maxLength) return filename
 
   const ext = filename.includes('.') ? '.' + filename.split('.').pop() : ''
@@ -745,9 +745,9 @@ onUnmounted(() => {
 }
 
 /* Progress status colors */
-.card-progress.completed { color: #10B981; }    /* Completed - Green */
-.card-progress.in-progress { color: #F59E0B; }  /* In Progress - Orange */
-.card-progress.not-started { color: #9CA3AF; }  /* Not Started - Gray */
+.card-progress.completed { color: #10B981; }    /* Terminé - Vert */
+.card-progress.in-progress { color: #F59E0B; }  /* En cours - Orange */
+.card-progress.not-started { color: #9CA3AF; }  /* Non démarré - Gray */
 .card-status.pending { color: #9CA3AF; }
 
 /* File list area */

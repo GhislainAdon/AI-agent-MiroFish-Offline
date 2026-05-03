@@ -1,16 +1,16 @@
 """
-OASIS Reddit simulation preset script
-This script reads parameters from config file to execute simulation, achieving full automation
+Script de simulation Reddit OASIS
+Ce script lit les paramètres du fichier de configuration pour exécuter la simulation, atteignant une automatisation complète
 
-Features:
-- Keep environment running after simulation completes, enter wait mode
-- Support Interview commands via IPC
-- Support single Agent interview and batch interview
-- Support remote environment shutdown command
+Fonctionnalités :
+- Maintenir l'environnement en cours d'exécution après la fin de la simulation, entrer en mode d'attente
+- Support des commandes Interview via IPC
+- Support de l'interview d'un Agent unique et de l'interview par lot
+- Support de la commande d'arrêt à distance de l'environnement
 
-Usage:
-    python run_reddit_simulation.py --config /path/to/simulation_config.json
-    python run_reddit_simulation.py --config /path/to/simulation_config.json --no-wait  # Close immediately after completion
+Utilisation :
+    python run_reddit_simulation.py --config /chemin/vers/simulation_config.json
+    python run_reddit_simulation.py --config /chemin/vers/simulation_config.json --no-wait  # Fermer immédiatement après la fin
 """
 
 import argparse
@@ -25,18 +25,18 @@ import sqlite3
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
-# Global variables: for signal handling
+# Variables globales : pour la gestion des signaux
 _shutdown_event = None
 _cleanup_done = False
 
-# Add project paths
+# Ajouter les chemins du projet
 _scripts_dir = os.path.dirname(os.path.abspath(__file__))
 _backend_dir = os.path.abspath(os.path.join(_scripts_dir, '..'))
 _project_root = os.path.abspath(os.path.join(_backend_dir, '..'))
 sys.path.insert(0, _scripts_dir)
 sys.path.insert(0, _backend_dir)
 
-# Load .env file from project root (contains LLM_API_KEY and other configurations)
+# Charger le fichier .env depuis la racine du projet (contient LLM_API_KEY et autres configurations)
 from dotenv import load_dotenv
 _env_file = os.path.join(_project_root, '.env')
 if os.path.exists(_env_file):
@@ -51,7 +51,7 @@ import re
 
 
 class UnicodeFormatter(logging.Formatter):
-    """Custom formatter to convert Unicode escape sequences to readable characters"""
+    """Formateur personnalisé pour convertir les séquences d'échappement Unicode en caractères lisibles"""
     
     UNICODE_ESCAPE_PATTERN = re.compile(r'\\u([0-9a-fA-F]{4})')
     
@@ -68,24 +68,24 @@ class UnicodeFormatter(logging.Formatter):
 
 
 class MaxTokensWarningFilter(logging.Filter):
-    """Filter out camel-ai max_tokens warnings (we intentionally don't set max_tokens to let the model decide)"""
+    """Filtrer les avertissements max_tokens de camel-ai (nous ne définissons pas intentionnellement max_tokens pour laisser le modèle décider)"""
     
     def filter(self, record):
-        # Filter out logs containing max_tokens warnings
+        # Filtrer les journaux contenant des avertissements max_tokens
         if "max_tokens" in record.getMessage() and "Invalid or missing" in record.getMessage():
             return False
         return True
 
 
-# Add filter immediately when module loads, ensure it takes effect before camel code executes
+# Ajouter le filtre immédiatement au chargement du module, pour qu'il prenne effet avant l'exécution du code camel
 logging.getLogger().addFilter(MaxTokensWarningFilter())
 
 
 def setup_oasis_logging(log_dir: str):
-    """Configure OASIS logging, use fixed-name log files"""
+    """Configurer la journalisation OASIS, utiliser des fichiers de journal avec noms fixes"""
     os.makedirs(log_dir, exist_ok=True)
     
-    # Clean up old log files
+    # Nettoyer les anciens fichiers de journal
     for f in os.listdir(log_dir):
         old_log = os.path.join(log_dir, f)
         if os.path.isfile(old_log) and f.endswith('.log'):
@@ -126,25 +126,25 @@ try:
         generate_reddit_agent_graph
     )
 except ImportError as e:
-    print(f"Error: Missing dependency {e}")
-    print("Please install first: pip install oasis-ai camel-ai")
+    print(f"Erreur : Dépendance manquante {e}")
+    print("Veuillez installer d'abord : pip install oasis-ai camel-ai")
     sys.exit(1)
 
 
-# IPC-related constants
+# Constantes liées à l'IPC
 IPC_COMMANDS_DIR = "ipc_commands"
 IPC_RESPONSES_DIR = "ipc_responses"
 ENV_STATUS_FILE = "env_status.json"
 
 class CommandType:
-    """Command type constants"""
+    """Constantes de type de commande"""
     INTERVIEW = "interview"
     BATCH_INTERVIEW = "batch_interview"
     CLOSE_ENV = "close_env"
 
 
 class IPCHandler:
-    """IPC command handler"""
+    """Gestionnaire de commandes IPC"""
     
     def __init__(self, simulation_dir: str, env, agent_graph):
         self.simulation_dir = simulation_dir
@@ -155,12 +155,12 @@ class IPCHandler:
         self.status_file = os.path.join(simulation_dir, ENV_STATUS_FILE)
         self._running = True
         
-        # Ensure directories exist
+        # S'assurer que les répertoires existent
         os.makedirs(self.commands_dir, exist_ok=True)
         os.makedirs(self.responses_dir, exist_ok=True)
     
     def update_status(self, status: str):
-        """Update environment status"""
+        """Mettre à jour le statut de l'environnement"""
         with open(self.status_file, 'w', encoding='utf-8') as f:
             json.dump({
                 "status": status,
@@ -168,11 +168,11 @@ class IPCHandler:
             }, f, ensure_ascii=False, indent=2)
     
     def poll_command(self) -> Optional[Dict[str, Any]]:
-        """Poll for pending commands"""
+        """Interroger les commandes en attente"""
         if not os.path.exists(self.commands_dir):
             return None
         
-        # Get command files (sorted by time)
+        # Obtenir les fichiers de commande (triés par heure)
         command_files = []
         for filename in os.listdir(self.commands_dir):
             if filename.endswith('.json'):
@@ -191,7 +191,7 @@ class IPCHandler:
         return None
     
     def send_response(self, command_id: str, status: str, result: Dict = None, error: str = None):
-        """Send response"""
+        """Envoyer une réponse"""
         response = {
             "command_id": command_id,
             "status": status,
@@ -204,7 +204,7 @@ class IPCHandler:
         with open(response_file, 'w', encoding='utf-8') as f:
             json.dump(response, f, ensure_ascii=False, indent=2)
         
-        # Delete command file
+        # Supprimer le fichier de commande
         command_file = os.path.join(self.commands_dir, f"{command_id}.json")
         try:
             os.remove(command_file)
@@ -213,49 +213,49 @@ class IPCHandler:
     
     async def handle_interview(self, command_id: str, agent_id: int, prompt: str) -> bool:
         """
-        Handle single Agent interview command
+        Gérer la commande d'interview d'un Agent unique
         
-        Returns:
-            True means success, False means failure
+        Retourne :
+            True signifie succès, False signifie échec
         """
         try:
-            # Get Agent
+            # Obtenir l'Agent
             agent = self.agent_graph.get_agent(agent_id)
             
-            # Create Interview action
+            # Créer l'action Interview
             interview_action = ManualAction(
                 action_type=ActionType.INTERVIEW,
                 action_args={"prompt": prompt}
             )
             
-            # Execute Interview
+            # Exécuter l'Interview
             actions = {agent: interview_action}
             await self.env.step(actions)
             
-            # Get result from database
+            # Obtenir le résultat depuis la base de données
             result = self._get_interview_result(agent_id)
             
             self.send_response(command_id, "completed", result=result)
-            print(f"  Interview completed: agent_id={agent_id}")
+            print(f"  Interview terminée : agent_id={agent_id}")
             return True
             
         except Exception as e:
             error_msg = str(e)
-            print(f"  Interview failed: agent_id={agent_id}, error={error_msg}")
+            print(f"  Interview échouée : agent_id={agent_id}, erreur={error_msg}")
             self.send_response(command_id, "failed", error=error_msg)
             return False
     
     async def handle_batch_interview(self, command_id: str, interviews: List[Dict]) -> bool:
         """
-        Handle batch interview command
+        Gérer la commande d'interview par lot
         
-        Args:
-            interviews: [{"agent_id": int, "prompt": str}, ...]
+        Args :
+            interviews : [{"agent_id": int, "prompt": str}, ...]
         """
         try:
-            # Build action dictionary
+            # Construire le dictionnaire d'actions
             actions = {}
-            agent_prompts = {}  # Record prompt for each agent
+            agent_prompts = {}  # Enregistrer le prompt de chaque agent
             
             for interview in interviews:
                 agent_id = interview.get("agent_id")
@@ -269,16 +269,16 @@ class IPCHandler:
                     )
                     agent_prompts[agent_id] = prompt
                 except Exception as e:
-                    print(f"  Warning: Unable to get Agent {agent_id}: {e}")
+                    print(f"  Avertissement : Impossible d'obtenir l'Agent {agent_id} : {e}")
             
             if not actions:
-                self.send_response(command_id, "failed", error="No valid Agents")
+                self.send_response(command_id, "failed", error="Aucun Agent valide")
                 return False
             
-            # Execute batch Interview
+            # Exécuter l'Interview par lot
             await self.env.step(actions)
             
-            # Get all results
+            # Obtenir tous les résultats
             results = {}
             for agent_id in agent_prompts.keys():
                 result = self._get_interview_result(agent_id)
@@ -288,17 +288,17 @@ class IPCHandler:
                 "interviews_count": len(results),
                 "results": results
             })
-            print(f"  Batch Interview completed: {len(results)} Agents")
+            print(f"  Interview par lot terminée : {len(results)} Agents")
             return True
             
         except Exception as e:
             error_msg = str(e)
-            print(f"  batchInterview failed: {error_msg}")
+            print(f"  Interview par lot échouée : {error_msg}")
             self.send_response(command_id, "failed", error=error_msg)
             return False
     
     def _get_interview_result(self, agent_id: int) -> Dict[str, Any]:
-        """Get the latest Interview result from database"""
+        """Obtenir le dernier résultat d'Interview depuis la base de données"""
         db_path = os.path.join(self.simulation_dir, "reddit_simulation.db")
         
         result = {
@@ -314,7 +314,7 @@ class IPCHandler:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
             
-            # query latestInterviewrecord
+            # Interroger le dernier enregistrement Interview
             cursor.execute("""
                 SELECT user_id, info, created_at
                 FROM trace
@@ -336,16 +336,16 @@ class IPCHandler:
             conn.close()
             
         except Exception as e:
-            print(f"  Failed to read Interview result: {e}")
+            print(f"  Échec de la lecture du résultat Interview : {e}")
         
         return result
     
     async def process_commands(self) -> bool:
         """
-        Process all pending commands
+        Traiter toutes les commandes en attente
         
-        Returns:
-            True means continue running, False means should exit
+        Retourne :
+            True signifie continuer l'exécution, False signifie qu'il faut quitter
         """
         command = self.poll_command()
         if not command:
@@ -355,7 +355,7 @@ class IPCHandler:
         command_type = command.get("command_type")
         args = command.get("args", {})
         
-        print(f"\nReceived IPC command: {command_type}, id={command_id}")
+        print(f"\nCommande IPC reçue : {command_type}, id={command_id}")
         
         if command_type == CommandType.INTERVIEW:
             await self.handle_interview(
@@ -373,19 +373,19 @@ class IPCHandler:
             return True
             
         elif command_type == CommandType.CLOSE_ENV:
-            print("Received close environment command")
-            self.send_response(command_id, "completed", result={"message": "Environment will close"})
+            print("Commande de fermeture de l'environnement reçue")
+            self.send_response(command_id, "completed", result={"message": "L'environnement va se fermer"})
             return False
         
         else:
-            self.send_response(command_id, "failed", error=f"Unknown command type: {command_type}")
+            self.send_response(command_id, "failed", error=f"Type de commande inconnu : {command_type}")
             return True
 
 
 class RedditSimulationRunner:
-    """Reddit simulation runner"""
+    """Lanceur de simulation Reddit"""
     
-    # Reddit available actions (INTERVIEW not included, INTERVIEW can only be triggered manually via ManualAction)
+    # Actions Reddit disponibles (INTERVIEW non incluse, INTERVIEW ne peut être déclenchée que manuellement via ManualAction)
     AVAILABLE_ACTIONS = [
         ActionType.LIKE_POST,
         ActionType.DISLIKE_POST,
@@ -404,11 +404,11 @@ class RedditSimulationRunner:
     
     def __init__(self, config_path: str, wait_for_commands: bool = True):
         """
-        Initialize simulation runner
+        Initialiser le lanceur de simulation
         
-        Args:
-            config_path: Configuration file path (simulation_config.json)
-            wait_for_commands: Whether to wait for commands after simulation completes (default True)
+        Args :
+            config_path : Chemin du fichier de configuration (simulation_config.json)
+            wait_for_commands : S'il faut attendre des commandes après la fin de la simulation (True par défaut)
         """
         self.config_path = config_path
         self.config = self._load_config()
@@ -419,47 +419,47 @@ class RedditSimulationRunner:
         self.ipc_handler = None
         
     def _load_config(self) -> Dict[str, Any]:
-        """Load configuration file"""
+        """Charger le fichier de configuration"""
         with open(self.config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     
     def _get_profile_path(self) -> str:
-        """Get Profile file path"""
+        """Obtenir le chemin du fichier de profil"""
         return os.path.join(self.simulation_dir, "reddit_profiles.json")
     
     def _get_db_path(self) -> str:
-        """Get database path"""
+        """Obtenir le chemin de la base de données"""
         return os.path.join(self.simulation_dir, "reddit_simulation.db")
     
     def _create_model(self):
         """
-        Create LLM model
+        Créer le modèle LLM
         
-        Unified use of configuration in project root .env file (highest priority)：
-        - LLM_API_KEY: API key
-        - LLM_BASE_URL: API base URL
-        - LLM_MODEL_NAME: Model name
+        Utilisation unifiée de la configuration dans le fichier .env à la racine du projet (priorité la plus élevée) :
+        - LLM_API_KEY : Clé API
+        - LLM_BASE_URL : URL de base de l'API
+        - LLM_MODEL_NAME : Nom du modèle
         """
-        # Read configuration from .env first
+        # Lire la configuration depuis .env en premier
         llm_api_key = os.environ.get("LLM_API_KEY", "")
         llm_base_url = os.environ.get("LLM_BASE_URL", "")
         llm_model = os.environ.get("LLM_MODEL_NAME", "")
         
-        # If not in .env, use config as fallback
+        # Si absent du .env, utiliser la configuration comme solution de secours
         if not llm_model:
             llm_model = self.config.get("llm_model", "gpt-4o-mini")
         
-        # Set environment variables required by camel-ai
+        # Définir les variables d'environnement requises par camel-ai
         if llm_api_key:
             os.environ["OPENAI_API_KEY"] = llm_api_key
         
         if not os.environ.get("OPENAI_API_KEY"):
-            raise ValueError("Missing API Key configuration, please set LLM_API_KEY in .env file in project root")
+            raise ValueError("Configuration de clé API manquante, veuillez définir LLM_API_KEY dans le fichier .env à la racine du projet")
         
         if llm_base_url:
             os.environ["OPENAI_API_BASE_URL"] = llm_base_url
         
-        print(f"LLM configuration: model={llm_model}, base_url={llm_base_url[:40] if llm_base_url else 'default'}...")
+        print(f"Configuration LLM : modèle={llm_model}, url_base={llm_base_url[:40] if llm_base_url else 'défaut'}...")
         
         return ModelFactory.create(
             model_platform=ModelPlatformType.OPENAI,
@@ -473,7 +473,7 @@ class RedditSimulationRunner:
         round_num: int
     ) -> List:
         """
-        Decide which Agents to activate this round based on time and configuration
+        Décider quels Agents activer ce tour en fonction de l'heure et de la configuration
         """
         time_config = self.config.get("time_config", {})
         agent_configs = self.config.get("agent_configs", [])
@@ -521,16 +521,16 @@ class RedditSimulationRunner:
         return active_agents
     
     async def run(self, max_rounds: int = None):
-        """Run Reddit simulation
+        """Exécuter la simulation Reddit
         
-        Args:
-            max_rounds: Maximum simulation rounds (optional, used to truncate long simulations)
+        Args :
+            max_rounds : Nombre maximum de tours de simulation (optionnel, utilisé pour tronquer les longues simulations)
         """
         print("=" * 60)
-        print("OASIS Reddit Simulation")
-        print(f"Configuration file: {self.config_path}")
-        print(f"Simulation ID: {self.config.get('simulation_id', 'unknown')}")
-        print(f"Wait mode: {'Enabled' if self.wait_for_commands else 'Disabled'}")
+        print("Simulation Reddit OASIS")
+        print(f"Fichier de configuration : {self.config_path}")
+        print(f"ID de simulation : {self.config.get('simulation_id', 'inconnu')}")
+        print(f"Mode d'attente : {'Activé' if self.wait_for_commands else 'Désactivé'}")
         print("=" * 60)
         
         time_config = self.config.get("time_config", {})
@@ -538,28 +538,28 @@ class RedditSimulationRunner:
         minutes_per_round = time_config.get("minutes_per_round", 30)
         total_rounds = (total_hours * 60) // minutes_per_round
         
-        # If maximum rounds specified, truncate
+        # Si le nombre maximum de tours est spécifié, tronquer
         if max_rounds is not None and max_rounds > 0:
             original_rounds = total_rounds
             total_rounds = min(total_rounds, max_rounds)
             if total_rounds < original_rounds:
-                print(f"\nRounds truncated: {original_rounds} -> {total_rounds} (max_rounds={max_rounds})")
+                print(f"\nTours tronqués : {original_rounds} -> {total_rounds} (max_rounds={max_rounds})")
         
-        print(f"\nSimulation parameters:")
-        print(f"  - Total simulation duration: {total_hours}hours")
-        print(f"  - Time per round: {minutes_per_round}minutes")
-        print(f"  - Total rounds: {total_rounds}")
+        print(f"\nParamètres de simulation :")
+        print(f"  - Durée totale de simulation : {total_hours} heures")
+        print(f"  - Temps par tour : {minutes_per_round} minutes")
+        print(f"  - Total des tours : {total_rounds}")
         if max_rounds:
-            print(f"  - Maximum rounds limit: {max_rounds}")
-        print(f"  - Number of Agents: {len(self.config.get('agent_configs', []))}")
+            print(f"  - Limite maximale de tours : {max_rounds}")
+        print(f"  - Nombre d'Agents : {len(self.config.get('agent_configs', []))}")
         
-        print("\nInitialize LLM model...")
+        print("\nInitialisation du modèle LLM...")
         model = self._create_model()
         
-        print("Load Agent Profile...")
+        print("Chargement du profil des Agents...")
         profile_path = self._get_profile_path()
         if not os.path.exists(profile_path):
-            print(f"Error: Profile file does not exist: {profile_path}")
+            print(f"Erreur : Le fichier de profil n'existe pas : {profile_path}")
             return
         
         self.agent_graph = await generate_reddit_agent_graph(
@@ -571,29 +571,29 @@ class RedditSimulationRunner:
         db_path = self._get_db_path()
         if os.path.exists(db_path):
             os.remove(db_path)
-            print(f"Old database deleted: {db_path}")
+            print(f"Ancienne base de données supprimée : {db_path}")
         
-        print("Create OASIS environment...")
+        print("Création de l'environnement OASIS...")
         self.env = oasis.make(
             agent_graph=self.agent_graph,
             platform=oasis.DefaultPlatformType.REDDIT,
             database_path=db_path,
-            semaphore=30,  # Limit maximum concurrent LLM requests to prevent API overload
+            semaphore=30,  # Limiter le nombre maximal de requêtes LLM simultanées pour éviter la surcharge de l'API
         )
         
         await self.env.reset()
-        print("Environment initialization complete\n")
+        print("Initialisation de l'environnement terminée\n")
         
-        # Initialize IPC handler
+        # Initialiser le gestionnaire IPC
         self.ipc_handler = IPCHandler(self.simulation_dir, self.env, self.agent_graph)
         self.ipc_handler.update_status("running")
         
-        # Execute initial events
+        # Exécuter les événements initiaux
         event_config = self.config.get("event_config", {})
         initial_posts = event_config.get("initial_posts", [])
         
         if initial_posts:
-            print(f"Execute initial events ({len(initial_posts)}initial posts)...")
+            print(f"Exécution des événements initiaux ({len(initial_posts)} publications initiales)...")
             initial_actions = {}
             for post in initial_posts:
                 agent_id = post.get("poster_agent_id", 0)
@@ -613,14 +613,14 @@ class RedditSimulationRunner:
                             action_args={"content": content}
                         )
                 except Exception as e:
-                    print(f"  Warning: Unable to create for Agent {agent_id}Create initial posts: {e}")
+                    print(f"  Avertissement : Impossible de créer la publication initiale pour l'Agent {agent_id} : {e}")
             
             if initial_actions:
                 await self.env.step(initial_actions)
-                print(f"  Published {len(initial_actions)} initial posts")
+                print(f"  {len(initial_actions)} publications initiales publiées")
         
-        # Main simulation loop
-        print("\nStart simulation loop...")
+        # Boucle de simulation principale
+        print("\nDémarrage de la boucle de simulation...")
         start_time = datetime.now()
         
         for round_num in range(total_rounds):
@@ -645,26 +645,26 @@ class RedditSimulationRunner:
             if (round_num + 1) % 10 == 0 or round_num == 0:
                 elapsed = (datetime.now() - start_time).total_seconds()
                 progress = (round_num + 1) / total_rounds * 100
-                print(f"  [Day {simulated_day}, {simulated_hour:02d}:00] "
-                      f"Round {round_num + 1}/{total_rounds} ({progress:.1f}%) "
-                      f"- {len(active_agents)} agents active "
-                      f"- elapsed: {elapsed:.1f}s")
+                print(f"  [Jour {simulated_day}, {simulated_hour:02d}:00] "
+                      f"Tour {round_num + 1}/{total_rounds} ({progress:.1f}%) "
+                      f"- {len(active_agents)} agents actifs "
+                      f"- temps écoulé : {elapsed:.1f}s")
         
         total_elapsed = (datetime.now() - start_time).total_seconds()
-        print(f"\nSimulation loop completed!")
-        print(f"  - Total time: {total_elapsed:.1f}seconds")
-        print(f"  - Database: {db_path}")
+        print(f"\nBoucle de simulation terminée !")
+        print(f"  - Temps total : {total_elapsed:.1f} secondes")
+        print(f"  - Base de données : {db_path}")
         
-        # Whether to enter wait mode
+        # S'il faut entrer en mode d'attente
         if self.wait_for_commands:
             print("\n" + "=" * 60)
-            print("Enter wait mode - environment keeps running")
-            print("Supported commands: interview, batch_interview, close_env")
+            print("Entrée en mode d'attente - l'environnement reste en cours d'exécution")
+            print("Commandes supportées : interview, batch_interview, close_env")
             print("=" * 60)
             
             self.ipc_handler.update_status("alive")
             
-            # Command wait loop (using global _shutdown_event)
+            # Boucle d'attente de commandes (utilisant le _shutdown_event global)
             try:
                 while not _shutdown_event.is_set():
                     should_continue = await self.ipc_handler.process_commands()
@@ -672,58 +672,58 @@ class RedditSimulationRunner:
                         break
                     try:
                         await asyncio.wait_for(_shutdown_event.wait(), timeout=0.5)
-                        break  # Received exit signal
+                        break  # Signal de sortie reçu
                     except asyncio.TimeoutError:
                         pass
             except KeyboardInterrupt:
-                print("\nReceived interrupt signal")
+                print("\nSignal d'interruption reçu")
             except asyncio.CancelledError:
-                print("\nTask was cancelled")
+                print("\nTâche annulée")
             except Exception as e:
-                print(f"\nError processing command: {e}")
+                print(f"\nErreur lors du traitement de la commande : {e}")
             
-            print("\nClose environment...")
+            print("\nFermeture de l'environnement...")
         
-        # Close environment
+        # Fermer l'environnement
         self.ipc_handler.update_status("stopped")
         await self.env.close()
         
-        print("Environment closed")
+        print("Environnement fermé")
         print("=" * 60)
 
 
 async def main():
-    parser = argparse.ArgumentParser(description='OASIS Reddit Simulation')
+    parser = argparse.ArgumentParser(description='Simulation Reddit OASIS')
     parser.add_argument(
         '--config', 
         type=str, 
         required=True,
-        help='Configuration file path (simulation_config.json)'
+        help='Chemin du fichier de configuration (simulation_config.json)'
     )
     parser.add_argument(
         '--max-rounds',
         type=int,
         default=None,
-        help='Maximum simulation rounds (optional, used to truncate long simulations)'
+        help='Nombre maximum de tours de simulation (optionnel, utilisé pour tronquer les longues simulations)'
     )
     parser.add_argument(
         '--no-wait',
         action='store_true',
         default=False,
-        help='Close environment immediately after simulation completes, do not enter wait mode'
+        help='Fermer l\'environnement immédiatement après la fin de la simulation, ne pas entrer en mode d\'attente'
     )
     
     args = parser.parse_args()
     
-    # Create shutdown event at the start of main function
+    # Créer l'événement d'arrêt au début de la fonction main
     global _shutdown_event
     _shutdown_event = asyncio.Event()
     
     if not os.path.exists(args.config):
-        print(f"Error: Configuration file does not exist: {args.config}")
+        print(f"Erreur : Le fichier de configuration n'existe pas : {args.config}")
         sys.exit(1)
     
-    # Initialize logging configuration (use fixed file names, clean up old logs)
+    # Initialiser la configuration de journalisation (utiliser des noms de fichiers fixes, nettoyer les anciens journaux)
     simulation_dir = os.path.dirname(args.config) or "."
     setup_oasis_logging(os.path.join(simulation_dir, "log"))
     
@@ -736,20 +736,20 @@ async def main():
 
 def setup_signal_handlers():
     """
-    Set signal handlers to ensure proper exit when receiving SIGTERM/SIGINT
-    Give program a chance to clean up resources properly (close database, environment, etc.)
+    Configurer les gestionnaires de signaux pour assurer une sortie propre lors de la réception de SIGTERM/SIGINT
+    Donner au programme une chance de nettoyer correctement les ressources (fermer la base de données, l'environnement, etc.)
     """
     def signal_handler(signum, frame):
         global _cleanup_done
         sig_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
-        print(f"\nReceived {sig_name} signal, exiting...")
+        print(f"\nSignal {sig_name} reçu, fermeture en cours...")
         if not _cleanup_done:
             _cleanup_done = True
             if _shutdown_event:
                 _shutdown_event.set()
         else:
-            # Force exit only after receiving signal repeatedly
-            print("Force exit...")
+            # Forcer la sortie uniquement après avoir reçu le signal de manière répétée
+            print("Forcer la sortie...")
             sys.exit(1)
     
     signal.signal(signal.SIGTERM, signal_handler)
@@ -761,9 +761,8 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nProgram interrupted")
+        print("\nProgramme interrompu")
     except SystemExit:
         pass
     finally:
-        print("Simulation process exited")
-
+        print("Processus de simulation terminé")

@@ -1,8 +1,8 @@
 """
-EmbeddingService — local embedding via Ollama API
+EmbeddingService — incorporation locale via l'API Ollama
 
-Replaces Zep Cloud's built-in embedding with local nomic-embed-text model.
-Uses Ollama's /api/embed endpoint for vector generation (768 dimensions).
+Remplace l'incorporation intégrée de Zep Cloud avec le modèle local nomic-embed-text.
+Utilise le point de terminaison /api/embed d'Ollama pour la génération de vecteurs (768 dimensions).
 """
 
 import time
@@ -18,7 +18,7 @@ logger = logging.getLogger('mirofish.embedding')
 
 
 class EmbeddingService:
-    """Generate embeddings using local Ollama server."""
+    """Générer des incorporations en utilisant le serveur Ollama local."""
 
     def __init__(
         self,
@@ -33,53 +33,53 @@ class EmbeddingService:
         self.timeout = timeout
         self._embed_url = f"{self.base_url}/api/embed"
 
-        # Simple in-memory cache (text -> embedding vector)
-        # Using dict instead of lru_cache because lists aren't hashable
+        # Cache simple en mémoire (texte -> vecteur d'incorporation)
+        # Utilisation d'un dictionnaire au lieu de lru_cache car les listes ne sont pas hachables
         self._cache: dict[str, List[float]] = {}
         self._cache_max_size = 2000
 
     def embed(self, text: str) -> List[float]:
         """
-        Generate embedding for a single text.
+        Générer une incorporation pour un texte unique.
 
         Args:
-            text: Input text to embed
+            text: Texte en entrée à incorporer
 
         Returns:
-            768-dimensional float vector
+            Vecteur de flottants à 768 dimensions
 
         Raises:
-            EmbeddingError: If Ollama request fails after retries
+            EmbeddingError: Si la requête Ollama échoue après les tentatives
         """
         if not text or not text.strip():
-            raise EmbeddingError("Cannot embed empty text")
+            raise EmbeddingError("Impossible d'incorporer un texte vide")
 
         text = text.strip()
 
-        # Check cache
+        # Vérifier le cache
         if text in self._cache:
             return self._cache[text]
 
         vectors = self._request_embeddings([text])
         vector = vectors[0]
 
-        # Cache result
+        # Mettre en cache le résultat
         self._cache_put(text, vector)
 
         return vector
 
     def embed_batch(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
         """
-        Generate embeddings for multiple texts.
+        Générer des incorporations pour plusieurs textes.
 
-        Processes in batches to avoid overwhelming Ollama.
+        Traite par lots pour éviter de surcharger Ollama.
 
         Args:
-            texts: List of input texts
-            batch_size: Number of texts per request
+            texts: Liste des textes en entrée
+            batch_size: Nombre de textes par requête
 
         Returns:
-            List of embedding vectors (same order as input)
+            Liste de vecteurs d'incorporation (même ordre que l'entrée)
         """
         if not texts:
             return []
@@ -88,7 +88,7 @@ class EmbeddingService:
         uncached_indices: List[int] = []
         uncached_texts: List[str] = []
 
-        # Check cache first
+        # Vérifier le cache d'abord
         for i, text in enumerate(texts):
             text = text.strip() if text else ""
             if text in self._cache:
@@ -97,10 +97,10 @@ class EmbeddingService:
                 uncached_indices.append(i)
                 uncached_texts.append(text)
             else:
-                # Empty text — zero vector
+                # Texte vide — vecteur nul
                 results[i] = [0.0] * 768
 
-        # Batch-embed uncached texts
+        # Incorporer par lot les textes non mis en cache
         if uncached_texts:
             all_vectors: List[List[float]] = []
             for start in range(0, len(uncached_texts), batch_size):
@@ -108,7 +108,7 @@ class EmbeddingService:
                 vectors = self._request_embeddings(batch)
                 all_vectors.extend(vectors)
 
-            # Place results and cache
+            # Placer les résultats et mettre en cache
             for idx, vec, text in zip(uncached_indices, all_vectors, uncached_texts):
                 results[idx] = vec
                 self._cache_put(text, vec)
@@ -117,13 +117,13 @@ class EmbeddingService:
 
     def _request_embeddings(self, texts: List[str]) -> List[List[float]]:
         """
-        Make HTTP request to Ollama /api/embed endpoint with retry.
+        Envoyer une requête HTTP au point de terminaison Ollama /api/embed avec nouvelle tentative.
 
         Args:
-            texts: List of texts to embed (Ollama supports batch in single request)
+            texts: Liste des textes à incorporer (Ollama prend en charge le lot en une seule requête)
 
         Returns:
-            List of embedding vectors
+            Liste de vecteurs d'incorporation
         """
         payload = {
             "model": self.model,
@@ -144,7 +144,7 @@ class EmbeddingService:
                 embeddings = data.get("embeddings", [])
                 if len(embeddings) != len(texts):
                     raise EmbeddingError(
-                        f"Expected {len(texts)} embeddings, got {len(embeddings)}"
+                        f"{len(texts)} incorporations attendues, {len(embeddings)} obtenues"
                     )
 
                 return embeddings
@@ -152,53 +152,53 @@ class EmbeddingService:
             except requests.exceptions.ConnectionError as e:
                 last_error = e
                 logger.warning(
-                    f"Ollama connection failed (attempt {attempt + 1}/{self.max_retries}): {e}"
+                    f"Connexion Ollama échouée (tentative {attempt + 1}/{self.max_retries}) : {e}"
                 )
             except requests.exceptions.Timeout as e:
                 last_error = e
                 logger.warning(
-                    f"Ollama request timed out (attempt {attempt + 1}/{self.max_retries})"
+                    f"Délai d'attente de la requête Ollama dépassé (tentative {attempt + 1}/{self.max_retries})"
                 )
             except requests.exceptions.HTTPError as e:
                 last_error = e
-                logger.error(f"Ollama HTTP error: {e.response.status_code} - {e.response.text}")
+                logger.error(f"Erreur HTTP Ollama : {e.response.status_code} - {e.response.text}")
                 if e.response.status_code >= 500:
-                    # Server error — retry
+                    # Erreur serveur — retenter
                     pass
                 else:
-                    # Client error (4xx) — don't retry
-                    raise EmbeddingError(f"Ollama embedding failed: {e}") from e
+                    # Erreur client (4xx) — ne pas retenter
+                    raise EmbeddingError(f"L'incorporation Ollama a échoué : {e}") from e
             except (KeyError, ValueError) as e:
-                raise EmbeddingError(f"Invalid Ollama response: {e}") from e
+                raise EmbeddingError(f"Réponse Ollama invalide : {e}") from e
 
-            # Exponential backoff
+            # Intervalle exponentiel
             if attempt < self.max_retries - 1:
                 wait = 2 ** attempt
-                logger.info(f"Retrying in {wait}s...")
+                logger.info(f"Nouvelle tentative dans {wait}s...")
                 time.sleep(wait)
 
         raise EmbeddingError(
-            f"Ollama embedding failed after {self.max_retries} retries: {last_error}"
+            f"L'incorporation Ollama a échoué après {self.max_retries} tentatives : {last_error}"
         )
 
     def _cache_put(self, text: str, vector: List[float]) -> None:
-        """Add to cache, evicting oldest entries if full."""
+        """Ajouter au cache, en évictant les entrées les plus anciennes si plein."""
         if len(self._cache) >= self._cache_max_size:
-            # Remove ~10% of oldest entries
+            # Supprimer environ 10 % des entrées les plus anciennes
             keys_to_remove = list(self._cache.keys())[:self._cache_max_size // 10]
             for key in keys_to_remove:
                 del self._cache[key]
         self._cache[text] = vector
 
     def health_check(self) -> bool:
-        """Check if Ollama embedding endpoint is reachable."""
+        """Vérifier si le point de terminaison d'incorporation Ollama est accessible."""
         try:
-            vec = self.embed("health check")
+            vec = self.embed("vérification de l'état de santé")
             return len(vec) > 0
         except Exception:
             return False
 
 
 class EmbeddingError(Exception):
-    """Raised when embedding generation fails."""
+    """Levée lorsque la génération d'incorporation échoue."""
     pass

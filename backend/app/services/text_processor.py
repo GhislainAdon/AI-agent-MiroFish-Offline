@@ -1,5 +1,5 @@
 """
-Textatmanageserveservice
+Service de traitement de texte
 """
 
 from typing import List, Optional
@@ -7,11 +7,11 @@ from ..utils.file_parser import FileParser, split_text_into_chunks
 
 
 class TextProcessor:
-    """Text processor"""
+    """Processeur de texte"""
     
     @staticmethod
     def extract_from_files(file_paths: List[str]) -> str:
-        """Extract text from multiple files"""
+        """Extraire le texte de plusieurs fichiers"""
         return FileParser.extract_from_multiple(file_paths)
     
     @staticmethod
@@ -21,40 +21,40 @@ class TextProcessor:
         overlap: int = 50
     ) -> List[str]:
         """
-        Split text
+        Diviser le texte
         
         Args:
-            text: Original text
-            chunk_size: Chunk size
-            overlap: Overlap size
+            text: Texte original
+            chunk_size: Taille des morceaux
+            overlap: Taille du chevauchement
             
         Returns:
-            Text chunk list
+            Liste des morceaux de texte
         """
         return split_text_into_chunks(text, chunk_size, overlap)
     
     @staticmethod
     def preprocess_text(text: str) -> str:
         """
-        preatmanageText
-        - moveexceptmanyremainingspacewhite
-        - markprepareconvertswitchperform
+        Prétraiter le texte
+        - Supprimer les espaces blancs excédentaires
+        - Normaliser les retours à la ligne et les conversions
         
         Args:
-            text: sourcestartText
+            text: Texte source
             
         Returns:
-            atmanageaftersText
+            Texte prétraité
         """
         import re
         
-        # Normalize line breaks
+        # Normaliser les retours à la ligne
         text = text.replace('\r\n', '\n').replace('\r', '\n')
         
-        # Remove consecutive blank lines (keep at most two line breaks)
+        # Supprimer les lignes vides consécutives (conserver au maximum deux retours à la ligne)
         text = re.sub(r'\n{3,}', '\n\n', text)
         
-        # Remove leading/trailing whitespace
+        # Supprimer les espaces au début et à la fin de chaque ligne
         lines = [line.strip() for line in text.split('\n')]
         text = '\n'.join(lines)
         
@@ -62,10 +62,9 @@ class TextProcessor:
     
     @staticmethod
     def get_text_stats(text: str) -> dict:
-        """Get text statistics"""
+        """Obtenir les statistiques du texte"""
         return {
             "total_chars": len(text),
             "total_lines": text.count('\n') + 1,
             "total_words": len(text.split()),
         }
-

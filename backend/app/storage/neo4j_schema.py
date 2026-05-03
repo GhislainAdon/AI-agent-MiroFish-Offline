@@ -1,10 +1,10 @@
 """
-Neo4j Schema — Cypher queries for index creation and schema management.
+Schéma Neo4j — requêtes Cypher pour la création d'index et la gestion du schéma.
 
-Called by Neo4jStorage.create_graph() to set up vector + fulltext indexes.
+Appelé par Neo4jStorage.create_graph() pour configurer les index vectoriels et plein texte.
 """
 
-# Constraints
+# Contraintes
 CREATE_GRAPH_UUID_CONSTRAINT = """
 CREATE CONSTRAINT graph_uuid IF NOT EXISTS
 FOR (g:Graph) REQUIRE g.graph_id IS UNIQUE
@@ -20,7 +20,7 @@ CREATE CONSTRAINT episode_uuid IF NOT EXISTS
 FOR (ep:Episode) REQUIRE ep.uuid IS UNIQUE
 """
 
-# Vector indexes (Neo4j 5.11+)
+# Index vectoriels (Neo4j 5.11+)
 CREATE_ENTITY_VECTOR_INDEX = """
 CREATE VECTOR INDEX entity_embedding IF NOT EXISTS
 FOR (n:Entity) ON (n.embedding)
@@ -39,7 +39,7 @@ OPTIONS {indexConfig: {
 }}
 """
 
-# Fulltext indexes (for BM25 keyword search)
+# Index plein texte (pour la recherche par mots-clés BM25)
 CREATE_ENTITY_FULLTEXT_INDEX = """
 CREATE FULLTEXT INDEX entity_fulltext IF NOT EXISTS
 FOR (n:Entity) ON EACH [n.name, n.summary]
@@ -50,7 +50,7 @@ CREATE FULLTEXT INDEX fact_fulltext IF NOT EXISTS
 FOR ()-[r:RELATION]-() ON EACH [r.fact, r.name]
 """
 
-# All schema queries to run on startup
+# Toutes les requêtes de schéma à exécuter au démarrage
 ALL_SCHEMA_QUERIES = [
     CREATE_GRAPH_UUID_CONSTRAINT,
     CREATE_ENTITY_UUID_CONSTRAINT,

@@ -1,11 +1,11 @@
 """
 Service ReportAgent.
-Genere des rapports de simulation avec le pattern ReACT via GraphStorage / Neo4j.
+Génère des rapports de simulation avec le pattern ReACT via GraphStorage / Neo4j.
 
-Fonctionnalites:
-1. Generer des rapports a partir des besoins de simulation et des informations du graphe.
+Fonctionnalités :
+1. Générer des rapports à partir des besoins de simulation et des informations du graphe.
 2. Planifier d'abord la structure, puis produire le rapport section par section.
-3. Utiliser ReACT avec raisonnement et reflexion multi-tours pour chaque section.
+3. Utiliser ReACT avec raisonnement et réflexion multi-tours pour chaque section.
 4. Permettre les conversations utilisateur avec appels autonomes aux outils de recherche.
 """
 
@@ -34,10 +34,10 @@ logger = get_logger('mirofish.report_agent')
 
 class ReportLogger:
     """
-    Journal detaille de ReportAgent.
+    Journal détaillé de ReportAgent.
 
-    Genere agent_log.jsonl dans le dossier du rapport et enregistre les actions detaillees.
-    Chaque ligne est un objet JSON complet avec horodatage, type d'action et details.
+    Génère agent_log.jsonl dans le dossier du rapport et enregistre les actions détaillées.
+    Chaque ligne est un objet JSON complet avec horodatage, type d'action et détails.
     """
     
     def __init__(self, report_id: str):
@@ -45,7 +45,7 @@ class ReportLogger:
         Initialiser le journal.
 
         Args:
-            report_id: ID du rapport, utilise pour determiner le chemin du fichier de log.
+            report_id: ID du rapport, utilisé pour déterminer le chemin du fichier de log.
         """
         self.report_id = report_id
         self.log_file_path = os.path.join(
@@ -55,12 +55,12 @@ class ReportLogger:
         self._ensure_log_file()
     
     def _ensure_log_file(self):
-        """Ensure the log file directory exists"""
+        """Garantir l'existence du répertoire du fichier de log"""
         log_dir = os.path.dirname(self.log_file_path)
         os.makedirs(log_dir, exist_ok=True)
     
     def _get_elapsed_time(self) -> float:
-        """Get elapsed time from start to now (in seconds)"""
+        """Obtenir le temps écoulé depuis le début (en secondes)"""
         return (datetime.now() - self.start_time).total_seconds()
     
     def log(
@@ -72,14 +72,14 @@ class ReportLogger:
         section_index: int = None
     ):
         """
-        Log an entry
+        Enregistrer une entrée
 
         Args:
-            action: Action type, e.g. 'start', 'tool_call', 'llm_response', 'section_complete', etc
-            stage: Current stage, e.g. 'planning', 'generating', 'completed'
-            details: Details dictionary, not truncated
-            section_title: Current section title (optional)
-            section_index: Current section index (optional)
+            action: Type d'action, par ex. 'start', 'tool_call', 'llm_response', 'section_complete', etc
+            stage: Étape actuelle, par ex. 'planning', 'generating', 'completed'
+            details: Dictionnaire de détails, non tronqué
+            section_title: Titre de la section actuelle (optionnel)
+            section_index: Index de la section actuelle (optionnel)
         """
         log_entry = {
             "timestamp": datetime.now().isoformat(),
@@ -92,12 +92,12 @@ class ReportLogger:
             "details": details
         }
         
-        # Append to JSONL file
+        # Ajouter au fichier JSONL
         with open(self.log_file_path, 'a', encoding='utf-8') as f:
             f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
     
     def log_start(self, simulation_id: str, graph_id: str, simulation_requirement: str):
-        """Log report generation start"""
+        """Journaliser le démarrage de la génération du rapport"""
         self.log(
             action="report_start",
             stage="pending",
@@ -105,52 +105,52 @@ class ReportLogger:
                 "simulation_id": simulation_id,
                 "graph_id": graph_id,
                 "simulation_requirement": simulation_requirement,
-                "message": "Report generation task started"
+                "message": "Tâche de génération du rapport démarrée"
             }
         )
     
     def log_planning_start(self):
-        """Log outline planning start"""
+        """Journaliser le début de la planification du plan"""
         self.log(
             action="planning_start",
             stage="planning",
-            details={"message": "Started planning report outline"}
+            details={"message": "Début de la planification du plan du rapport"}
         )
     
     def log_planning_context(self, context: Dict[str, Any]):
-        """Log context information acquired during planning"""
+        """Journaliser les informations de contexte acquises lors de la planification"""
         self.log(
             action="planning_context",
             stage="planning",
             details={
-                "message": "Acquired simulation context information",
+                "message": "Informations de contexte de simulation acquises",
                 "context": context
             }
         )
     
     def log_planning_complete(self, outline_dict: Dict[str, Any]):
-        """Log outline planning completion"""
+        """Journaliser l'achèvement de la planification du plan"""
         self.log(
             action="planning_complete",
             stage="planning",
             details={
-                "message": "Outline planning completed",
+                "message": "Planification du plan achevée",
                 "outline": outline_dict
             }
         )
     
     def log_section_start(self, section_title: str, section_index: int):
-        """Log section generation start"""
+        """Journaliser le début de la génération d'une section"""
         self.log(
             action="section_start",
             stage="generating",
             section_title=section_title,
             section_index=section_index,
-            details={"message": f"Started generating section: {section_title}"}
+            details={"message": f"Début de la génération de la section : {section_title}"}
         )
     
     def log_react_thought(self, section_title: str, section_index: int, iteration: int, thought: str):
-        """Log ReACT thinking process"""
+        """Journaliser le processus de réflexion ReACT"""
         self.log(
             action="react_thought",
             stage="generating",
@@ -159,7 +159,7 @@ class ReportLogger:
             details={
                 "iteration": iteration,
                 "thought": thought,
-                "message": f"ReACT round {iteration} thought"
+                "message": f"Réflexion du tour ReACT {iteration}"
             }
         )
     
@@ -171,7 +171,7 @@ class ReportLogger:
         parameters: Dict[str, Any],
         iteration: int
     ):
-        """Log tool call"""
+        """Journaliser un appel d'outil"""
         self.log(
             action="tool_call",
             stage="generating",
@@ -181,7 +181,7 @@ class ReportLogger:
                 "iteration": iteration,
                 "tool_name": tool_name,
                 "parameters": parameters,
-                "message": f"Called tool: {tool_name}"
+                "message": f"Outil appelé : {tool_name}"
             }
         )
     
@@ -193,7 +193,7 @@ class ReportLogger:
         result: str,
         iteration: int
     ):
-        """Log tool call result (full content, not truncated)"""
+        """Journaliser le résultat d'un appel d'outil (contenu complet, non tronqué)"""
         self.log(
             action="tool_result",
             stage="generating",
@@ -202,9 +202,9 @@ class ReportLogger:
             details={
                 "iteration": iteration,
                 "tool_name": tool_name,
-                "result": result,  # Full result, not truncated
+                "result": result,  # Résultat complet, non tronqué
                 "result_length": len(result),
-                "message": f"Tool {tool_name} returned result"
+                "message": f"L'outil {tool_name} a renvoyé un résultat"
             }
         )
     
@@ -217,7 +217,7 @@ class ReportLogger:
         has_tool_calls: bool,
         has_final_answer: bool
     ):
-        """Log LLM response (full content, not truncated)"""
+        """Journaliser la réponse LLM (contenu complet, non tronqué)"""
         self.log(
             action="llm_response",
             stage="generating",
@@ -225,11 +225,11 @@ class ReportLogger:
             section_index=section_index,
             details={
                 "iteration": iteration,
-                "response": response,  # Full response, not truncated
+                "response": response,  # Réponse complète, non tronquée
                 "response_length": len(response),
                 "has_tool_calls": has_tool_calls,
                 "has_final_answer": has_final_answer,
-                "message": f"LLM response (tool calls: {has_tool_calls}, final answer: {has_final_answer})"
+                "message": f"Réponse LLM (appels d'outils : {has_tool_calls}, réponse finale : {has_final_answer})"
             }
         )
     
@@ -240,17 +240,17 @@ class ReportLogger:
         content: str,
         tool_calls_count: int
     ):
-        """Log section content generation completion (records content only, not the whole section completion)"""
+        """Journaliser l'achèvement de la génération du contenu de section (enregistre uniquement le contenu, pas l'achèvement complet de la section)"""
         self.log(
             action="section_content",
             stage="generating",
             section_title=section_title,
             section_index=section_index,
             details={
-                "content": content,  # Full content, not truncated
+                "content": content,  # Contenu complet, non tronqué
                 "content_length": len(content),
                 "tool_calls_count": tool_calls_count,
-                "message": f"Section {section_title} content generation completed"
+                "message": f"Génération du contenu de la section {section_title} terminée"
             }
         )
     
@@ -261,9 +261,9 @@ class ReportLogger:
         full_content: str
     ):
         """
-        Log section generation completion
+        Journaliser l'achèvement de la génération de la section
 
-        Frontend should listen to this log to determine if a section is truly complete and get full content
+        Le frontend doit écouter ce journal pour déterminer si une section est réellement achevée et obtenir le contenu complet
         """
         self.log(
             action="section_complete",
@@ -273,24 +273,24 @@ class ReportLogger:
             details={
                 "content": full_content,
                 "content_length": len(full_content),
-                "message": f"Section {section_title} generation completed"
+                "message": f"Génération de la section {section_title} terminée"
             }
         )
     
     def log_report_complete(self, total_sections: int, total_time_seconds: float):
-        """Log report generation completion"""
+        """Journaliser l'achèvement de la génération du rapport"""
         self.log(
             action="report_complete",
             stage="completed",
             details={
                 "total_sections": total_sections,
                 "total_time_seconds": round(total_time_seconds, 2),
-                "message": "Report generation completed"
+                "message": "Génération du rapport terminée"
             }
         )
     
     def log_error(self, error_message: str, stage: str, section_title: str = None):
-        """Log error"""
+        """Journaliser une erreur"""
         self.log(
             action="error",
             stage=stage,
@@ -298,7 +298,7 @@ class ReportLogger:
             section_index=None,
             details={
                 "error": error_message,
-                "message": f"Error occurred: {error_message}"
+                "message": f"Une erreur s'est produite : {error_message}"
             }
         )
 
@@ -307,7 +307,7 @@ class ReportConsoleLogger:
     """
     Journal console de ReportAgent.
 
-    Ecrit les journaux de type console (INFO, WARNING, etc.) dans console_log.txt.
+    Écrit les journaux de type console (INFO, WARNING, etc.) dans console_log.txt.
     Ces journaux sont distincts de agent_log.jsonl et restent en texte brut.
     """
     
@@ -316,7 +316,7 @@ class ReportConsoleLogger:
         Initialiser le journal console.
 
         Args:
-            report_id: ID du rapport, utilise pour determiner le chemin du fichier de log.
+            report_id: ID du rapport, utilisé pour déterminer le chemin du fichier de log.
         """
         self.report_id = report_id
         self.log_file_path = os.path.join(
@@ -327,15 +327,15 @@ class ReportConsoleLogger:
         self._setup_file_handler()
     
     def _ensure_log_file(self):
-        """Garantir l'existence du repertoire du fichier de log."""
+        """Garantir l'existence du répertoire du fichier de log."""
         log_dir = os.path.dirname(self.log_file_path)
         os.makedirs(log_dir, exist_ok=True)
     
     def _setup_file_handler(self):
-        """Configurer le handler charge d'ecrire les logs dans le fichier."""
+        """Configurer le handler chargé d'écrire les logs dans le fichier."""
         import logging
 
-        # Create file handler
+        # Créer le gestionnaire de fichier
         self._file_handler = logging.FileHandler(
             self.log_file_path,
             mode='a',
@@ -343,14 +343,14 @@ class ReportConsoleLogger:
         )
         self._file_handler.setLevel(logging.INFO)
 
-        # Use the same concise format as console
+        # Utiliser le même format concis que la console
         formatter = logging.Formatter(
             '[%(asctime)s] %(levelname)s: %(message)s',
             datefmt='%H:%M:%S'
         )
         self._file_handler.setFormatter(formatter)
 
-        # Add to report_agent related loggers
+        # Ajouter aux journaliseurs liés à report_agent
         loggers_to_attach = [
             'mirofish.report_agent',
             'mirofish.graph_tools',
@@ -358,12 +358,12 @@ class ReportConsoleLogger:
 
         for logger_name in loggers_to_attach:
             target_logger = logging.getLogger(logger_name)
-            # Avoid duplicate additions
+            # Éviter les ajouts en double
             if self._file_handler not in target_logger.handlers:
                 target_logger.addHandler(self._file_handler)
     
     def close(self):
-        """Close file handler and remove it from logger"""
+        """Fermer le gestionnaire de fichier et le retirer du journaliseur"""
         import logging
 
         if self._file_handler:
@@ -381,12 +381,12 @@ class ReportConsoleLogger:
             self._file_handler = None
     
     def __del__(self):
-        """Ensure file handler is closed during destructor"""
+        """Garantir la fermeture du gestionnaire de fichier lors de la destruction"""
         self.close()
 
 
 class ReportStatus(str, Enum):
-    """Report status"""
+    """Statut du rapport"""
     PENDING = "pending"
     PLANNING = "planning"
     GENERATING = "generating"
@@ -396,7 +396,7 @@ class ReportStatus(str, Enum):
 
 @dataclass
 class ReportSection:
-    """Report section"""
+    """Section du rapport"""
     title: str
     content: str = ""
 
@@ -407,7 +407,7 @@ class ReportSection:
         }
 
     def to_markdown(self, level: int = 2) -> str:
-        """Convert to Markdown format"""
+        """Convertir au format Markdown"""
         md = f"{'#' * level} {self.title}\n\n"
         if self.content:
             md += f"{self.content}\n\n"
@@ -416,7 +416,7 @@ class ReportSection:
 
 @dataclass
 class ReportOutline:
-    """Report outline"""
+    """Plan du rapport"""
     title: str
     summary: str
     sections: List[ReportSection]
@@ -429,7 +429,7 @@ class ReportOutline:
         }
     
     def to_markdown(self) -> str:
-        """Convert to Markdown format"""
+        """Convertir au format Markdown"""
         md = f"# {self.title}\n\n"
         md += f"> {self.summary}\n\n"
         for section in self.sections:
@@ -439,7 +439,7 @@ class ReportOutline:
 
 @dataclass
 class Report:
-    """Complete report"""
+    """Rapport complet"""
     report_id: str
     simulation_id: str
     graph_id: str
@@ -467,396 +467,396 @@ class Report:
 
 
 # ═══════════════════════════════════════════════════════════════
-# Prompt Template Constants
+# Constantes de Modèles de Prompt
 # ═══════════════════════════════════════════════════════════════
 
-# ── Tool Descriptions ──
+# ── Descriptions d'Outils ──
 
 TOOL_DESC_INSIGHT_FORGE = """\
-[Deep Insight Retrieval - Powerful Retrieval Tool]
-This is our powerful retrieval function, designed for deep analysis. It will:
-1. Automatically decompose your question into multiple sub-questions
-2. Retrieve information from the simulated knowledge graph from multiple dimensions
-3. Integrate results from semantic search, entity analysis, and relationship chain tracking
-4. Return the most comprehensive and deep retrieval content
+[Récupération d'Insights Profonds - Outil de Récupération Puissant]
+Ceci est notre fonction de récupération puissante, conçue pour l'analyse approfondie. Elle va :
+1. Décomposer automatiquement votre question en plusieurs sous-questions
+2. Récupérer des informations du graphe de connaissances simulé sous plusieurs dimensions
+3. Intégrer les résultats de la recherche sémantique, de l'analyse d'entités et du suivi des chaînes de relations
+4. Retourner le contenu de récupération le plus complet et approfondi
 
-[Use Cases]
-- Need to deeply analyze a topic
-- Need to understand multiple aspects of an event
-- Need to obtain rich materials to support report sections
+[Cas d'utilisation]
+- Besoin d'analyser en profondeur un sujet
+- Besoin de comprendre de multiples aspects d'un événement
+- Besoin d'obtenir des matériaux riches pour soutenir les sections du rapport
 
-[Return Content]
-- Relevant facts in original text (can be directly cited)
-- Core entity insights
-- Relationship chain analysis"""
+[Contenu retourné]
+- Faits pertinents en texte original (peuvent être cités directement)
+- Insights sur les entités centrales
+- Analyse des chaînes de relations"""
 
 TOOL_DESC_PANORAMA_SEARCH = """\
-[Breadth Search - Get Complete Overview]
-This tool is used to get a complete panoramic view of simulation results, especially suitable for understanding the evolution of events. It will:
-1. Retrieve all relevant nodes and relationships
-2. Distinguish between current valid facts and historical/expired facts
-3. Help you understand how events have evolved
+[Recherche Panoramique - Obtenir une Vue Complète]
+Cet outil est utilisé pour obtenir une vue panoramique complète des résultats de simulation, particulièrement adapté pour comprendre l'évolution des événements. Il va :
+1. Récupérer tous les nœuds et relations pertinents
+2. Distinguer les faits actuellement valides des faits historiques/expirés
+3. Vous aider à comprendre comment les événements ont évolué
 
-[Use Cases]
-- Need to understand the complete development trajectory of an event
-- Need to compare public sentiment changes across different stages
-- Need to get comprehensive entity and relationship information
+[Cas d'utilisation]
+- Besoin de comprendre la trajectoire de développement complète d'un événement
+- Besoin de comparer les changements de sentiment public à travers différentes étapes
+- Besoin d'obtenir des informations complètes sur les entités et relations
 
-[Return Content]
-- Current valid facts (latest simulation results)
-- Historical/expired facts (evolution records)
-- All involved entities"""
+[Contenu retourné]
+- Faits actuellement valides (derniers résultats de simulation)
+- Faits historiques/expirés (enregistrements d'évolution)
+- Toutes les entités impliquées"""
 
 TOOL_DESC_QUICK_SEARCH = """\
-[Simple Search - Quick Retrieval]
-A lightweight quick retrieval tool suitable for simple and direct information queries.
+[Recherche Simple - Récupération Rapide]
+Un outil léger de récupération rapide adapté aux requêtes d'information simples et directes.
 
-[Use Cases]
-- Need to quickly find specific information
-- Need to verify a fact
-- Simple information retrieval
+[Cas d'utilisation]
+- Besoin de trouver rapidement une information spécifique
+- Besoin de vérifier un fait
+- Recherche d'information simple
 
-[Return Content]
-- List of facts most relevant to the query"""
+[Contenu retourné]
+- Liste des faits les plus pertinents pour la requête"""
 
 TOOL_DESC_INTERVIEW_AGENTS = """\
-[Deep Interview - Real Agent Interview (Dual Platform)]
-Call the OASIS simulation environment's interview API to conduct real interviews with running simulation agents!
-This is not an LLM simulation, but calls the real interview interface to get original responses from simulation agents.
-By default, interview on Twitter and Reddit simultaneously to get more comprehensive perspectives.
+[Entretien Approfondi - Véritable Entretien d'Agent (Double Plateforme)]
+Appelez l'API d'entretien de l'environnement de simulation OASIS pour mener de véritables entretiens avec les agents de simulation en cours d'exécution !
+Il ne s'agit pas d'une simulation LLM, mais d'appels à la véritable interface d'entretien pour obtenir les réponses originales des agents de simulation.
+Par défaut, entretien sur Twitter et Reddit simultanément pour obtenir des perspectives plus complètes.
 
-Function Flow:
-1. Automatically read character profile files to understand all simulation agents
-2. Intelligently select agents most relevant to the interview topic (e.g., students, media, officials)
-3. Automatically generate interview questions
-4. Call /api/simulation/interview/batch interface to conduct real interviews on dual platforms
-5. Integrate all interview results and provide multi-perspective analysis
+Flux de fonctionnement :
+1. Lire automatiquement les fichiers de profil des personnages pour comprendre tous les agents de simulation
+2. Sélectionner intelligemment les agents les plus pertinents par rapport au sujet d'entretien (par ex., étudiants, médias, officiels)
+3. Générer automatiquement les questions d'entretien
+4. Appeler l'interface /api/simulation/interview/batch pour mener de véritables entretiens sur les deux plateformes
+5. Intégrer tous les résultats d'entretien et fournir une analyse multi-perspectives
 
-[Use Cases]
-- Need to understand event perspectives from different role angles (How do students view it? How does media view it? What does the official say?)
-- Need to collect diverse opinions and positions
-- Need to get real responses from simulation agents (from OASIS simulation environment)
-- Want to make the report more vivid, including "interview records"
+[Cas d'utilisation]
+- Besoin de comprendre les perspectives d'un événement sous différents angles de rôle (Comment les étudiants le voient-ils ? Comment les médias le voient-ils ? Que dit l'officiel ?)
+- Besoin de recueillir des opinions et positions diverses
+- Besoin d'obtenir de véritables réponses des agents de simulation (de l'environnement de simulation OASIS)
+- Souhaite rendre le rapport plus vivant, en incluant des « relevés d'entretien »
 
-[Return Content]
-- Identity information of interviewed agents
-- Interview responses from each agent on Twitter and Reddit platforms
-- Key quotes (can be directly cited)
-- Interview summary and perspective comparison
+[Contenu retourné]
+- Informations d'identité des agents interrogés
+- Réponses d'entretien de chaque agent sur les plateformes Twitter et Reddit
+- Citations clés (peuvent être citées directement)
+- Résumé d'entretien et comparaison des perspectives
 
-[Important] This feature requires the OASIS simulation environment to be running!"""
+[Important] Cette fonctionnalité nécessite que l'environnement de simulation OASIS soit en cours d'exécution !"""
 
-# ── Outline Planning Prompt ──
+# ── Prompt de Planification du Plan ──
 
 PLAN_SYSTEM_PROMPT = """\
-You are an expert in writing "future prediction reports" with a "god's eye view" of the simulated world - you can gain insights into the behavior, statements, and interactions of every agent in the simulation.
+Vous êtes un expert en rédaction de « rapports de prédiction du futur » avec une « vue divine » du monde simulé - vous pouvez observer le comportement, les déclarations et les interactions de chaque agent dans la simulation.
 
-[Core Concept]
-We built a simulated world and injected specific "simulation requirements" as variables into it. The evolution result of the simulated world is a prediction of what might happen in the future. What you're observing is not "experimental data" but a "rehearsal of the future".
+[Concept Central]
+Nous avons construit un monde simulé et y avons injecté des « exigences de simulation » spécifiques comme variables. Le résultat de l'évolution du monde simulé est une prédiction de ce qui pourrait se passer à l'avenir. Ce que vous observez n'est pas des « données expérimentales » mais une « répétition du futur ».
 
-[Your Task]
-Write a "future prediction report" that answers:
-1. What happened in the future under the conditions we set?
-2. How do various agents (groups) react and act?
-3. What future trends and risks does this simulation reveal that deserve attention?
+[Votre Tâche]
+Rédigez un « rapport de prédiction du futur » qui répond à :
+1. Que s'est-il passé dans le futur sous les conditions que nous avons fixées ?
+2. Comment les divers agents (groupes) réagissent-ils et agissent-ils ?
+3. Quelles tendances et risques futurs cette simulation révèle-t-elle qui méritent attention ?
 
-[Report Positioning]
-- ✅ This is a future prediction report based on simulation, revealing "if this happens, how will the future unfold"
-- ✅ Focus on prediction results: event trajectories, group reactions, emergent phenomena, potential risks
-- ✅ Agent statements and behaviors in the simulated world are predictions of future human behavior
-- ❌ Not an analysis of the current state of the real world
-- ❌ Not a general overview of public sentiment
+[Positionnement du Rapport]
+- ✅ Ceci est un rapport de prédiction du futur basé sur la simulation, révélant « si cela se produit, comment le futur se déroulera »
+- ✅ Concentrez-vous sur les résultats de prédiction : trajectoires d'événements, réactions de groupes, phénomènes émergents, risques potentiels
+- ✅ Les déclarations et comportements des agents dans le monde simulé sont des prédictions du comportement humain futur
+- ❌ Ce n'est pas une analyse de l'état actuel du monde réel
+- ❌ Ce n'est pas un aperçu général du sentiment public
 
-[Section Number Limit]
+[Limitation du Nombre de Sections]
 - Minimum 2 sections, maximum 5 sections
-- No subsections needed, each section directly writes complete content
-- Content should be concise, focused on core prediction findings
-- Section structure is designed independently based on prediction results
+- Pas de sous-sections nécessaires, chaque section rédige directement le contenu complet
+- Le contenu doit être concis, axé sur les résultats de prédiction centraux
+- La structure des sections est conçue indépendamment en fonction des résultats de prédiction
 
-Please output the report outline in JSON format as follows:
+Veuillez produire le plan du rapport au format JSON comme suit :
 {
-    "title": "Report Title",
-    "summary": "Report Summary (one sentence summarizing core prediction findings)",
+    "title": "Titre du Rapport",
+    "summary": "Résumé du Rapport (une phrase résumant les résultats de prédiction centraux)",
     "sections": [
         {
-            "title": "Section Title",
-            "description": "Section Content Description"
+            "title": "Titre de la Section",
+            "description": "Description du Contenu de la Section"
         }
     ]
 }
 
-Note: sections array must have at least 2 and at most 5 elements!
-IMPORTANT: The entire report outline (title, summary, section titles and descriptions) MUST be in English. Never use Chinese or other languages."""
+Note : le tableau sections doit contenir au minimum 2 et au maximum 5 éléments !
+IMPORTANT : L'ensemble du plan du rapport (titre, résumé, titres et descriptions des sections) doivent être en français. N'utilisez JAMAIS le chinois ou d'autres langues que le français."""
 
 PLAN_USER_PROMPT_TEMPLATE = """\
-[Prediction Scenario Settings]
-Variable (simulation requirement) injected into the simulated world: {simulation_requirement}
+[Paramètres du Scénario de Prédiction]
+Variable (exigence de simulation) injectée dans le monde simulé : {simulation_requirement}
 
-[Simulated World Scale]
-- Number of entities participating in simulation: {total_nodes}
-- Number of relationships generated between entities: {total_edges}
-- Entity type distribution: {entity_types}
-- Number of active agents: {total_entities}
+[Échelle du Monde Simulé]
+- Nombre d'entités participant à la simulation : {total_nodes}
+- Nombre de relations générées entre les entités : {total_edges}
+- Distribution des types d'entités : {entity_types}
+- Nombre d'agents actifs : {total_entities}
 
-[Sample of Some Future Facts Predicted by Simulation]
+[Échantillon de Quelques Faits Futurs Prédits par la Simulation]
 {related_facts_json}
 
-Please examine this future rehearsal from a "god's eye view":
-1. What state does the future present under the conditions we set?
-2. How do various groups (agents) react and act?
-3. What future trends does this simulation reveal that deserve attention?
+Veuillez examiner cette répétition du futur avec une « vue divine » :
+1. Quel état le futur présente-t-il sous les conditions que nous avons fixées ?
+2. Comment les divers groupes (agents) réagissent-ils et agissent-ils ?
+3. Quelles tendances futures cette simulation révèle-t-elle qui méritent attention ?
 
-Based on the prediction results, design the most appropriate report section structure.
+Sur la base des résultats de prédiction, concevez la structure de sections de rapport la plus appropriée.
 
-[Reminder] Report section count: minimum 2, maximum 5, content should be concise and focused on core prediction findings."""
+[Rappel] Nombre de sections du rapport : minimum 2, maximum 5, le contenu doit être concis et axé sur les résultats de prédiction centraux."""
 
-# ── Section Generation Prompt ──
+# ── Prompt de Génération de Section ──
 
 SECTION_SYSTEM_PROMPT_TEMPLATE = """\
-You are an expert in writing "future prediction reports" and are writing a section of the report.
+Vous êtes un expert en rédaction de « rapports de prédiction du futur » et vous rédigez une section du rapport.
 
-Report Title: {report_title}
-Report Summary: {report_summary}
-Prediction Scenario (Simulation Requirement): {simulation_requirement}
+Titre du rapport : {report_title}
+Résumé du rapport : {report_summary}
+Scénario de prédiction (exigence de simulation) : {simulation_requirement}
 
-Current Section to Write: {section_title}
-
-═══════════════════════════════════════════════════════════════
-[Core Concept]
-═══════════════════════════════════════════════════════════════
-
-The simulated world is a rehearsal of the future. We injected specific conditions (simulation requirements) into the simulated world.
-The behavior and interactions of agents in the simulation are predictions of future human behavior.
-
-Your task is to:
-- Reveal what happens in the future under the set conditions
-- Predict how various groups (agents) react and act
-- Discover future trends, risks, and opportunities worth paying attention to
-
-❌ Don't write it as an analysis of the current state of the real world
-✅ Focus on "how the future will unfold" - simulation results are the predicted future
+Section actuelle à rédiger : {section_title}
 
 ═══════════════════════════════════════════════════════════════
-[Most Important Rules - Must Follow]
+[Concept Central]
 ═══════════════════════════════════════════════════════════════
 
-1. [Must Call Tools to Observe the Simulated World]
-   - You are observing a rehearsal of the future from a "god's eye view"
-   - All content must come from events and agent statements/behaviors in the simulated world
-   - Forbidden to use your own knowledge to write report content
-   - Each section must call tools at least 3 times (maximum 5 times) to observe the simulated world, which represents the future
+Le monde simulé est une répétition du futur. Nous avons injecté des conditions spécifiques (exigences de simulation) dans le monde simulé.
+Le comportement et les interactions des agents dans la simulation sont des prédictions du comportement humain futur.
 
-2. [Must Quote Original Agent Statements and Behaviors]
-   - Agent statements and behaviors are predictions of future human behavior
-   - Use quote format in the report to display these predictions, for example:
-     > "Certain groups will state: original content..."
-   - These quotes are core evidence of simulation predictions
+Votre tâche est de :
+- Révéler ce qui se passe dans le futur sous les conditions fixées
+- Prédire comment les divers groupes (agents) réagissent et agissent
+- Découvrir les tendances futures, les risques et les opportunités qui méritent attention
 
-3. [Language Consistency - ALWAYS Write in English]
-   - The entire report MUST be written in English, regardless of source material language
-   - Tool-returned content may contain Chinese, mixed Chinese-English, or other languages
-   - When quoting tool-returned non-English content, ALWAYS translate it to fluent English before writing to report
-   - Keep original meaning unchanged during translation, ensure natural expression
-   - This rule applies to both body text and quoted content (> format)
-   - NEVER switch to Chinese or any other language mid-report
-
-4. [Faithfully Present Prediction Results]
-   - Report content must reflect simulation results that represent the future in the simulated world
-   - Don't add information that doesn't exist in the simulation
-   - If information is insufficient in some aspects, state it truthfully
+❌ Ne rédigez pas cela comme une analyse de l'état actuel du monde réel
+✅ Concentrez-vous sur « comment le futur se déroulera » - les résultats de simulation sont le futur prédit
 
 ═══════════════════════════════════════════════════════════════
-[⚠️ Format Specification - Extremely Important!]
+[Règles les plus importantes - À suivre impérativement]
 ═══════════════════════════════════════════════════════════════
 
-[One Section = Minimum Content Unit]
-- Each section is the minimum content unit of the report
-- ❌ Forbidden to use any Markdown titles (#, ##, ###, ####, etc.) within the section
-- ❌ Forbidden to add section titles at the beginning of content
-- ✅ Section titles are added automatically by the system, just write pure body text
-- ✅ Use **bold**, paragraph separation, quotes, and lists to organize content, but don't use titles
+1. [Doit appeler des outils pour observer le monde simulé]
+   - Vous observez une répétition du futur avec une « vue divine »
+   - Tout le contenu doit provenir des événements et des déclarations/comportements des agents dans le monde simulé
+   - Interdit d'utiliser vos propres connaissances pour rédiger le contenu du rapport
+   - Chaque section doit appeler des outils au moins 3 fois (maximum 5 fois) pour observer le monde simulé, qui représente le futur
 
-[Correct Example]
+2. [Doit citer les déclarations et comportements originaux des agents]
+   - Les déclarations et comportements des agents sont des prédictions du comportement humain futur
+   - Utilisez le format de citation dans le rapport pour afficher ces prédictions, par exemple :
+     > « Certains groupes déclareront : contenu original... »
+   - Ces citations sont des preuves centrales des prédictions de simulation
+
+3. [Cohérence linguistique - TOUJOURS écrire en français]
+   - L'ensemble du rapport doit être rédigé en français, quelle que soit la langue du matériel source
+   - Le contenu retourné par les outils peut contenir du chinois, de l'anglais mélangé ou d'autres langues
+   - Lorsque vous citez du contenu non français retourné par les outils, traduisez-le TOUJOURS en français fluide avant de l'écrire dans le rapport
+   - Conservez le sens original inchangé lors de la traduction, assurez une expression naturelle
+   - Cette règle s'applique à la fois au texte principal et au contenu cité (format >)
+   - Ne passez JAMAIS au chinois ou à toute autre langue en cours de rapport
+
+4. [Présenter fidèlement les résultats de prédiction]
+   - Le contenu du rapport doit refléter les résultats de simulation qui représentent le futur dans le monde simulé
+   - N'ajoutez pas d'informations qui n'existent pas dans la simulation
+   - Si les informations sont insuffisantes dans certains aspects, indiquez-le honnêtement
+
+═══════════════════════════════════════════════════════════════
+[⚠️ Spécification de Format - Extrêmement Important !]
+═══════════════════════════════════════════════════════════════
+
+[Une Section = Unité de Contenu Minimale]
+- Chaque section est l'unité de contenu minimale du rapport
+- ❌ Interdit d'utiliser tout titre Markdown (#, ##, ###, ####, etc.) dans la section
+- ❌ Interdit d'ajouter des titres de section au début du contenu
+- ✅ Les titres de section sont ajoutés automatiquement par le système, rédigez uniquement le texte pur
+- ✅ Utilisez **gras**, séparation de paragraphes, citations et listes pour organiser le contenu, mais n'utilisez pas de titres
+
+[Exemple Correct]
 ```
-This section analyzes how the regulatory shift reshaped corporate strategy. Through in-depth analysis of simulation data, we found...
+Cette section analyse comment le changement réglementaire a remodelé la stratégie d'entreprise. À travers une analyse approfondie des données de simulation, nous avons trouvé...
 
-**Initial Industry Response**
+**Réponse Initiale de l'Industrie**
 
-Major tech companies moved quickly to reassess their compliance posture:
+Les grandes entreprises technologiques se sont rapidement mobilisées pour réévaluer leur posture de conformité :
 
-> "OpenAI and Anthropic scrambled to meet the new transparency requirements..."
+> « OpenAI et Anthropic se sont dépêchés de répondre aux nouvelles exigences de transparence... »
 
-**Emerging Strategic Divergence**
+**Divergence Stratégique Émergente**
 
-A clear split emerged between companies embracing regulation and those resisting it:
+Une division claire est apparue entre les entreprises adoptant la réglementation et celles la résistant :
 
-- Proactive compliance as competitive advantage
-- Lobbying efforts to soften enforcement
-```
-
-[Incorrect Example]
-```
-## Executive Summary          ← Wrong! Don't add any titles
-### 1. Initial Phase         ← Wrong! Don't use ### for subsections
-#### 1.1 Detailed Analysis   ← Wrong! Don't use #### for subdivisions
-
-This section analyzes...
+- La conformité proactive comme avantage concurrentiel
+- Les efforts de lobbying pour adoucir l'application
 ```
 
+[Exemple Incorrect]
+```
+## Résumé Exécutif          ← Faux ! N'ajoutez aucun titre
+### 1. Phase Initiale       ← Faux ! N'utilisez pas ### pour les sous-sections
+#### 1.1 Analyse Détaillée  ← Faux ! N'utilisez pas #### pour les subdivisions
+
+Cette section analyse...
+```
+
 ═══════════════════════════════════════════════════════════════
-[Available Retrieval Tools] (call 3-5 times per section)
+[Outils de Récupération Disponibles] (appeler 3-5 fois par section)
 ═══════════════════════════════════════════════════════════════
 
 {tools_description}
 
-[Tool Usage Suggestions - Please Mix Different Tools, Don't Use Only One]
-- insight_forge: Deep insight analysis, automatically decompose problems and retrieve facts and relationships from multiple dimensions
-- panorama_search: Wide-angle panoramic search, understand complete event view, timeline, and evolution process
-- quick_search: Quick verification of specific information points
-- interview_agents: Interview simulated agents, get first-person perspectives and real reactions from different roles
+[Suggestions d'Utilisation des Outils - Veuillez Mélanger Différents Outils, N'Utilisez Pas Un Seul]
+- insight_forge : Analyse d'insight approfondie, décompose automatiquement les problèmes et récupère des faits et relations sous plusieurs dimensions
+- panorama_search : Recherche panoramique grand angle, comprendre la vue complète des événements, la chronologie et le processus d'évolution
+- quick_search : Vérification rapide de points d'information spécifiques
+- interview_agents : Interviewer les agents simulés, obtenir des perspectives de première main et des réactions réelles de différents rôles
 
 ═══════════════════════════════════════════════════════════════
-[Workflow]
+[Flux de Travail]
 ═══════════════════════════════════════════════════════════════
 
-Each reply you can only do one of two things (cannot do both):
+Chaque réponse vous permet de faire uniquement l'une des deux choses suivantes (vous ne pouvez pas faire les deux) :
 
-Option A - Call Tool:
-Output your thinking, then call a tool using the following format:
-<tool_call>
-{{"name": "Tool Name", "parameters": {{"parameter_name": "parameter_value"}}}}
-</tool_call>
-The system will execute the tool and return the result to you. You don't need to and cannot write tool return results yourself.
+Option A - Appeler un Outil :
+Affichez votre réflexion, puis appelez un outil en utilisant le format suivant :
+<tool_call&gt;
+{{"name": "Nom de l'Outil", "parameters": {{"nom_paramètre": "valeur_paramètre"}}}}
+</tool_call&gt;
+Le système exécutera l'outil et vous retournera le résultat. Vous n'avez pas besoin et ne pouvez pas écrire vous-même les résultats retournés par les outils.
 
-Option B - Output Final Content:
-When you have gathered enough information through tools, start with "Final Answer:" and output section content.
+Option B - Produire le Contenu Final :
+Lorsque vous avez recueilli suffisamment d'informations via les outils, commencez par "Final Answer:" et produisez le contenu de la section.
 
-⚠️ Strictly Forbidden:
-- Forbidden to include both tool calls and Final Answer in one reply
-- Forbidden to fabricate tool return results (Observation), all tool results are injected by the system
-- At most one tool call per reply
+⚠️ Strictement Interdit :
+- Interdit d'inclure à la fois des appels d'outils et une réponse finale dans une seule réponse
+- Interdit de fabriquer des résultats retournés par les outils (Observation), tous les résultats d'outils sont injectés par le système
+- Au maximum un appel d'outil par réponse
 
 ═══════════════════════════════════════════════════════════════
-[Section Content Requirements]
+[Exigences de Contenu de Section]
 ═══════════════════════════════════════════════════════════════
 
-1. Content must be based on simulation data retrieved by tools
-2. Heavily quote original text to demonstrate simulation effects
-3. Use Markdown format (but forbidden to use titles):
-   - Use **bold text** to mark key points (replacing sub-titles)
-   - Use lists (- or 1.2.3.) to organize points
-   - Use blank lines to separate paragraphs
-   - ❌ Forbidden to use any title syntax like #, ##, ###, ####
-4. [Quote Format Specification - Must Be Separate Paragraph]
-   Quotes must be standalone paragraphs with blank lines before and after, cannot be mixed in paragraphs:
+1. Le contenu doit être basé sur les données de simulation récupérées par les outils
+2. Citez abondamment le texte original pour démontrer les effets de simulation
+3. Utilisez le format Markdown (mais interdit d'utiliser des titres) :
+   - Utilisez **texte en gras** pour marquer les points clés (remplaçant les sous-titres)
+   - Utilisez des listes (- ou 1.2.3.) pour organiser les points
+   - Utilisez des lignes vides pour séparer les paragraphes
+   - ❌ Interdit d'utiliser toute syntaxe de titre comme #, ##, ###, ####
+4. [Spécification du Format de Citation - Doit Être un Paragraphe Séparé]
+   Les citations doivent être des paragraphes autonomes avec des lignes vides avant et après, ne peuvent pas être mélangées dans les paragraphes :
 
-   ✅ Correct Format:
+   ✅ Format Correct :
    ```
-   School officials' response was considered lacking substantive content.
+   La réponse des officiels de l'école a été considérée comme manquant de contenu substantiel.
 
-   > "School's response pattern appears rigid and slow in the rapidly changing social media environment."
+   > « Le mode de réponse de l'école apparaît rigide et lent dans l'environnement des médias sociaux en rapide évolution. »
 
-   This assessment reflects widespread public dissatisfaction.
+   Cette évaluation reflète une insatisfaction publique généralisée.
    ```
 
-   ❌ Incorrect Format:
+   ❌ Format Incorrect :
    ```
-   School officials' response was considered lacking substantive content.> "School's response pattern..." This assessment reflects...
+   La réponse des officiels de l'école a été considérée comme manquant de contenu substantiel.> « Le mode de réponse de l'école... » Cette évaluation reflète...
    ```
-5. Maintain logical coherence with other sections
-6. [Avoid Duplication] Carefully read the completed section content below, don't repeat describing the same information
-7. [Emphasis Again] Don't add any titles! Use **bold** instead of section sub-titles"""
+5. Maintenez une cohérence logique avec les autres sections
+6. [Éviter la Duplication] Lisez attentivement le contenu des sections complétées ci-dessous, ne répétez pas la description des mêmes informations
+7. [Rappel Final] N'ajoutez aucun titre ! Utilisez **gras** à la place des sous-titres de section"""
 
 SECTION_USER_PROMPT_TEMPLATE = """\
-Completed Section Content (Please Read Carefully to Avoid Duplication):
+Contenu des Sections Complétées (Veuillez Lire Attentivement pour Éviter la Duplication) :
 {previous_content}
 
 ═══════════════════════════════════════════════════════════════
-[Current Task] Write Section: {section_title}
+[Tâche Actuelle] Rédiger la Section : {section_title}
 ═══════════════════════════════════════════════════════════════
 
-[Important Reminders]
-1. Carefully read the completed sections above to avoid repeating the same content!
-2. You must call tools to get simulation data before starting
-3. Please mix different tools, don't use only one
-4. Report content must come from retrieval results, don't use your own knowledge
+[Rappels Importants]
+1. Lisez attentivement les sections complétées ci-dessus pour éviter de répéter le même contenu !
+2. Vous devez appeler des outils pour obtenir des données de simulation avant de commencer
+3. Veuillez mélanger différents outils, n'utilisez pas un seul
+4. Le contenu du rapport doit provenir des résultats de récupération, n'utilisez pas vos propres connaissances
 
-[⚠️ Format Warning - Must Follow]
-- ❌ Don't write any titles (#, ##, ###, #### none allowed)
-- ❌ Don't write "{section_title}" as the opening
-- ✅ Section titles are added automatically by the system
-- ✅ Write the body directly, use **bold** instead of sub-section titles
+[⚠️ Avertissement de Format - À Suivre Impérativement]
+- ❌ N'écrivez aucun titre (#, ##, ###, #### aucun autorisé)
+- ❌ N'écrivez pas « {section_title} » en ouverture
+- ✅ Les titres de section sont ajoutés automatiquement par le système
+- ✅ Rédigez le corps directement, utilisez **gras** à la place des sous-titres de section
 
-Please start:
-1. First think (Thought) what information this section needs
-2. Then call tools (Action) to get simulation data
-3. After collecting enough information, output Final Answer (pure body text, no titles)"""
+Veuillez commencer :
+1. Réfléchissez d'abord (Réflexion) aux informations dont cette section a besoin
+2. Puis appelez des outils (Action) pour obtenir des données de simulation
+3. Après avoir recueilli suffisamment d'informations, produisez la réponse finale en commençant par "Final Answer:" (texte pur, sans titres)"""
 
-# ── ReACT Loop Message Templates ──
+# ── Modèles de Messages de Boucle ReACT ──
 
 REACT_OBSERVATION_TEMPLATE = """\
-Observation (Retrieval Result):
+Observation (Résultat de Récupération) :
 
-═══ Tool {tool_name} Returned ═══
+═══ L'outil {tool_name} a renvoyé ═══
 {result}
 
 ═══════════════════════════════════════════════════════════════
-Called tools {tool_calls_count}/{max_tool_calls} times (Used: {used_tools_str}){unused_hint}
-- If information is sufficient: Start with "Final Answer:" and output section content (must quote the above original text)
-- If more information is needed: Call a tool to continue retrieving
+Outils appelés {tool_calls_count}/{max_tool_calls} fois (Utilisés : {used_tools_str}){unused_hint}
+- Si les informations sont suffisantes : Commencez par "Final Answer:" et produisez le contenu de la section (vous devez citer le texte original ci-dessus)
+- Si plus d'informations sont nécessaires : Appelez un outil pour continuer la récupération
 ═══════════════════════════════════════════════════════════════"""
 
 REACT_INSUFFICIENT_TOOLS_MSG = (
-    "[Notice] You have only called {tool_calls_count} tools, need at least {min_tool_calls}. "
-    "Please call tools again to get more simulation data, then output Final Answer. {unused_hint}"
+    "[Avis] Vous n'avez appelé que {tool_calls_count} outils, il en faut au moins {min_tool_calls}. "
+    'Veuillez appeler à nouveau des outils pour obtenir plus de données de simulation, puis produire la réponse finale (commencez par "Final Answer:"). {unused_hint}'
 )
 
 REACT_INSUFFICIENT_TOOLS_MSG_ALT = (
-    "Currently called {tool_calls_count} tools, need at least {min_tool_calls}. "
-    "Please call tools to get simulation data. {unused_hint}"
+    "Actuellement {tool_calls_count} outils appelés, il en faut au moins {min_tool_calls}. "
+    "Veuillez appeler des outils pour obtenir des données de simulation. {unused_hint}"
 )
 
 REACT_TOOL_LIMIT_MSG = (
-    "Tool call count has reached the limit ({tool_calls_count}/{max_tool_calls}), cannot call tools anymore. "
-    'Please immediately start with "Final Answer:" and output section content based on acquired information.'
+    "Le nombre d'appels d'outils a atteint la limite ({tool_calls_count}/{max_tool_calls}), impossible d'appeler d'autres outils. "
+    'Veuillez immédiatement commencer par "Final Answer:" et produire le contenu de la section sur la base des informations acquises.'
 )
 
-REACT_UNUSED_TOOLS_HINT = "\n💡 You haven't used yet: {unused_list}, suggest trying different tools to get multi-perspective information"
+REACT_UNUSED_TOOLS_HINT = "\n💡 Vous n'avez pas encore utilisé : {unused_list}, il est suggéré d'essayer différents outils pour obtenir des informations multi-perspectives"
 
-REACT_FORCE_FINAL_MSG = "Tool call limit reached, please directly output Final Answer: and generate section content."
+REACT_FORCE_FINAL_MSG = 'Limite d\'appels d\'outils atteinte, veuillez directement produire "Final Answer:" et générer le contenu de la section.'
 
-# ── Chat Prompt ──
+# ── Prompt de Chat ──
 
 CHAT_SYSTEM_PROMPT_TEMPLATE = """\
-You are a concise and efficient simulation prediction assistant.
+Vous êtes un assistant de prédiction de simulation concis et efficace.
 
-[Background]
-Prediction Condition: {simulation_requirement}
+[Contexte]
+Condition de Prédiction : {simulation_requirement}
 
-[Generated Analysis Report]
+[Rapport d'Analyse Généré]
 {report_content}
 
-[Rules]
-1. Prioritize answering questions based on the above report content
-2. Answer questions directly, avoid lengthy deliberation
-3. Only call tools to retrieve more data if the report content is insufficient to answer
-4. Answers should be concise, clear, and well-organized
+[Règles]
+1. Prioriser les réponses basées sur le contenu du rapport ci-dessus
+2. Répondre directement aux questions, éviter les délibérations longues
+3. Appeler des outils pour récupérer plus de données uniquement si le contenu du rapport est insuffisant pour répondre
+4. Les réponses doivent être concises, claires et bien organisées
 
-[Available Tools] (use only when needed, call at most 1-2 times)
+[Outils Disponibles] (utiliser uniquement si nécessaire, appeler au maximum 1-2 fois)
 {tools_description}
 
-[Tool Call Format]
-<tool_call>
-{{"name": "Tool Name", "parameters": {{"parameter_name": "parameter_value"}}}}
-</tool_call>
+[Format d'Appel d'Outil]
+<tool_call&gt;
+{{"name": "Nom de l'Outil", "parameters": {{"nom_paramètre": "valeur_paramètre"}}}}
+</tool_call&gt;
 
-[Answer Style]
-- Concise and direct, don't write lengthy passages
-- Use > format to quote key content
-- Give conclusions first, then explain reasons
-- ALWAYS respond in English, regardless of the language used in source material or report content"""
+[Style de Réponse]
+- Concis et direct, ne rédigez pas de passages longs
+- Utilisez le format > pour citer le contenu clé
+- Donnez d'abord les conclusions, puis expliquez les raisons
+- Répondez TOUJOURS en français, quelle que soit la langue utilisée dans le matériel source ou le contenu du rapport"""
 
-CHAT_OBSERVATION_SUFFIX = "\n\nPlease answer the question concisely."
+CHAT_OBSERVATION_SUFFIX = "\n\nVeuillez répondre à la question de manière concise."
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -866,18 +866,18 @@ CHAT_OBSERVATION_SUFFIX = "\n\nPlease answer the question concisely."
 
 class ReportAgent:
     """
-    ReportAgent - agent de generation de rapport de simulation.
+    ReportAgent - agent de génération de rapport de simulation.
 
-    Utilise le pattern ReACT (raisonnement + action):
-    1. Planification: analyser les besoins et structurer le rapport.
-    2. Generation: produire le contenu section par section avec appels d'outils si necessaire.
-    3. Reflexion: verifier la completude et la precision.
+    Utilise le pattern ReACT (raisonnement + action) :
+    1. Planification : analyser les besoins et structurer le rapport.
+    2. Génération : produire le contenu section par section avec appels d'outils si nécessaire.
+    3. Réflexion : vérifier la complétude et la précision.
     """
     
     # Nombre maximal d'appels d'outils par section
     MAX_TOOL_CALLS_PER_SECTION = 5
 
-    # Nombre maximal de tours de reflexion
+    # Nombre maximal de tours de réflexion
     MAX_REFLECTION_ROUNDS = 3
 
     # Nombre maximal d'appels d'outils en conversation
@@ -899,7 +899,7 @@ class ReportAgent:
             simulation_id: ID de simulation.
             simulation_requirement: description du besoin de simulation.
             llm_client: client LLM optionnel.
-            graph_tools: service d'outils graphe optionnel, injecte depuis GraphStorage.
+            graph_tools: service d'outils graphe optionnel, injecté depuis GraphStorage.
         """
         self.graph_id = graph_id
         self.simulation_id = simulation_id
@@ -908,71 +908,71 @@ class ReportAgent:
         self.llm = llm_client or LLMClient()
         if graph_tools is None:
             raise ValueError(
-                "graph_tools (GraphToolsService) is required. "
-                "Create it via GraphToolsService(storage=...) and pass it in."
+                "graph_tools (GraphToolsService) est requis. "
+                "Créez-le via GraphToolsService(storage=...) et passez-le en paramètre."
             )
         self.graph_tools = graph_tools
         
-        # Tool definitions
+        # Définitions des outils
         self.tools = self._define_tools()
 
-        # Logger (initialized in generate_report)
+        # Logger (initialisé dans generate_report)
         self.report_logger: Optional[ReportLogger] = None
-        # Console logger (initialized in generate_report)
+        # Logger console (initialisé dans generate_report)
         self.console_logger: Optional[ReportConsoleLogger] = None
 
-        logger.info(f"ReportAgent initialization complete: graph_id={graph_id}, simulation_id={simulation_id}")
+        logger.info(f"Initialisation de ReportAgent terminée : graph_id={graph_id}, simulation_id={simulation_id}")
     
     def _define_tools(self) -> Dict[str, Dict[str, Any]]:
-        """Define available tools"""
+        """Définir les outils disponibles"""
         return {
             "insight_forge": {
                 "name": "insight_forge",
                 "description": TOOL_DESC_INSIGHT_FORGE,
                 "parameters": {
-                    "query": "The question or topic you want to deeply analyze",
-                    "report_context": "Context of current report section (optional, helps generate more accurate sub-questions)"
+                    "query": "La question ou le sujet que vous souhaitez analyser en profondeur",
+                    "report_context": "Contexte de la section de rapport actuelle (optionnel, aide à générer des sous-questions plus précises)"
                 }
             },
             "panorama_search": {
                 "name": "panorama_search",
                 "description": TOOL_DESC_PANORAMA_SEARCH,
                 "parameters": {
-                    "query": "Search query, used for relevance sorting",
-                    "include_expired": "Whether to include expired/historical content (default True)"
+                    "query": "Requête de recherche, utilisée pour le tri par pertinence",
+                    "include_expired": "Inclure ou non le contenu expiré/historique (par défaut True)"
                 }
             },
             "quick_search": {
                 "name": "quick_search",
                 "description": TOOL_DESC_QUICK_SEARCH,
                 "parameters": {
-                    "query": "Search query string",
-                    "limit": "Number of results to return (optional, default 10)"
+                    "query": "Chaîne de requête de recherche",
+                    "limit": "Nombre de résultats à retourner (optionnel, par défaut 10)"
                 }
             },
             "interview_agents": {
                 "name": "interview_agents",
                 "description": TOOL_DESC_INTERVIEW_AGENTS,
                 "parameters": {
-                    "interview_topic": "Interview topic or requirement description (e.g. 'understand students' views on the dorm formaldehyde incident')",
-                    "max_agents": "Maximum number of agents to interview (optional, default 5, max 10)"
+                    "interview_topic": "Sujet d'entretien ou description des exigences (par ex. 'comprendre les opinions des étudiants sur l'incident de formaldéhyde du dortoir')",
+                    "max_agents": "Nombre maximal d'agents à interroger (optionnel, par défaut 5, max 10)"
                 }
             }
         }
     
     def _execute_tool(self, tool_name: str, parameters: Dict[str, Any], report_context: str = "") -> str:
         """
-        Execute tool call
+        Exécuter l'appel d'outil
 
         Args:
-            tool_name: Tool name
-            parameters: Tool parameters
-            report_context: Report context (for InsightForge)
+            tool_name: Nom de l'outil
+            parameters: Paramètres de l'outil
+            report_context: Contexte du rapport (pour InsightForge)
 
         Returns:
-            Tool execution result (text format)
+            Résultat de l'exécution de l'outil (format texte)
         """
-        logger.info(f"Executing tool: {tool_name}, parameters: {parameters}")
+        logger.info(f"Exécution de l'outil : {tool_name}, paramètres : {parameters}")
         
         try:
             if tool_name == "insight_forge":
@@ -987,7 +987,7 @@ class ReportAgent:
                 return result.to_text()
             
             elif tool_name == "panorama_search":
-                # Breadth search - get complete panorama
+                # Recherche panoramique - obtenir une vue complète
                 query = parameters.get("query", "")
                 include_expired = parameters.get("include_expired", True)
                 if isinstance(include_expired, str):
@@ -1000,7 +1000,7 @@ class ReportAgent:
                 return result.to_text()
             
             elif tool_name == "quick_search":
-                # Simple search - quick retrieval
+                # Recherche simple - recherche rapide
                 query = parameters.get("query", "")
                 limit = parameters.get("limit", 10)
                 if isinstance(limit, str):
@@ -1013,7 +1013,7 @@ class ReportAgent:
                 return result.to_text()
             
             elif tool_name == "interview_agents":
-                # Entretien approfondi: appeler l'API OASIS reelle pour obtenir les reponses des agents simules.
+                # Entretien approfondi : appeler l'API OASIS réelle pour obtenir les réponses des agents simulés.
                 interview_topic = parameters.get("interview_topic", parameters.get("query", ""))
                 max_agents = parameters.get("max_agents", 5)
                 if isinstance(max_agents, str):
@@ -1027,11 +1027,11 @@ class ReportAgent:
                 )
                 return result.to_text()
             
-            # ========== Backward Compatibility: Old Tools (Internal Redirect to New Tools) ==========
+            # ========== Compatibilité Ascendante : Anciens Outils (Redirection Interne vers Nouveaux Outils) ==========
 
             elif tool_name == "search_graph":
-                # Redirect to quick_search
-                logger.info("search_graph has been redirected to quick_search")
+                # Redirigé vers quick_search
+                logger.info("search_graph a été redirigé vers quick_search")
                 return self._execute_tool("quick_search", parameters, report_context)
             
             elif tool_name == "get_graph_statistics":
@@ -1047,8 +1047,8 @@ class ReportAgent:
                 return json.dumps(result, ensure_ascii=False, indent=2)
             
             elif tool_name == "get_simulation_context":
-                # Redirect to insight_forge because it's more powerful
-                logger.info("get_simulation_context has been redirected to insight_forge")
+                # Redirigé vers insight_forge car il est plus puissant
+                logger.info("get_simulation_context a été redirigé vers insight_forge")
                 query = parameters.get("query", self.simulation_requirement)
                 return self._execute_tool("insight_forge", {"query": query}, report_context)
             
@@ -1062,27 +1062,27 @@ class ReportAgent:
                 return json.dumps(result, ensure_ascii=False, indent=2)
             
             else:
-                return f"Unknown tool: {tool_name}. Please use one of the following tools: insight_forge, panorama_search, quick_search"
+                return f"Outil inconnu : {tool_name}. Veuillez utiliser l'un des outils suivants : insight_forge, panorama_search, quick_search"
 
         except Exception as e:
-            logger.error(f"Tool execution failed: {tool_name}, error: {str(e)}")
-            return f"Tool execution failed: {str(e)}"
+            logger.error(f"Échec de l'exécution de l'outil : {tool_name}, erreur : {str(e)}")
+            return f"Échec de l'exécution de l'outil : {str(e)}"
     
-    # Valid tool names set, used for validation when parsing raw JSON fallback
+    # Ensemble de noms d'outils valides, utilisé pour la validation lors de l'analyse du JSON brut de secours
     VALID_TOOL_NAMES = {"insight_forge", "panorama_search", "quick_search", "interview_agents"}
 
     def _parse_tool_calls(self, response: str) -> List[Dict[str, Any]]:
         """
-        Parse tool calls from LLM response
+        Analyser les appels d'outils à partir de la réponse LLM
 
-        Supported formats (in priority order):
-        1. <tool_call>{"name": "tool_name", "parameters": {...}}</tool_call>
-        2. Raw JSON (the entire response or a single line is a tool call JSON)
+        Formats pris en charge (par ordre de priorité) :
+        1. <tool_call&gt;{"name": "nom_outil", "parameters": {...}}</tool_call&gt;
+        2. JSON brut (la réponse entière ou une seule ligne est un JSON d'appel d'outil)
         """
         tool_calls = []
 
-        # Format 1: XML-style (standard format)
-        xml_pattern = r'<tool_call>\s*(\{.*?\})\s*</tool_call>'
+        # Format 1 : Style XML (format standard)
+        xml_pattern = r'<tool_call&gt;\s*(\{.*?\})\s*</tool_call&gt;'
         for match in re.finditer(xml_pattern, response, re.DOTALL):
             try:
                 call_data = json.loads(match.group(1))
@@ -1093,8 +1093,8 @@ class ReportAgent:
         if tool_calls:
             return tool_calls
 
-        # Format 2: Fallback - LLM directly outputs raw JSON (not wrapped in <tool_call> tags)
-        # Only try if format 1 didn't match to avoid mismatching JSON in body text
+        # Format 2 : Secours - Le LLM produit directement du JSON brut (non enveloppé dans des balises <tool_call&gt;)
+        # Essayer uniquement si le format 1 n'a pas correspondu pour éviter les erreurs de correspondance JSON dans le texte
         stripped = response.strip()
         if stripped.startswith('{') and stripped.endswith('}'):
             try:
@@ -1105,7 +1105,7 @@ class ReportAgent:
             except json.JSONDecodeError:
                 pass
 
-        # Response may contain thinking text + raw JSON, try to extract the last JSON object
+        # La réponse peut contenir du texte de réflexion + JSON brut, essayer d'extraire le dernier objet JSON
         json_pattern = r'(\{"(?:name|tool)"\s*:.*?\})\s*$'
         match = re.search(json_pattern, stripped, re.DOTALL)
         if match:
@@ -1119,11 +1119,11 @@ class ReportAgent:
         return tool_calls
 
     def _is_valid_tool_call(self, data: dict) -> bool:
-        """Validate if the parsed JSON is a valid tool call"""
-        # Support both {"name": ..., "parameters": ...} and {"tool": ..., "params": ...} key names
+        """Valider si le JSON analysé est un appel d'outil valide"""
+        # Prendre en charge à la fois les noms de clés {"name": ..., "parameters": ...} et {"tool": ..., "params": ...}
         tool_name = data.get("name") or data.get("tool")
         if tool_name and tool_name in self.VALID_TOOL_NAMES:
-            # Normalize key names to name / parameters
+            # Normaliser les noms de clés en name / parameters
             if "tool" in data:
                 data["name"] = data.pop("tool")
             if "params" in data and "parameters" not in data:
@@ -1132,13 +1132,13 @@ class ReportAgent:
         return False
     
     def _get_tools_description(self) -> str:
-        """Generate tool description text"""
-        desc_parts = ["Available Tools:"]
+        """Générer le texte de description des outils"""
+        desc_parts = ["Outils disponibles :"]
         for name, tool in self.tools.items():
             params_desc = ", ".join([f"{k}: {v}" for k, v in tool["parameters"].items()])
             desc_parts.append(f"- {name}: {tool['description']}")
             if params_desc:
-                desc_parts.append(f"  Parameters: {params_desc}")
+                desc_parts.append(f"  Paramètres : {params_desc}")
         return "\n".join(desc_parts)
     
     def plan_outline(
@@ -1146,29 +1146,29 @@ class ReportAgent:
         progress_callback: Optional[Callable] = None
     ) -> ReportOutline:
         """
-        Plan report outline
+        Planifier le plan du rapport
 
-        Use LLM to analyze simulation requirements and plan the report structure
+        Utiliser le LLM pour analyser les exigences de simulation et planifier la structure du rapport
 
         Args:
-            progress_callback: Progress callback function
+            progress_callback: Fonction de rappel de progression
 
         Returns:
-            ReportOutline: Report outline
+            ReportOutline: Plan du rapport
         """
-        logger.info("Starting to plan report outline...")
+        logger.info("Début de la planification du plan du rapport...")
 
         if progress_callback:
-            progress_callback("planning", 0, "Analyzing simulation requirements...")
+            progress_callback("planning", 0, "Analyse des exigences de simulation...")
 
-        # First get simulation context
+        # D'abord obtenir le contexte de simulation
         context = self.graph_tools.get_simulation_context(
             graph_id=self.graph_id,
             simulation_requirement=self.simulation_requirement
         )
 
         if progress_callback:
-            progress_callback("planning", 30, "Generating report outline...")
+            progress_callback("planning", 30, "Génération du plan du rapport...")
         
         system_prompt = PLAN_SYSTEM_PROMPT
         user_prompt = PLAN_USER_PROMPT_TEMPLATE.format(
@@ -1190,9 +1190,9 @@ class ReportAgent:
             )
             
             if progress_callback:
-                progress_callback("planning", 80, "Parsing outline structure...")
+                progress_callback("planning", 80, "Analyse de la structure du plan...")
 
-            # Parse outline
+            # Analyser le plan
             sections = []
             for section_data in response.get("sections", []):
                 sections.append(ReportSection(
@@ -1201,27 +1201,27 @@ class ReportAgent:
                 ))
             
             outline = ReportOutline(
-                title=response.get("title", "Simulation Analysis Report"),
+                title=response.get("title", "Rapport d'analyse de simulation"),
                 summary=response.get("summary", ""),
                 sections=sections
             )
 
             if progress_callback:
-                progress_callback("planning", 100, "Outline planning completed")
+                progress_callback("planning", 100, "Planification du plan achevée")
 
-            logger.info(f"Outline planning completed: {len(sections)} sections")
+            logger.info(f"Planification du plan achevée : {len(sections)} sections")
             return outline
 
         except Exception as e:
-            logger.error(f"Outline planning failed: {str(e)}")
-            # Return default outline (3 sections as fallback)
+            logger.error(f"Échec de la planification du plan : {str(e)}")
+            # Retourner un plan par défaut (3 sections comme secours)
             return ReportOutline(
-                title="Future Prediction Report",
-                summary="Future trends and risk analysis based on simulation predictions",
+                title="Rapport de prédiction du futur",
+                summary="Tendances futures et analyse des risques basées sur les prédictions de simulation",
                 sections=[
-                    ReportSection(title="Prediction Scenario and Core Findings"),
-                    ReportSection(title="Crowd Behavior Prediction Analysis"),
-                    ReportSection(title="Trend Outlook and Risk Warning")
+                    ReportSection(title="Scénario de prédiction et découvertes principales"),
+                    ReportSection(title="Analyse de prédiction du comportement des foules"),
+                    ReportSection(title="Perspectives tendancielles et avertissement de risques")
                 ]
             )
     
@@ -1234,28 +1234,28 @@ class ReportAgent:
         section_index: int = 0
     ) -> str:
         """
-        Generate individual section content using ReACT pattern
+        Générer le contenu d'une section individuelle en utilisant le pattern ReACT
 
-        ReACT loop:
-        1. Thought - Analyze what information is needed
-        2. Action - Call tool to get information
-        3. Observation - Analyze tool return results
-        4. Repeat until information is sufficient or maximum iterations reached
-        5. Final Answer - Generate section content
+        Boucle ReACT :
+        1. Réflexion - Analyser de quelles informations on a besoin
+        2. Action - Appeler un outil pour obtenir des informations
+        3. Observation - Analyser les résultats retournés par l'outil
+        4. Répéter jusqu'à ce que les informations soient suffisantes ou que les itérations maximales soient atteintes
+        5. Réponse Finale - Générer le contenu de la section
 
         Args:
-            section: Section to generate
-            outline: Complete outline
-            previous_sections: Content of previous sections (for maintaining coherence)
-            progress_callback: Progress callback
-            section_index: Section index (for logging)
+            section: Section à générer
+            outline: Plan complet
+            previous_sections: Contenu des sections précédentes (pour maintenir la cohérence)
+            progress_callback: Rappel de progression
+            section_index: Index de la section (pour la journalisation)
 
         Returns:
-            Section content (Markdown format)
+            Contenu de la section (format Markdown)
         """
-        logger.info(f"ReACT generating section: {section.title}")
+        logger.info(f"Génération ReACT de la section : {section.title}")
         
-        # Log section start
+        # Enregistrer le début de la section
         if self.report_logger:
             self.report_logger.log_section_start(section.title, section_index)
         
@@ -1267,16 +1267,16 @@ class ReportAgent:
             tools_description=self._get_tools_description(),
         )
 
-        # Build user prompt - pass maximum 4000 characters for each completed section
+        # Construire le prompt utilisateur - passer au maximum 4000 caractères pour chaque section achevée
         if previous_sections:
             previous_parts = []
             for sec in previous_sections:
-                # Maximum 4000 characters per section
+                # Maximum 4000 caractères par section
                 truncated = sec[:4000] + "..." if len(sec) > 4000 else sec
                 previous_parts.append(truncated)
             previous_content = "\n\n---\n\n".join(previous_parts)
         else:
-            previous_content = "(This is the first section)"
+            previous_content = "(Ceci est la première section)"
         
         user_prompt = SECTION_USER_PROMPT_TEMPLATE.format(
             previous_content=previous_content,
@@ -1288,87 +1288,87 @@ class ReportAgent:
             {"role": "user", "content": user_prompt}
         ]
         
-        # ReACT loop
+        # Boucle ReACT
         tool_calls_count = 0
-        max_iterations = 5  # Maximum iterations
-        min_tool_calls = 3  # Minimum tool calls
-        conflict_retries = 0  # Consecutive conflicts where tool calls and Final Answer appear simultaneously
-        used_tools = set()  # Record tool names already called
+        max_iterations = 5  # Itérations maximales
+        min_tool_calls = 3  # Appels d'outils minimum
+        conflict_retries = 0  # Conflits consécutifs où les appels d'outils et la Réponse Finale apparaissent simultanément
+        used_tools = set()  # Enregistrer les noms d'outils déjà appelés
         all_tools = {"insight_forge", "panorama_search", "quick_search", "interview_agents"}
 
-        # Report context for InsightForge sub-question generation
-        report_context = f"Section Title: {section.title}\nSimulation Requirement: {self.simulation_requirement}"
+        # Contexte du rapport pour la génération de sous-questions InsightForge
+        report_context = f"Titre de la section : {section.title}\nExigence de simulation : {self.simulation_requirement}"
         
         for iteration in range(max_iterations):
             if progress_callback:
                 progress_callback(
                     "generating", 
                     int((iteration / max_iterations) * 100),
-                    f"Deep retrieval and writing in progress ({tool_calls_count}/{self.MAX_TOOL_CALLS_PER_SECTION})"
+                    f"Récupération approfondie et rédaction en cours ({tool_calls_count}/{self.MAX_TOOL_CALLS_PER_SECTION})"
                 )
             
-            # Call LLM
+            # Appeler le LLM
             response = self.llm.chat(
                 messages=messages,
                 temperature=0.5,
                 max_tokens=4096
             )
 
-            # Check if LLM return is None (API exception or empty content)
+            # Vérifier si le retour du LLM est None (exception API ou contenu vide)
             if response is None:
-                logger.warning(f"Section {section.title} round {iteration + 1} iteration: LLM returned None")
-                # If there are more iterations, add message and retry
+                logger.warning(f"Section {section.title} tour {iteration + 1} : le LLM a retourné None")
+                # S'il reste des itérations, ajouter un message et réessayer
                 if iteration < max_iterations - 1:
-                    messages.append({"role": "assistant", "content": "(Response empty)"})
-                    messages.append({"role": "user", "content": "Please continue generating content."})
+                    messages.append({"role": "assistant", "content": "(Réponse vide)"})
+                    messages.append({"role": "user", "content": "Veuillez continuer à générer le contenu."})
                     continue
-                # Last iteration also returned None, exit loop and enter forced conclusion
+                # Dernière itération a aussi retourné None, sortir de la boucle et entrer en conclusion forcée
                 break
 
-            logger.debug(f"LLM response: {response[:200]}...")
+            logger.debug(f"Réponse LLM : {response[:200]}...")
 
-            # Parse once, reuse result
+            # Analyser une fois, réutiliser le résultat
             tool_calls = self._parse_tool_calls(response)
             has_tool_calls = bool(tool_calls)
             has_final_answer = "Final Answer:" in response
 
-            # ── Conflict handling: LLM simultaneously output tool calls and Final Answer ──
+            # ── Gestion des conflits : le LLM produit simultanément des appels d'outils et la Réponse Finale ──
             if has_tool_calls and has_final_answer:
                 conflict_retries += 1
                 logger.warning(
-                    f"Section {section.title} round {iteration+1} : "
-                    f"LLM simultaneously output tool calls and Final Answer (round {conflict_retries} conflicts)"
+                    f"Section {section.title} tour {iteration+1} : "
+                    f"Le LLM a produit simultanément des appels d'outils et la Réponse Finale ({conflict_retries} conflits)"
                 )
 
                 if conflict_retries <= 2:
-                    # First two times: discard this response and request LLM to reply again
+                    # Les deux premières fois : ignorer cette réponse et demander au LLM de répondre à nouveau
                     messages.append({"role": "assistant", "content": response})
                     messages.append({
                         "role": "user",
                         "content": (
-                            "[Format Error] You cannot include both tool calls and Final Answer in one reply.\n"
-                            "Each reply can only do one of the following:\n"
-                            "- Call a tool (output a <tool_call> block, don't write Final Answer)\n"
-                            "- Output final content (starting with 'Final Answer:', don't include <tool_call>)\n"
-                            "Please reply again and only do one of these."
+                            "[Erreur de format] Vous ne pouvez pas inclure à la fois des appels d'outils et une Réponse Finale dans une seule réponse.\n"
+                            "Chaque réponse ne peut faire qu'une seule des choses suivantes :\n"
+                            "- Appeler un outil (produire un bloc <tool_call&gt;, ne pas écrire de réponse finale)\n"
+                            "- Produire le contenu final (commençant par 'Final Answer:', ne pas inclure <tool_call&gt;)\n"
+                            "Veuillez répondre à nouveau et ne faire qu'une seule de ces actions."
                         ),
                     })
                     continue
                 else:
-                    # Third time: downgrade, truncate to first tool call, force execution
+                    # Troisième fois : rétrograder, tronquer au premier appel d'outil, forcer l'exécution
                     logger.warning(
-                        f"Section {section.title}: consecutive {conflict_retries} conflicts，"
-                        "downgraded to truncate and execute first tool call"
+                        f"Section {section.title} : {conflict_retries} conflits consécutifs, "
+                        "rétrogradé pour tronquer et exécuter le premier appel d'outil"
                     )
-                    first_tool_end = response.find('</tool_call>')
+                    first_tool_end = response.find('</tool_call&gt;')
                     if first_tool_end != -1:
-                        response = response[:first_tool_end + len('</tool_call>')]
+                        response = response[:first_tool_end + len('</tool_call&gt;')]
                         tool_calls = self._parse_tool_calls(response)
                         has_tool_calls = bool(tool_calls)
                     has_final_answer = False
                     conflict_retries = 0
 
-            # Log LLM response
+            # Enregistrer la réponse du LLM
             if self.report_logger:
                 self.report_logger.log_llm_response(
                     section_title=section.title,
@@ -1379,13 +1379,13 @@ class ReportAgent:
                     has_final_answer=has_final_answer
                 )
 
-            # ── Case 1: LLM output Final Answer ──
+            # ── Cas 1 : Le LLM produit la Réponse Finale ──
             if has_final_answer:
-                # Insufficient tool calls, reject and request to continue calling tools
+                # Appels d'outils insuffisants, rejeter et demander de continuer à appeler des outils
                 if tool_calls_count < min_tool_calls:
                     messages.append({"role": "assistant", "content": response})
                     unused_tools = all_tools - used_tools
-                    unused_hint = f"(These tools have not been used, recommend using them: {', '.join(unused_tools)}）" if unused_tools else ""
+                    unused_hint = f"(Ces outils n'ont pas été utilisés, il est recommandé de les utiliser : {', '.join(unused_tools)})" if unused_tools else ""
                     messages.append({
                         "role": "user",
                         "content": REACT_INSUFFICIENT_TOOLS_MSG.format(
@@ -1396,9 +1396,9 @@ class ReportAgent:
                     })
                     continue
 
-                # Normal completion
+                # Achèvement normal
                 final_answer = response.split("Final Answer:")[-1].strip()
-                logger.info(f"Section {section.title} generation completed (tool calls: {tool_calls_count}times)")
+                logger.info(f"Génération de la section {section.title} achevée (appels d'outils : {tool_calls_count} fois)")
 
                 if self.report_logger:
                     self.report_logger.log_section_content(
@@ -1409,9 +1409,9 @@ class ReportAgent:
                     )
                 return final_answer
 
-            # ── Case 2: LLM attempts to call tools ──
+            # ── Cas 2 : Le LLM tente d'appeler des outils ──
             if has_tool_calls:
-                # Tool quota exhausted → inform clearly, request output Final Answer
+                # Quota d'outils épuisé → informer clairement, demander de produire la Réponse Finale
                 if tool_calls_count >= self.MAX_TOOL_CALLS_PER_SECTION:
                     messages.append({"role": "assistant", "content": response})
                     messages.append({
@@ -1423,10 +1423,10 @@ class ReportAgent:
                     })
                     continue
 
-                # Only execute the first tool call
+                # Exécuter uniquement le premier appel d'outil
                 call = tool_calls[0]
                 if len(tool_calls) > 1:
-                    logger.info(f"LLM attempted to call {len(tool_calls)} tools, only execute the first: {call['name']}")
+                    logger.info(f"Le LLM a tenté d'appeler {len(tool_calls)} outils, exécution uniquement du premier : {call['name']}")
 
                 if self.report_logger:
                     self.report_logger.log_tool_call(
@@ -1455,7 +1455,7 @@ class ReportAgent:
                 tool_calls_count += 1
                 used_tools.add(call['name'])
 
-                # Build unused tools hint
+                # Construire l'indice d'outils inutilisés
                 unused_tools = all_tools - used_tools
                 unused_hint = ""
                 if unused_tools and tool_calls_count < self.MAX_TOOL_CALLS_PER_SECTION:
@@ -1475,13 +1475,13 @@ class ReportAgent:
                 })
                 continue
 
-            # ── Case 3: NeitherTool call，nor Final Answer ──
+            # ── Cas 3 : Ni appel d'outil, ni Réponse Finale ──
             messages.append({"role": "assistant", "content": response})
 
             if tool_calls_count < min_tool_calls:
-                # Tool callcount insufficient，recommend unused tools
+                # Nombre d'appels d'outils insuffisant, recommander les outils inutilisés
                 unused_tools = all_tools - used_tools
-                unused_hint = f"(These tools have not been used, recommend using them: {', '.join(unused_tools)}）" if unused_tools else ""
+                unused_hint = f"(Ces outils n'ont pas été utilisés, il est recommandé de les utiliser : {', '.join(unused_tools)})" if unused_tools else ""
 
                 messages.append({
                     "role": "user",
@@ -1493,9 +1493,8 @@ class ReportAgent:
                 })
                 continue
 
-            # Directly adopt this content as final answer, no more waiting
-            # directlyconvertthis contentas finalanswer, no more waiting
-            logger.info(f"Section {section.title} did not detectto 'Final Answer:' prefix, directlyadoptLLM outputas finalcontent（Tool call: {tool_calls_count}times)")
+            # Adopter directement ce contenu comme réponse finale, ne plus attendre
+            logger.info(f"Section {section.title} : préfixe 'Final Answer:' non détecté, adoption directe de la sortie du LLM comme contenu final (Appels d'outils : {tool_calls_count} fois)")
             final_answer = response.strip()
 
             if self.report_logger:
@@ -1507,8 +1506,8 @@ class ReportAgent:
                 )
             return final_answer
         
-        # Reachedmaximum iterations, forcegeneratecontent
-        logger.warning(f"Section {section.title} reachedmaximumiterationscount，Forcegenerate")
+        # Itérations maximales atteintes, forcer la génération du contenu
+        logger.warning(f"Section {section.title} : nombre maximal d'itérations atteint, génération forcée")
         messages.append({"role": "user", "content": REACT_FORCE_FINAL_MSG})
         
         response = self.llm.chat(
@@ -1517,16 +1516,15 @@ class ReportAgent:
             max_tokens=4096
         )
 
-        # Check forceconclusion when LLM return is None
+        # Vérifier la conclusion forcée lorsque le LLM retourne None
         if response is None:
-            final_answer = f"(This section generation failed: LLM returned empty response, please retry later)"
-            final_answer = f"(ThisSectiongeneratefailed: LLM returnedemptyresponse, pleaselaterretry)"
+            final_answer = f"(La génération de cette section a échoué : le LLM a retourné une réponse vide, veuillez réessayer plus tard)"
         elif "Final Answer:" in response:
             final_answer = response.split("Final Answer:")[-1].strip()
         else:
             final_answer = response
         
-        # Log sectioncontentgeneratecompletion log
+        # Enregistrer le journal d'achèvement de la génération du contenu de la section
         if self.report_logger:
             self.report_logger.log_section_content(
                 section_title=section.title,
@@ -1543,29 +1541,26 @@ class ReportAgent:
         report_id: Optional[str] = None
     ) -> Report:
         """
-        Generate complete report (realtime output per section)
+        Générer le rapport complet (sortie en temps réel par section)
         
-        File structure:
-        File structure:
-        reports/{report_id}/
-            outline.json    - Report outline
-            progress.json   - Generation progress
+        Structure des fichiers :
+        rapports/{report_id}/
+            outline.json    - Plan du rapport
+            progress.json   - Progression de la génération
             section_01.md   - Section 1
             section_02.md   - Section 2
-            section_02.md   - Section 2
             ...
-            full_report.md  - Complete report
+            full_report.md  - Rapport complet
         
         Args:
-            report_id: Report ID (optional, auto-generate if not provided)
-            report_id: Report ID (optional, auto-generate if not provided)
+            report_id : ID du rapport (optionnel, auto-généré si non fourni)
             
         Returns:
-            Report: Complete report
+            Report: Rapport complet
         """
         import uuid
         
-        # If not provided report_id，then autogenerate
+        # Si report_id n'est pas fourni, auto-générer
         if not report_id:
             report_id = f"report_{uuid.uuid4().hex[:12]}"
         start_time = datetime.now()
@@ -1579,14 +1574,14 @@ class ReportAgent:
             created_at=datetime.now().isoformat()
         )
         
-        # CompletedSection Titlelist（for progress tracking）
+        # Liste des titres de sections achevées (pour le suivi de la progression)
         completed_section_titles = []
         
         try:
-            # Initialize: Create report folder and save initial state
+            # Initialisation : Créer le dossier du rapport et sauvegarder l'état initial
             ReportManager._ensure_report_folder(report_id)
             
-            # Initialize logslogger（structured logs agent_log.jsonl）
+            # Initialiser le logger structuré (agent_log.jsonl)
             self.report_logger = ReportLogger(report_id)
             self.report_logger.log_start(
                 simulation_id=self.simulation_id,
@@ -1594,27 +1589,27 @@ class ReportAgent:
                 simulation_requirement=self.simulation_requirement
             )
             
-            # Initialize console logslogger（console_log.txt）
+            # Initialiser le logger console (console_log.txt)
             self.console_logger = ReportConsoleLogger(report_id)
             
             ReportManager.update_progress(
-                report_id, "pending", 0, "Initializereport...",
+                report_id, "pending", 0, "Initialisation du rapport...",
                 completed_sections=[]
             )
             ReportManager.save_report(report)
             
-            # phase1: planoutline
+            # Phase 1 : planifier le plan
             report.status = ReportStatus.PLANNING
             ReportManager.update_progress(
-                report_id, "planning", 5, "Start planning report outline...",
+                report_id, "planning", 5, "Début de la planification du plan du rapport...",
                 completed_sections=[]
             )
             
-            # Log outline planning start
+            # Enregistrer le début de la planification du plan
             self.report_logger.log_planning_start()
             
             if progress_callback:
-                progress_callback("planning", 0, "Start planning report outline...")
+                progress_callback("planning", 0, "Début de la planification du plan du rapport...")
             
             outline = self.plan_outline(
                 progress_callback=lambda stage, prog, msg: 
@@ -1622,33 +1617,33 @@ class ReportAgent:
             )
             report.outline = outline
             
-            # recordplancompletion log
+            # Enregistrer le journal d'achèvement de la planification du plan
             self.report_logger.log_planning_complete(outline.to_dict())
             
-            # saveoutlinetofile
+            # Sauvegarder le plan dans un fichier
             ReportManager.save_outline(report_id, outline)
             ReportManager.update_progress(
-                report_id, "planning", 15, f"Outline planning completed, total{len(outline.sections)}sections",
+                report_id, "planning", 15, f"Planification du plan achevée, total {len(outline.sections)} sections",
                 completed_sections=[]
             )
             ReportManager.save_report(report)
             
-            logger.info(f"outlinesavedtofile: {report_id}/outline.json")
+            logger.info(f"Plan sauvegardé dans le fichier : {report_id}/outline.json")
             
-            # Phase 2: generer les sections sequentiellement et les enregistrer une par une.
+            # Phase 2 : générer les sections séquentiellement et les enregistrer une par une.
             report.status = ReportStatus.GENERATING
             
             total_sections = len(outline.sections)
-            generated_sections = []  # Conserver le contenu genere pour le contexte.
+            generated_sections = []  # Conserver le contenu généré pour le contexte.
             
             for i, section in enumerate(outline.sections):
                 section_num = i + 1
                 base_progress = 20 + int((i / total_sections) * 70)
                 
-                # Update progress
+                # Mettre à jour la progression
                 ReportManager.update_progress(
                     report_id, "generating", base_progress,
-                    f"generatinggenerateSection: {section.title} ({section_num}/{total_sections})",
+                    f"Génération de la section : {section.title} ({section_num}/{total_sections})",
                     current_section=section.title,
                     completed_sections=completed_section_titles
                 )
@@ -1657,10 +1652,10 @@ class ReportAgent:
                     progress_callback(
                         "generating", 
                         base_progress, 
-                        f"generatinggenerateSection: {section.title} ({section_num}/{total_sections})"
+                        f"Génération de la section : {section.title} ({section_num}/{total_sections})"
                     )
                 
-                # Generate main sectioncontent
+                # Générer le contenu principal de la section
                 section_content = self._generate_section_react(
                     section=section,
                     outline=outline,
@@ -1677,11 +1672,11 @@ class ReportAgent:
                 section.content = section_content
                 generated_sections.append(f"## {section.title}\n\n{section_content}")
 
-                # saveSection
+                # Sauvegarder la section
                 ReportManager.save_section(report_id, section_num, section)
                 completed_section_titles.append(section.title)
 
-                # Log sectioncompletion log
+                # Enregistrer le journal d'achèvement de la section
                 full_section_content = f"## {section.title}\n\n{section_content}"
 
                 if self.report_logger:
@@ -1691,54 +1686,54 @@ class ReportAgent:
                         full_content=full_section_content.strip()
                     )
 
-                logger.info(f"Sectionsaved: {report_id}/section_{section_num:02d}.md")
+                logger.info(f"Section sauvegardée : {report_id}/section_{section_num:02d}.md")
                 
-                # Update progress
+                # Mettre à jour la progression
                 ReportManager.update_progress(
                     report_id, "generating", 
                     base_progress + int(70 / total_sections),
-                    f"Section {section.title} completed",
+                    f"Section {section.title} terminée",
                     current_section=None,
                     completed_sections=completed_section_titles
                 )
             
-            # phase3: assembleComplete report
+            # Phase 3 : assembler le rapport complet
             if progress_callback:
-                progress_callback("generating", 95, "generatingassemblecompletereport...")
+                progress_callback("generating", 95, "Assemblage du rapport complet...")
             
             ReportManager.update_progress(
-                report_id, "generating", 95, "generatingassemblecompletereport...",
+                report_id, "generating", 95, "Assemblage du rapport complet...",
                 completed_sections=completed_section_titles
             )
             
-            # Using ReportManagerassembleComplete report
+            # Utiliser ReportManager pour assembler le rapport complet
             report.markdown_content = ReportManager.assemble_full_report(report_id, outline)
             report.status = ReportStatus.COMPLETED
             report.completed_at = datetime.now().isoformat()
             
-            # Calculate total elapsed time
+            # Calculer le temps total écoulé
             total_time_seconds = (datetime.now() - start_time).total_seconds()
             
-            # recordReportcompletion log
+            # Enregistrer le journal d'achèvement du rapport
             if self.report_logger:
                 self.report_logger.log_report_complete(
                     total_sections=total_sections,
                     total_time_seconds=total_time_seconds
                 )
             
-            # savefinalReport
+            # Sauvegarder le rapport final
             ReportManager.save_report(report)
             ReportManager.update_progress(
-                report_id, "completed", 100, "reportgeneratecomplete",
+                report_id, "completed", 100, "Génération du rapport terminée",
                 completed_sections=completed_section_titles
             )
             
             if progress_callback:
-                progress_callback("completed", 100, "reportgeneratecomplete")
+                progress_callback("completed", 100, "Génération du rapport terminée")
             
-            logger.info(f"reportgeneratecomplete: {report_id}")
+            logger.info(f"Génération du rapport terminée : {report_id}")
             
-            # Closeconsoleloglogger
+            # Fermer le logger console
             if self.console_logger:
                 self.console_logger.close()
                 self.console_logger = None
@@ -1746,25 +1741,25 @@ class ReportAgent:
             return report
             
         except Exception as e:
-            logger.error(f"reportgeneratefailed: {str(e)}")
+            logger.error(f"Échec de la génération du rapport : {str(e)}")
             report.status = ReportStatus.FAILED
             report.error = str(e)
             
-            # recorderrorlog
+            # Enregistrer le journal d'erreur
             if self.report_logger:
                 self.report_logger.log_error(str(e), "failed")
             
-            # savefailedstatus
+            # Sauvegarder l'état d'échec
             try:
                 ReportManager.save_report(report)
                 ReportManager.update_progress(
-                    report_id, "failed", -1, f"reportgeneratefailed: {str(e)}",
+                    report_id, "failed", -1, f"Échec de la génération du rapport : {str(e)}",
                     completed_sections=completed_section_titles
                 )
             except Exception:
-                pass  # ignoresavefailederror
+                pass  # Ignorer l'erreur de sauvegarde d'échec
             
-            # Closeconsoleloglogger
+            # Fermer le logger console
             if self.console_logger:
                 self.console_logger.close()
                 self.console_logger = None
@@ -1777,59 +1772,59 @@ class ReportAgent:
         chat_history: List[Dict[str, str]] = None
     ) -> Dict[str, Any]:
         """
-        andReport Agentchat
+        Discussion avec l'Agent de Rapport
         
-        inchatinAgentcan autonomouslycallretrievaltoolto answer questions
+        En discussion, l'Agent peut appeler de manière autonome des outils de récupération pour répondre aux questions
         
         Args:
-            message: user message
-            chat_history: chathistory
+            message: Message utilisateur
+            chat_history: Historique de discussion
             
         Returns:
             {
-                "response": "Agentresponse",
-                "tool_calls": [calltoollist],
-                "sources": [informationsource]
+                "response": "Réponse de l'Agent",
+                "tool_calls": [liste des appels d'outils],
+                "sources": [source d'information]
             }
         """
-        logger.info(f"Report Agentchat: {message[:50]}...")
+        logger.info(f"Discussion avec l'Agent de Rapport : {message[:50]}...")
         
         chat_history = chat_history or []
         
-        # GetalreadygenerateReportcontent
+        # Obtenir le contenu du rapport déjà généré
         report_content = ""
         try:
             report = ReportManager.get_report_by_simulation(self.simulation_id)
             if report and report.markdown_content:
-                # limitReportlength，avoid overly long context
+                # Limiter la longueur du rapport, éviter un contexte trop long
                 report_content = report.markdown_content[:15000]
                 if len(report.markdown_content) > 15000:
-                    report_content += "\n\n... [reportcontenthasTruncate] ..."
+                    report_content += "\n\n... [contenu du rapport tronqué] ..."
         except Exception as e:
-            logger.warning(f"getreportcontentfailed: {e}")
+            logger.warning(f"Échec de l'obtention du contenu du rapport : {e}")
         
         system_prompt = CHAT_SYSTEM_PROMPT_TEMPLATE.format(
             simulation_requirement=self.simulation_requirement,
-            report_content=report_content if report_content else "（nonereport）",
+            report_content=report_content if report_content else "(aucun rapport)",
             tools_description=self._get_tools_description(),
         )
 
-        # Buildmessage
+        # Construire les messages
         messages = [{"role": "system", "content": system_prompt}]
         
-        # add historychat
-        for h in chat_history[-10:]:  # limithistorylength
+        # Ajouter l'historique de discussion
+        for h in chat_history[-10:]:  # Limiter la longueur de l'historique
             messages.append(h)
         
-        # add user message
+        # Ajouter le message utilisateur
         messages.append({
             "role": "user", 
             "content": message
         })
         
-        # ReACT loop（simplified version）
+        # Boucle ReACT (version simplifiée)
         tool_calls_made = []
-        max_iterations = 2  # reduce iterations
+        max_iterations = 2  # Réduire les itérations
         
         for iteration in range(max_iterations):
             response = self.llm.chat(
@@ -1837,12 +1832,12 @@ class ReportAgent:
                 temperature=0.5
             )
             
-            # parseTool call
+            # Analyser les appels d'outils
             tool_calls = self._parse_tool_calls(response)
             
             if not tool_calls:
-                # noTool call，directlyReturnresponse
-                clean_response = re.sub(r'<tool_call>.*?</tool_call>', '', response, flags=re.DOTALL)
+                # Pas d'appel d'outil, retourner directement la réponse
+                clean_response = re.sub(r'<tool_call&gt;.*?</tool_call&gt;', '', response, flags=re.DOTALL)
                 clean_response = re.sub(r'\[TOOL_CALL\].*?\)', '', clean_response)
                 
                 return {
@@ -1851,34 +1846,34 @@ class ReportAgent:
                     "sources": [tc.get("parameters", {}).get("query", "") for tc in tool_calls_made]
                 }
             
-            # Execute toolcall（limitcount）
+            # Exécuter l'appel d'outil (limiter le nombre)
             tool_results = []
-            for call in tool_calls[:1]:  # at mostExecute1 time tool call
+            for call in tool_calls[:1]:  # Au maximum exécuter 1 appel d'outil
                 if len(tool_calls_made) >= self.MAX_TOOL_CALLS_PER_CHAT:
                     break
                 result = self._execute_tool(call["name"], call.get("parameters", {}))
                 tool_results.append({
                     "tool": call["name"],
-                    "result": result[:1500]  # limitresultlength
+                    "result": result[:1500]  # Limiter la longueur du résultat
                 })
                 tool_calls_made.append(call)
             
-            # convertresultadd to message
+            # Ajouter les résultats convertis aux messages
             messages.append({"role": "assistant", "content": response})
-            observation = "\n".join([f"[{r['tool']}result]\n{r['result']}" for r in tool_results])
+            observation = "\n".join([f"[Résultat {r['tool']}]\n{r['result']}" for r in tool_results])
             messages.append({
                 "role": "user",
                 "content": observation + CHAT_OBSERVATION_SUFFIX
             })
         
-        # Reachedmaximum iteration，Getfinalresponse
+        # Itération maximale atteinte, obtenir la réponse finale
         final_response = self.llm.chat(
             messages=messages,
             temperature=0.5
         )
         
-        # cleanresponse
-        clean_response = re.sub(r'<tool_call>.*?</tool_call>', '', final_response, flags=re.DOTALL)
+        # Nettoyer la réponse
+        clean_response = re.sub(r'<tool_call&gt;.*?</tool_call&gt;', '', final_response, flags=re.DOTALL)
         clean_response = re.sub(r'\[TOOL_CALL\].*?\)', '', clean_response)
         
         return {
@@ -1890,95 +1885,95 @@ class ReportAgent:
 
 class ReportManager:
     """
-    ReportManagemanager
+    Gestionnaire de Rapports
     
-    responsible forReportpersistence storage and retrieval
+    Responsable du stockage persistant et de la récupération des rapports
     
-    filestructure（perSectionoutput）：
+    Structure des fichiers (sortie par section) :
     reports/
       {report_id}/
-        meta.json          - Reportmetainformationand status
-        outline.json       - Reportoutline
-        progress.json      - generateProgress
+        meta.json          - Méta-informations et statut du rapport
+        outline.json       - Plan du rapport
+        progress.json      - Progression de la génération
         section_01.md      - Section 1
         section_02.md      - Section 2
         ...
-        full_report.md     - Complete report
+        full_report.md     - Rapport complet
     """
     
-    # Reportstorage directory
+    # Répertoire de stockage des rapports
     REPORTS_DIR = os.path.join(Config.UPLOAD_FOLDER, 'reports')
     
     @classmethod
     def _ensure_reports_dir(cls):
-        """ensurereportroot directory exists"""
+        """Garantir l'existence du répertoire racine des rapports"""
         os.makedirs(cls.REPORTS_DIR, exist_ok=True)
     
     @classmethod
     def _get_report_folder(cls, report_id: str) -> str:
-        """getreportfolderpath"""
+        """Obtenir le chemin du dossier du rapport"""
         return os.path.join(cls.REPORTS_DIR, report_id)
     
     @classmethod
     def _ensure_report_folder(cls, report_id: str) -> str:
-        """ensurereportfolderexists andreturnedpath"""
+        """Garantir l'existence du dossier du rapport et retourner le chemin"""
         folder = cls._get_report_folder(report_id)
         os.makedirs(folder, exist_ok=True)
         return folder
     
     @classmethod
     def _get_report_path(cls, report_id: str) -> str:
-        """getreportmetainformationfile path"""
+        """Obtenir le chemin du fichier de méta-informations du rapport"""
         return os.path.join(cls._get_report_folder(report_id), "meta.json")
     
     @classmethod
     def _get_report_markdown_path(cls, report_id: str) -> str:
-        """getcompletereportMarkdownfile path"""
+        """Obtenir le chemin du fichier Markdown du rapport complet"""
         return os.path.join(cls._get_report_folder(report_id), "full_report.md")
     
     @classmethod
     def _get_outline_path(cls, report_id: str) -> str:
-        """getoutlinefile path"""
+        """Obtenir le chemin du fichier de plan"""
         return os.path.join(cls._get_report_folder(report_id), "outline.json")
     
     @classmethod
     def _get_progress_path(cls, report_id: str) -> str:
-        """getprogressfile path"""
+        """Obtenir le chemin du fichier de progression"""
         return os.path.join(cls._get_report_folder(report_id), "progress.json")
     
     @classmethod
     def _get_section_path(cls, report_id: str, section_index: int) -> str:
-        """getSectionMarkdownfile path"""
+        """Obtenir le chemin du fichier Markdown de la section"""
         return os.path.join(cls._get_report_folder(report_id), f"section_{section_index:02d}.md")
     
     @classmethod
     def _get_agent_log_path(cls, report_id: str) -> str:
-        """get Agent logsfile path"""
+        """Obtenir le chemin du fichier de journal de l'Agent"""
         return os.path.join(cls._get_report_folder(report_id), "agent_log.jsonl")
     
     @classmethod
     def _get_console_log_path(cls, report_id: str) -> str:
-        """getconsolelogsfile path"""
+        """Obtenir le chemin du fichier de journal console"""
         return os.path.join(cls._get_report_folder(report_id), "console_log.txt")
     
     @classmethod
     def get_console_log(cls, report_id: str, from_line: int = 0) -> Dict[str, Any]:
         """
-        Getconsolelogcontent
+        Obtenir le contenu du journal console
         
-        This isReportgenerateduring processconsoleoutputlog（INFO、WARNINGetc），
-        and agent_log.jsonl structured logsdifferent。
+        Il s'agit du journal de sortie console (INFO, WARNING, etc.) pendant le processus de génération du rapport,
+        différent du journal structuré agent_log.jsonl.
         
         Args:
-            report_id: ReportID
-            from_line: from which rowrowStartRead（for incrementalGet，0 means from the beginningStart）
+            report_id: ID du rapport
+            from_line: À partir de quelle ligne commencer la lecture (pour l'obtention incrémentale, 0 signifie depuis le début)
             
         Returns:
             {
-                "logs": [logrowlist],
-                "total_lines": totalrownumber,
-                "from_line": startrownumber,
-                "has_more": whether there are morelog
+                "logs": [liste des lignes de journal],
+                "total_lines": nombre total de lignes,
+                "from_line": numéro de ligne de départ,
+                "has_more": s'il y a plus de journaux
             }
         """
         log_path = cls._get_console_log_path(report_id)
@@ -1998,26 +1993,26 @@ class ReportManager:
             for i, line in enumerate(f):
                 total_lines = i + 1
                 if i >= from_line:
-                    # keeporiginallogrow，remove trailingrowcharacter
+                    # Conserver la ligne de journal originale, supprimer les caractères de fin de ligne
                     logs.append(line.rstrip('\n\r'))
         
         return {
             "logs": logs,
             "total_lines": total_lines,
             "from_line": from_line,
-            "has_more": False  # alreadyReadto the end
+            "has_more": False  # Déjà lu jusqu'à la fin
         }
     
     @classmethod
     def get_console_log_stream(cls, report_id: str) -> List[str]:
         """
-        GetCompleteconsolelog（one-timeGetall）
+        Obtenir le journal console complet (obtention unique de tout)
         
         Args:
-            report_id: ReportID
+            report_id: ID du rapport
             
         Returns:
-            logrowlist
+            Liste des lignes de journal
         """
         result = cls.get_console_log(report_id, from_line=0)
         return result["logs"]
@@ -2025,18 +2020,18 @@ class ReportManager:
     @classmethod
     def get_agent_log(cls, report_id: str, from_line: int = 0) -> Dict[str, Any]:
         """
-        Get Agent logcontent
+        Obtenir le contenu du journal de l'Agent
         
         Args:
-            report_id: ReportID
-            from_line: from which rowrowStartRead（for incrementalGet，0 means from the beginningStart）
+            report_id: ID du rapport
+            from_line: À partir de quelle ligne commencer la lecture (pour l'obtention incrémentale, 0 signifie depuis le début)
             
         Returns:
             {
-                "logs": [logentrylist],
-                "total_lines": totalrownumber,
-                "from_line": startrownumber,
-                "has_more": whether there are morelog
+                "logs": [liste des entrées de journal],
+                "total_lines": nombre total de lignes,
+                "from_line": numéro de ligne de départ,
+                "has_more": s'il y a plus de journaux
             }
         """
         log_path = cls._get_agent_log_path(report_id)
@@ -2060,26 +2055,26 @@ class ReportManager:
                         log_entry = json.loads(line.strip())
                         logs.append(log_entry)
                     except json.JSONDecodeError:
-                        # skip parsingfailedrow
+                        # Ignorer les lignes dont l'analyse a échoué
                         continue
         
         return {
             "logs": logs,
             "total_lines": total_lines,
             "from_line": from_line,
-            "has_more": False  # alreadyReadto the end
+            "has_more": False  # Déjà lu jusqu'à la fin
         }
     
     @classmethod
     def get_agent_log_stream(cls, report_id: str) -> List[Dict[str, Any]]:
         """
-        GetComplete Agent log（for one-timeGetall）
+        Obtenir le journal complet de l'Agent (pour l'obtention unique de tout)
         
         Args:
-            report_id: ReportID
+            report_id: ID du rapport
             
         Returns:
-            logentrylist
+            Liste des entrées de journal
         """
         result = cls.get_agent_log(report_id, from_line=0)
         return result["logs"]
@@ -2087,16 +2082,16 @@ class ReportManager:
     @classmethod
     def save_outline(cls, report_id: str, outline: ReportOutline) -> None:
         """
-        saveReportoutline
+        Sauvegarder le plan du rapport
         
-        in planningphasecompleteimmediately aftercall
+        Appelé immédiatement après l'achèvement de la phase de planification
         """
         cls._ensure_report_folder(report_id)
         
         with open(cls._get_outline_path(report_id), 'w', encoding='utf-8') as f:
             json.dump(outline.to_dict(), f, ensure_ascii=False, indent=2)
         
-        logger.info(f"outlinesaved: {report_id}")
+        logger.info(f"Plan sauvegardé : {report_id}")
     
     @classmethod
     def save_section(
@@ -2106,49 +2101,49 @@ class ReportManager:
         section: ReportSection
     ) -> str:
         """
-        savesinglesections
+        Sauvegarder une section individuelle
 
-        inEach sectiongeneration completed afterimmediatelycall，implementperSectionoutput
+        Appelé immédiatement après l'achèvement de la génération de chaque section, implémente la sortie par section
 
         Args:
-            report_id: ReportID
-            section_index: Sectionindex（from1Start）
-            section: Sectionobject
+            report_id: ID du rapport
+            section_index: Index de la section (à partir de 1)
+            section: Objet section
 
         Returns:
-            savefile path
+            Chemin du fichier sauvegardé
         """
         cls._ensure_report_folder(report_id)
 
-        # BuildSectionMarkdowncontent - clean possibleduplicatetitle
+        # Construire le contenu Markdown de la section - nettoyer les titres potentiellement dupliqués
         cleaned_content = cls._clean_section_content(section.content, section.title)
         md_content = f"## {section.title}\n\n"
         if cleaned_content:
             md_content += f"{cleaned_content}\n\n"
 
-        # savefile
+        # Sauvegarder le fichier
         file_suffix = f"section_{section_index:02d}.md"
         file_path = os.path.join(cls._get_report_folder(report_id), file_suffix)
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(md_content)
 
-        logger.info(f"Sectionsaved: {report_id}/{file_suffix}")
+        logger.info(f"Section sauvegardée : {report_id}/{file_suffix}")
         return file_path
     
     @classmethod
     def _clean_section_content(cls, content: str, section_title: str) -> str:
         """
-        cleanSectioncontent
+        Nettoyer le contenu de la section
         
-        1. removecontentbeginningandSection TitleduplicateMarkdowntitlerow
-        2. convertall ### and below levelstitleconvert toboldtext
+        1. Supprimer les lignes de titre Markdown en double au début du contenu et du titre de section
+        2. Convertir tous les titres de niveau ### et inférieur en texte gras
         
         Args:
-            content: originalcontent
-            section_title: Section Title
+            content: Contenu original
+            section_title: Titre de la section
             
         Returns:
-            after cleaningcontent
+            Contenu après nettoyage
         """
         import re
         
@@ -2163,26 +2158,26 @@ class ReportManager:
         for i, line in enumerate(lines):
             stripped = line.strip()
             
-            # Checkwhether isMarkdowntitlerow
+            # Vérifier s'il s'agit d'une ligne de titre Markdown
             heading_match = re.match(r'^(#{1,6})\s+(.+)$', stripped)
             
             if heading_match:
                 level = len(heading_match.group(1))
                 title_text = heading_match.group(2).strip()
                 
-                # Checkwhether isandSection Titleduplicatetitle（skip first5rowwithinduplicate）
+                # Vérifier s'il s'agit d'un titre en double avec le titre de section (ignorer les doublons dans les 5 premières lignes)
                 if i < 5:
                     if title_text == section_title or title_text.replace(' ', '') == section_title.replace(' ', ''):
                         skip_next_empty = True
                         continue
                 
-                # convertallleveltitle（#, ##, ###, ####etc）convert tobold
-                # becauseSection Titleadded by system，contentshould not have anytitle
+                # Convertir tous les titres de niveau (#, ##, ###, #### etc.) en gras
+                # Car le titre de section est ajouté par le système, le contenu ne doit avoir aucun titre
                 cleaned_lines.append(f"**{title_text}**")
-                cleaned_lines.append("")  # addempty line
+                cleaned_lines.append("")  # Ajouter une ligne vide
                 continue
             
-            # if previousrowwas skippedtitle，and currentrowempty，also skip
+            # Si la ligne précédente était un titre ignoré, et que la ligne actuelle est vide, l'ignorer aussi
             if skip_next_empty and stripped == '':
                 skip_next_empty = False
                 continue
@@ -2190,14 +2185,14 @@ class ReportManager:
             skip_next_empty = False
             cleaned_lines.append(line)
         
-        # removebeginningempty line
+        # Supprimer les lignes vides au début
         while cleaned_lines and cleaned_lines[0].strip() == '':
             cleaned_lines.pop(0)
         
-        # removebeginningseparatorline
+        # Supprimer les lignes de séparation au début
         while cleaned_lines and cleaned_lines[0].strip() in ['---', '***', '___']:
             cleaned_lines.pop(0)
-            # meanwhileremoveseparatorline afterempty line
+            # Simultanément supprimer les lignes vides après la ligne de séparation
             while cleaned_lines and cleaned_lines[0].strip() == '':
                 cleaned_lines.pop(0)
         
@@ -2214,9 +2209,9 @@ class ReportManager:
         completed_sections: List[str] = None
     ) -> None:
         """
-        UpdateReportgenerateProgress
+        Mettre à jour la progression de la génération du rapport
         
-        frontend can getReadprogress.jsonGetrealtimeProgress
+        Le frontend peut obtenir la progression en temps réel en lisant progress.json
         """
         cls._ensure_report_folder(report_id)
         
@@ -2234,7 +2229,7 @@ class ReportManager:
     
     @classmethod
     def get_progress(cls, report_id: str) -> Optional[Dict[str, Any]]:
-        """getreportgenerateprogress"""
+        """Obtenir la progression de la génération du rapport"""
         path = cls._get_progress_path(report_id)
         
         if not os.path.exists(path):
@@ -2246,9 +2241,9 @@ class ReportManager:
     @classmethod
     def get_generated_sections(cls, report_id: str) -> List[Dict[str, Any]]:
         """
-        GetalreadygenerateSectionlist
+        Obtenir la liste des sections déjà générées
         
-        ReturnallalreadysaveSectionfileinformation
+        Retourne les informations de tous les fichiers de sections déjà sauvegardés
         """
         folder = cls._get_report_folder(report_id)
         
@@ -2262,7 +2257,7 @@ class ReportManager:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
 
-                # fromfilename parsingSectionindex
+                # Analyser l'index de la section à partir du nom de fichier
                 parts = filename.replace('.md', '').split('_')
                 section_index = int(parts[1])
 
@@ -2277,48 +2272,48 @@ class ReportManager:
     @classmethod
     def assemble_full_report(cls, report_id: str, outline: ReportOutline) -> str:
         """
-        assembleComplete report
+        Assembler le rapport complet
         
-        fromsaveSectionfileassembleComplete report，and processrowtitleclean
+        Assembler le rapport complet à partir des fichiers de sections sauvegardés, et nettoyer les titres
         """
         folder = cls._get_report_folder(report_id)
         
-        # BuildReportheader
+        # Construire l'en-tête du rapport
         md_content = f"# {outline.title}\n\n"
         md_content += f"> {outline.summary}\n\n"
         md_content += f"---\n\n"
         
-        # sequentiallyReadallSectionfile
+        # Lire séquentiellement tous les fichiers de sections
         sections = cls.get_generated_sections(report_id)
         for section_info in sections:
             md_content += section_info["content"]
         
-        # post-processing：clean entireReporttitlequestion
+        # Post-traitement : nettoyer les problèmes de titres du rapport entier
         md_content = cls._post_process_report(md_content, outline)
         
-        # saveComplete report
+        # Sauvegarder le rapport complet
         full_path = cls._get_report_markdown_path(report_id)
         with open(full_path, 'w', encoding='utf-8') as f:
             f.write(md_content)
         
-        logger.info(f"completereporthasassemble: {report_id}")
+        logger.info(f"Rapport complet assemblé : {report_id}")
         return md_content
     
     @classmethod
     def _post_process_report(cls, content: str, outline: ReportOutline) -> str:
         """
-        post-processingReportcontent
+        Post-traiter le contenu du rapport
         
-        1. removeduplicatetitle
-        2. keepReportmain title(#)andSection Title(##)，removeother levelstitle(###, ####etc)
-        3. clean redundantempty lineandseparatorline
+        1. Supprimer les titres en double
+        2. Conserver le titre principal du rapport (#) et les titres de section (##), supprimer les titres d'autres niveaux (###, #### etc)
+        3. Nettoyer les lignes vides redondantes et les lignes de séparation
         
         Args:
-            content: originalReportcontent
-            outline: Reportoutline
+            content: Contenu original du rapport
+            outline: Plan du rapport
             
         Returns:
-            after processingcontent
+            Contenu après traitement
         """
         import re
         
@@ -2326,7 +2321,7 @@ class ReportManager:
         processed_lines = []
         prev_was_heading = False
         
-        # collectoutlineinallSection Title
+        # Collecter tous les titres de section dans le plan
         section_titles = set()
         for section in outline.sections:
             section_titles.add(section.title)
@@ -2336,14 +2331,14 @@ class ReportManager:
             line = lines[i]
             stripped = line.strip()
             
-            # Checkwhether istitlerow
+            # Vérifier s'il s'agit d'une ligne de titre
             heading_match = re.match(r'^(#{1,6})\s+(.+)$', stripped)
             
             if heading_match:
                 level = len(heading_match.group(1))
                 title = heading_match.group(2).strip()
                 
-                # Checkwhether isduplicatetitle（inconsecutive5rowappear the same withincontenttitle）
+                # Vérifier s'il s'agit d'un titre en double (apparaissant dans les 5 lignes consécutives précédentes avec le même contenu de titre)
                 is_duplicate = False
                 for j in range(max(0, len(processed_lines) - 5), len(processed_lines)):
                     prev_line = processed_lines[j].strip()
@@ -2355,43 +2350,43 @@ class ReportManager:
                             break
                 
                 if is_duplicate:
-                    # skipduplicatetitleand subsequentempty line
+                    # Ignorer le titre en double et les lignes vides suivantes
                     i += 1
                     while i < len(lines) and lines[i].strip() == '':
                         i += 1
                     continue
                 
-                # titlelevel handling：
-                # - # (level=1) onlykeepReportmain title
-                # - ## (level=2) keepSection Title
-                # - ### and below (level>=3) convert toboldtext
+                # Gestion des niveaux de titre :
+                # - # (niveau=1) conserver uniquement le titre principal du rapport
+                # - ## (niveau=2) conserver les titres de section
+                # - ### et inférieur (niveau>=3) convertir en texte gras
                 
                 if level == 1:
                     if title == outline.title:
-                        # keepReportmain title
+                        # Conserver le titre principal du rapport
                         processed_lines.append(line)
                         prev_was_heading = True
                     elif title in section_titles:
-                        # Section Titleerrorusing#，corrected to##
+                        # Titre de section utilisant incorrectement #, corriger en ##
                         processed_lines.append(f"## {title}")
                         prev_was_heading = True
                     else:
-                        # other first-leveltitleconvert tobold
+                        # Autre titre de premier niveau convertir en gras
                         processed_lines.append(f"**{title}**")
                         processed_lines.append("")
                         prev_was_heading = False
                 elif level == 2:
                     if title in section_titles or title == outline.title:
-                        # keepSection Title
+                        # Conserver le titre de section
                         processed_lines.append(line)
                         prev_was_heading = True
                     else:
-                        # nonSectionsecond-leveltitleconvert tobold
+                        # Titre de second niveau non-section convertir en gras
                         processed_lines.append(f"**{title}**")
                         processed_lines.append("")
                         prev_was_heading = False
                 else:
-                    # ### and below levelstitleconvert toboldtext
+                    # Titres de niveau ### et inférieur convertir en texte gras
                     processed_lines.append(f"**{title}**")
                     processed_lines.append("")
                     prev_was_heading = False
@@ -2400,12 +2395,12 @@ class ReportManager:
                 continue
             
             elif stripped == '---' and prev_was_heading:
-                # skiptitlefollowed immediately byseparatorline
+                # Ignorer la ligne de séparation suivant immédiatement un titre
                 i += 1
                 continue
             
             elif stripped == '' and prev_was_heading:
-                # titleafter onlykeeponeempty line
+                # Après un titre, conserver uniquement une seule ligne vide
                 if processed_lines and processed_lines[-1].strip() != '':
                     processed_lines.append(line)
                 prev_was_heading = False
@@ -2416,7 +2411,7 @@ class ReportManager:
             
             i += 1
         
-        # cleanconsecutivemultipleempty line（keepat most2)
+        # Nettoyer les lignes vides consécutives multiples (conserver au maximum 2)
         result_lines = []
         empty_count = 0
         for line in processed_lines:
@@ -2432,31 +2427,31 @@ class ReportManager:
     
     @classmethod
     def save_report(cls, report: Report) -> None:
-        """SavereportmetainformationandcompleteReport"""
+        """Sauvegarder les méta-informations et le rapport complet"""
         cls._ensure_report_folder(report.report_id)
         
-        # savemetainformationJSON
+        # Sauvegarder les méta-informations JSON
         with open(cls._get_report_path(report.report_id), 'w', encoding='utf-8') as f:
             json.dump(report.to_dict(), f, ensure_ascii=False, indent=2)
         
-        # saveoutline
+        # Sauvegarder le plan
         if report.outline:
             cls.save_outline(report.report_id, report.outline)
         
-        # saveCompleteMarkdownReport
+        # Sauvegarder le rapport Markdown complet
         if report.markdown_content:
             with open(cls._get_report_markdown_path(report.report_id), 'w', encoding='utf-8') as f:
                 f.write(report.markdown_content)
         
-        logger.info(f"reportsaved: {report.report_id}")
+        logger.info(f"Rapport sauvegardé : {report.report_id}")
     
     @classmethod
     def get_report(cls, report_id: str) -> Optional[Report]:
-        """getreport"""
+        """Obtenir le rapport"""
         path = cls._get_report_path(report_id)
         
         if not os.path.exists(path):
-            # backward compatibleformat：Checkdirectlystored inreportsunder directoryfile
+            # Format compatible antérieur : Vérifier les fichiers stockés directement dans le répertoire reports
             old_path = os.path.join(cls.REPORTS_DIR, f"{report_id}.json")
             if os.path.exists(old_path):
                 path = old_path
@@ -2466,7 +2461,7 @@ class ReportManager:
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        # rebuildReportobject
+        # Reconstruire l'objet rapport
         outline = None
         if data.get('outline'):
             outline_data = data['outline']
@@ -2482,7 +2477,7 @@ class ReportManager:
                 sections=sections
             )
         
-        # ifmarkdown_contentempty，attempt tofromfull_report.mdRead
+        # Si markdown_content est vide, tenter de lire depuis full_report.md
         markdown_content = data.get('markdown_content', '')
         if not markdown_content:
             full_report_path = cls._get_report_markdown_path(report_id)
@@ -2505,17 +2500,17 @@ class ReportManager:
     
     @classmethod
     def get_report_by_simulation(cls, simulation_id: str) -> Optional[Report]:
-        """based onsimulationIDgetreport"""
+        """Obtenir le rapport basé sur l'ID de simulation"""
         cls._ensure_reports_dir()
         
         for item in os.listdir(cls.REPORTS_DIR):
             item_path = os.path.join(cls.REPORTS_DIR, item)
-            # newformat：filefolder
+            # Nouveau format : dossier
             if os.path.isdir(item_path):
                 report = cls.get_report(item)
                 if report and report.simulation_id == simulation_id:
                     return report
-            # backward compatibleformat：JSONfile
+            # Format compatible antérieur : fichier JSON
             elif item.endswith('.json'):
                 report_id = item[:-5]
                 report = cls.get_report(report_id)
@@ -2526,19 +2521,19 @@ class ReportManager:
     
     @classmethod
     def list_reports(cls, simulation_id: Optional[str] = None, limit: int = 50) -> List[Report]:
-        """columnappearreport"""
+        """Lister les rapports"""
         cls._ensure_reports_dir()
         
         reports = []
         for item in os.listdir(cls.REPORTS_DIR):
             item_path = os.path.join(cls.REPORTS_DIR, item)
-            # newformat：filefolder
+            # Nouveau format : dossier
             if os.path.isdir(item_path):
                 report = cls.get_report(item)
                 if report:
                     if simulation_id is None or report.simulation_id == simulation_id:
                         reports.append(report)
-            # backward compatibleformat：JSONfile
+            # Format compatible antérieur : fichier JSON
             elif item.endswith('.json'):
                 report_id = item[:-5]
                 report = cls.get_report(report_id)
@@ -2546,25 +2541,25 @@ class ReportManager:
                     if simulation_id is None or report.simulation_id == simulation_id:
                         reports.append(report)
         
-        # sorted by creation time descending
+        # Tri par date de création décroissante
         reports.sort(key=lambda r: r.created_at, reverse=True)
         
         return reports[:limit]
     
     @classmethod
     def delete_report(cls, report_id: str) -> bool:
-        """Deletereport（entirefolder）"""
+        """Supprimer le rapport (dossier entier)"""
         import shutil
         
         folder_path = cls._get_report_folder(report_id)
         
-        # newformat：Deleteentirefilefolder
+        # Nouveau format : Supprimer le dossier entier
         if os.path.exists(folder_path) and os.path.isdir(folder_path):
             shutil.rmtree(folder_path)
-            logger.info(f"reportfolderhasDelete: {report_id}")
+            logger.info(f"Dossier du rapport supprimé : {report_id}")
             return True
         
-        # backward compatibleformat：Deleteseparatefile
+        # Format compatible antérieur : Supprimer les fichiers individuels
         deleted = False
         old_json_path = os.path.join(cls.REPORTS_DIR, f"{report_id}.json")
         old_md_path = os.path.join(cls.REPORTS_DIR, f"{report_id}.md")
